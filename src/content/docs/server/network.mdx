@@ -244,7 +244,7 @@ each client. The server sets a cap via [`bandwidth`](/reference/config-keys/#ser
 | Typical (20 ms packets, ~50 kbit/s quality) | **65 kbit/s** per user |
 | Maximum (10 ms packets, 96 kbit/s quality) | **134 kbit/s** per user |
 
-**Server-side formula** (all speakers in one channel, everyone talking at once — the theoretical worst case):
+**Server-side formula** (all speakers in one channel, everyone talking at once - the theoretical worst case):
 
 $$
 \text{incoming} = \text{quality} \times \text{users}
@@ -273,7 +273,7 @@ within the cap.
 
 ## SRV DNS record
 
-An SRV record lets users connect with just a domain name — no port
+An SRV record lets users connect with just a domain name - no port
 required. Fancy Mumble resolves the record automatically when a user
 types a bare domain into the server address field.
 
@@ -291,7 +291,7 @@ client picks up the correct host and port automatically. Without it
 they must type `mumble.yourdomain.com:64738` explicitly.
 
 <Aside type="note">
-The service label is `_mumble._tcp` — the upstream Mumble protocol
+The service label is `_mumble._tcp` - the upstream Mumble protocol
 standard. No other variant is needed.
 </Aside>
 

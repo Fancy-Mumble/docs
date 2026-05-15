@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
 
 Persistent chat means **messages survive a disconnect**. Without it, a
 Mumble server forgets everything as soon as a user leaves, just like
@@ -71,7 +71,7 @@ nothing until an admin picks a mode.
 <Tabs>
 <TabItem label="Choosing a mode">
 
-| | **None** | **Full Archive** | **Signal V1** |
+| | **None** | **Full Archive** <Badge text="Experimental" variant="danger" /> | **Signal V1** |
 |---|---|---|---|
 | **History for newcomers** | - | Yes - full log up to the retention limit. | No - brand-new joiners get no backlog. |
 | **Missed messages on reconnect** | - | Everything since your last session, up to the cap. | Automatically pushed on reconnect for existing members. |
@@ -95,7 +95,7 @@ history - for example, a staff channel handling sensitive topics.
 | Mode (UI label) | Wire value | Server stores ciphertext? | Backfill on join | Key distribution |
 |---|---|:-:|---|---|
 | **None (standard volatile chat)** | `none` | - | - | - |
-| **Full Archive (all messages)** | `fancy_v1_full_archive` | yes | full history (subject to retention / message-count cap) | HMAC challenge against an online key custodian; relay cap scales with online member count |
+| **Full Archive (all messages)** <Badge text="Experimental" variant="danger" /> | `fancy_v1_full_archive` | yes | full history (subject to retention / message-count cap) | HMAC challenge against an online key custodian; relay cap scales with online member count |
 | **Signal V1 (E2EE via Signal Protocol)** | `signal_v1` | no - offline queue only | none for new joiners; existing members receive queued messages on reconnect | [Signal Sender Keys](https://signal.org/docs/specifications/sesame/) via `libsignal-protocol`; auto-verifies on `PchatKeyHolderReport`; relay cap 3 |
 
 <Aside type="note" title="Deprecated wire values">
@@ -118,7 +118,13 @@ Things that often surprise people:
 The two persistent modes differ in *who* holds keys and *where*
 messages live.
 
-### Full Archive
+### Full Archive <Badge text="Experimental" variant="danger" />
+
+<Aside type="danger" title="Not recommended - experimental with potential security issues">
+Full Archive (`fancy_v1_full_archive`) is currently **not recommended for production use**. The custom encryption scheme it uses has not undergone a formal security audit, and the key-distribution flow has known edge cases that can expose the channel key to a malicious server operator.
+
+Until a full audit is completed, treat Full Archive as **transport encryption only** - not end-to-end encryption. The server operator could, in principle, intercept keys and read message content. Use **Signal V1** for any channel where true E2EE guarantees matter.
+</Aside>
 
 - The server keeps an opaque encrypted **envelope** per message,
   plus a small amount of metadata (`message_id`, `channel_id`,

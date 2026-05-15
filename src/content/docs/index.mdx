@@ -5,7 +5,7 @@ template: splash
 hero:
   tagline: A modern, feature-rich voice chat for gaming, podcasts, communities, and study groups.
   image:
-    file: ../../assets/logo.svg
+    html: '<img src="/mainpage.png" alt="Fancy Mumble main interface" style="width: 100%; height: auto; max-width: 100%;" />'
   actions:
     - text: Get started in 5 minutes
       link: /getting-started/install/
@@ -23,40 +23,43 @@ hero:
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
 
+<div class="hero-grad">
+
 ## Pick your starting point
 
 <CardGrid>
-  <Card title="Join a server" icon="open-book">
-    Install the app, connect to a server your admin gave you, and start talking.
-
-    [Install the app →](/getting-started/install/)
-  </Card>
-  <Card title="Run a server" icon="rocket">
-    Get a fully featured Fancy Mumble server running with Docker in under 5 minutes.
-
-    [Docker quick start →](/server/docker/)
-  </Card>
-  <Card title="Administer a server" icon="setting">
-    Manage channels, roles, ACLs, onboarding, emotes, and bans.
-
-    [SuperUser & first login →](/admin/superuser/)
-  </Card>
-  <Card title="Troubleshoot" icon="warning">
-    Audio glitches, connection drops, screen-share failures, and how to get the right info to a developer.
-
-    [Common issues →](/troubleshooting/common-issues/)
-  </Card>
+  <LinkCard title="Join a server" href="/getting-started/install/" description="Install the app, connect to a server your admin gave you, and start talking." />
+  <LinkCard title="Run a server" href="/server/docker/" description="Get a fully featured Fancy Mumble server running with Docker in under 5 minutes." />
+  <LinkCard title="Administer a server" href="/admin/superuser/" description="Manage channels, roles, ACLs, onboarding, emotes, and bans." />
+  <LinkCard title="Troubleshoot" href="/troubleshooting/common-issues/" description="Audio glitches, connection drops, screen-share failures, and how to get the right info to a developer." />
 </CardGrid>
+
+</div>
 
 ## How the pieces fit together
 
-Fancy Mumble has three parts that work as one:
+<CardGrid style="grid-template-columns: repeat(4, 1fr);">
+  <Card title="The app" icon="laptop">
+    The cross-platform desktop and mobile client for voice, persistent chat, and screen sharing.
 
-| Part | What it does |
-|------|--------------|
-| **The app** | The program you install on your computer or phone to talk and chat. |
-| **The server** | A program someone runs (maybe you) that everyone connects to. |
-| **The Docker image** | A pre-packaged server with an interactive setup wizard for fast deployment. |
+    [View on GitHub →](https://github.com/Fancy-Mumble/FancyMumble)
+  </Card>
+  <Card title="The server" icon="puzzle">
+    The self-hosted backend responsible for channel management, authentication, and message routing.
+
+    [View on GitHub →](https://github.com/Fancy-Mumble/mumble-server)
+  </Card>
+  <Card title="The Docker image" icon="seti:docker">
+    A production-ready container image bundled with an interactive setup wizard for zero-configuration deployment.
+
+    [View on GitHub →](https://github.com/Fancy-Mumble/mumble-docker)
+  </Card>
+  <Card title="Documentation" icon="open-book">
+    The source for this site — guides, reference pages, and configuration examples. Contributions welcome.
+
+    [View on GitHub →](https://github.com/Fancy-Mumble/docs)
+  </Card>
+</CardGrid>
 
 :::tip[Want a tour first?]
 Take the [60-second UI tour](/welcome/tour/) before diving in.
