@@ -1,11 +1,11 @@
-# Build outputs — regenerated inside the container.
+# Build outputs - regenerated inside the container.
 dist/
 .astro/
 
-# Dependencies — reinstalled via npm ci inside the container.
+# Dependencies - reinstalled via npm ci inside the container.
 node_modules/
 
-# Git history and CI config — not needed at runtime.
+# Git history and CI config - not needed at runtime.
 .git/
 .github/
 .gitignore
@@ -28,5 +28,5 @@ desktop.ini
 # not part of the Docker build).
 scripts/
 
-# Test / preview output — not needed inside the image.
+# Test / preview output - not needed inside the image.
 *.log

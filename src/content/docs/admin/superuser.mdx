@@ -133,6 +133,11 @@ If you accidentally removed your own admin role:
 - **SuperUser is registered as a regular user**: not possible by
   design. SuperUser is hard-coded outside the user table.
 - **Lost the password**: same fix, `--set-su-pw` to set a new one.
+- **Changed a password in the app and SuperUser login broke**: the
+  in-app password in your profile settings applies to your *regular
+  user account*, not to SuperUser. SuperUser has no profile in the
+  app - its password is set only via `--set-su-pw` or the
+  `MUMBLE_SUPERUSER_PASSWORD` environment variable.
 
 ## Next step
 
