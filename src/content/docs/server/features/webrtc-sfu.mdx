@@ -226,7 +226,7 @@ will not forward it. You need the stream/UDP layer of the proxy.
     The standard Caddy binary does not support raw UDP proxying. The
     community `layer4` plugin adds it:
 
-    ```caddyfile
+    ```nginx
     {
       layer4 {
         :10000 {

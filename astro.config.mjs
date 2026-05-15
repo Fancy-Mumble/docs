@@ -15,11 +15,10 @@ export default defineConfig({
         lucide: ["*"],
         // Simple Icons gives us real brand logos (Windows, Linux,
         // Android, Apple, Ubuntu, Fedora, Debian, Docker, GitHub...).
-        // Reference via `<Icon name="simple-icons:windows11" />`.
+        // Reference via `<Icon name="simple-icons:windows" />`.
         // Pre-listed so the bundle stays small.
         "simple-icons": [
           "windows",
-          "windows11",
           "linux",
           "android",
           "apple",

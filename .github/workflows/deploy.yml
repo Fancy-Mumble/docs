@@ -26,6 +26,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Graphviz
+        run: sudo apt-get install -y graphviz
+
+      - name: Verify Java (required by PlantUML)
+        run: java -version
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
