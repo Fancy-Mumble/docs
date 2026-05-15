@@ -26,7 +26,8 @@ An **identity** is your "passport" between servers. It bundles:
 You can have multiple identities. For example one for a gaming
 server, one for a work group, one for an anonymous community.
 
-<div class="screenshot-placeholder">
+
+<div id="screenshot-users-privacy-1" class="screenshot-placeholder">
   &nbsp;Screenshot placeholder: identities panel with three saved identities.
 </div>
 
@@ -97,6 +98,21 @@ What the server **does not** see:
 - Your saved servers, your bios, your themes, your screenshots.
 - Any data from other servers you have connected to.
 
+## Privacy settings
+
+Open **Settings, Privacy** to control what data the app sends and
+what it renders for you.
+
+| Setting | Default | What it does |
+|---------|:-------:|--------------|
+| **Streamer mode** | off | Hides server host, port, IP addresses, and geolocation in the UI. Suppresses native OS notifications so they cannot leak into a screen recording. |
+| **Disable read receipts** | off | Stops sending read receipts so others cannot see you have read their messages. Also hides receipts from others in your view. |
+| **Disable typing indicators** | off | Stops broadcasting the "is typing…" signal when you are composing. Also hides typing indicators from others. |
+| **Disable OpenStreetMap maps** | off | Prevents map tile requests and IP geolocation lookups to external services. |
+| **Disable link previews** | off | Stops requesting link-preview metadata from the server for URLs you paste into chat. Prevents the server from learning which URLs you shared. |
+| **Allow external embeds** | off | Required for the YouTube watch-together adapter. When enabled, the YouTube IFrame API is loaded on demand. Disable to restrict watch-together to direct media URLs only. |
+| **Enable dual-path sending** | on | In end-to-end encrypted channels, also sends a plain-text `[Encrypted message]` placeholder over the normal path so legacy clients see something. Disable to keep the ciphertext off the unencrypted path entirely. |
+
 ## Expert mode
 
 Toggle **Expert mode** under **Settings, Advanced** to reveal extra
@@ -125,6 +141,10 @@ shows:
 - Memory stats in the status bar.
 - Offloaded message counts.
 - The reload-app button in the menu.
+- An **audio recording** button in the channel sidebar (only while
+  connected and voice is active). Records inbound channel audio to a
+  WAV file. The filename supports wildcards: `{date}`, `{time}`,
+  `{datetime}`, `{host}`, `{user}`, `{channel}`.
 
 This is for power users who want to monitor the app's footprint. The
 default is off.

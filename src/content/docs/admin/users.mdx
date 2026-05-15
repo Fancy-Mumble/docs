@@ -17,7 +17,8 @@ specific username on your server. Registered users can:
 
 This page covers the **Registered users** tab in the admin panel.
 
-<div class="screenshot-placeholder">
+
+<div id="screenshot-admin-users-1" class="screenshot-placeholder">
   &nbsp;Screenshot placeholder: registered users tab listing eight users with role badges.
 </div>
 
@@ -126,6 +127,47 @@ Two distinct operations:
 - **Ban**: see [Ban list](/admin/bans/).
 
 You usually want **Ban** plus **Deregister** for a permanent removal.
+
+## Priority speaker
+
+Any admin with the **Mute/Deafen** permission can right-click a user
+and toggle **Priority speaker** on or off.
+
+When a user has priority status:
+
+- All other users in the same channel are **automatically attenuated**
+  (turned down) while the priority speaker is transmitting.
+- A **megaphone icon** appears next to their name in the sidebar.
+- The effect is temporary. It lasts until you remove it or the user
+  disconnects.
+
+This is useful for moderators, presenters, or a team lead speaking
+over a group channel where background crosstalk is disruptive.
+
+To toggle: right-click the user → **Admin** section → **Priority speaker** /
+**Remove priority**.
+
+## Idle time
+
+Every user entry shows an **idle time** counter. This tracks inactivity
+within Mumble, not on the desktop, for privacy reasons.
+
+**Actions that reset the counter:**
+
+- Any status change (mute, deafen, change channel, etc.)
+- Speaking
+- Opening the channel edit dialog
+
+**Actions that do not reset the counter:**
+
+- Viewing another user's profile
+- Reading channel descriptions or user comments
+- Opening a right-click context menu
+- Sending a message (counter resets only when OK is clicked, not when
+  the chat window opens)
+
+The counter intentionally reflects Mumble-specific activity. Deliberately
+resetting it by desktop interaction would be a privacy violation.
 
 ## Pitfalls
 

@@ -33,15 +33,45 @@ settings; for those, see
 | `database` | `/data/mumble-server.sqlite` | Path to the SQLite database. |
 | `port` | `64738` | TCP/UDP port the server listens on. |
 | `host` | empty | Bind address. Empty means "all interfaces". |
-| `welcometext` | empty | HTML welcome message sent on connect. |
-| `serverpassword` | empty | Optional shared password. |
+| `welcometext` | empty | HTML welcome message sent on connect. Supports HTML even when `allowhtml` is false. |
+| `serverpassword` | empty | Optional shared password. Registered users bypass this. |
 | `registerName` | empty | Public display name. Required for the public directory. |
 | `users` | `100` | Maximum simultaneous users. |
 | `usersperchannel` | `0` | Per-channel limit. 0 means unlimited. |
-| `bandwidth` | `558000` | Max bits/s per user for audio. |
-| `textmessagelength` | `500000` | Max characters per text message. |
-| `imagemessagelength` | `1048576` | Max bytes for inline images. |
+| `bandwidth` | `558000` | Max bits/s per user for audio. Hard ceiling is ~134 400 bit/s. |
+| `textmessagelength` | `500000` | Max characters per text message. 0 = unlimited. |
+| `imagemessagelength` | `1048576` | Max bytes for inline images. 0 = unlimited. |
 | `allowhtml` | `true` | Render HTML in chat and comments. |
+| `defaultchannel` | `0` | Channel ID new users land in. 0 = root channel. Registered users ignore this unless `rememberchannel` is false. |
+| `rememberchannel` | `true` | If true, registered users rejoin the channel they were last in. If false, everyone lands in `defaultchannel`. |
+| `rememberchannelduration` | `0` | How long (in seconds) the server remembers a registered user's last channel. `0` = remember forever. If a user was away longer than this value, they land in `defaultchannel` instead. |
+| `channelnestinglimit` | `10` | Maximum nesting depth for channels. Prevents infinite trees. |
+| `timeout` | `30` | Seconds before an unresponsive client is disconnected. |
+
+## Name constraints
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `username` | (see below) | Regular expression for allowed username characters. Default pattern (`[ -=\w\[\]\{\}\(\)\@\|\.]+`) allows spaces, letters, digits, and common symbols. |
+| `channelname` | (see below) | Regular expression for allowed channel name characters. Default (`[ -=\w\#\[\]\{\}\(\)\@\|]+`) allows spaces, `#`, and common symbols. Max 512 characters. |
+
+## Client suggestions
+
+These send a recommendation to the client if their setting differs. The client shows a notice; it does not force the change. Set to an empty string (`""`) to disable a suggestion entirely.
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `suggestversion` | empty | Minimum version string (e.g. `1.4.0`). Clients below this version see a "please update" notice. |
+| `suggestpushtotalk` | empty | Set to `true` to nudge voice-activation users to switch to push-to-talk. |
+| `suggestpositional` | empty | Set to `true` or `false` to recommend a positional audio setting. |
+
+## Discovery
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `bonjour` | `true` | Advertise the server on the local network via mDNS/Bonjour. The service name comes from `registerName`. |
+| `allowping` | `true` | Allow unauthenticated ping queries that report user count and server info. Required for the public server directory. |
+| `sendversion` | `true` | Include the server OS in the version string sent to clients. |
 
 ## Security and bans
 

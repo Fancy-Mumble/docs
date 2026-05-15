@@ -17,9 +17,45 @@ Without the relay, screen sharing still works on a local network, but
 falls back to peer-to-peer, which is unreliable behind strict NAT or
 across the internet.
 
-<div class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: diagram of broadcaster uploading once, server fanning out to N viewers.
-</div>
+
+<PlantUML alt="Diagram of broadcaster uploading once, server SFU fanning out to N viewers" code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam arrowColor #5e35b1
+skinparam packageBorderColor #7c3aed
+skinparam packageBackgroundColor #f5f3ff
+skinparam packageFontColor #311b92
+skinparam noteBorderColor #7c3aed
+skinparam noteBackgroundColor #f5f3ff
+skinparam noteFontColor #311b92
+
+left to right direction
+
+component "Broadcaster" as B
+
+package "Fancy Mumble Server" {
+  component "SFU\\nUDP 10000" as SFU
+}
+
+component "Viewer 1" as V1
+component "Viewer 2" as V2
+component "Viewer N" as VN
+
+B --> SFU : 1× upload
+SFU --> V1 : fan-out
+SFU --> V2 : fan-out
+SFU --> VN : fan-out
+
+note bottom of SFU
+  Broadcaster sends once.
+  Server forwards to every viewer.
+end note
+@enduml
+`} />
 
 ## When you want it
 

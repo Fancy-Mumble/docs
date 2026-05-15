@@ -10,7 +10,8 @@ import { Steps, Aside } from '@astrojs/starlight/components';
 Channels are the rooms in your server. Users sit in one channel at a
 time for voice; chat is per channel.
 
-<div class="screenshot-placeholder">
+
+<div id="screenshot-admin-channels-1" class="screenshot-placeholder">
   &nbsp;Screenshot placeholder: channel tree on the left with a "Voice" parent and three child channels.
 </div>
 
@@ -49,7 +50,8 @@ Right-click, **Edit channel**. The dialog has several tabs:
 | **Notifications** | Default notification settings for the channel. |
 | **Audio** | Bandwidth caps, codec overrides. |
 
-<div class="screenshot-placeholder">
+
+<div id="screenshot-admin-channels-2" class="screenshot-placeholder">
   &nbsp;Screenshot placeholder: channel-edit dialog with the ACL tab open.
 </div>
 
@@ -66,6 +68,28 @@ in either channel hear each other.
 </Steps>
 
 Linking is symmetric and persists across restarts.
+
+### One-way channel linking
+
+Sometimes you want channel A to hear channel B but **not** the other way
+around — e.g. a stage channel that broadcasts into a lobby.
+
+<Steps>
+1. Create channel A and channel B normally.
+2. Open the ACL editor for **channel A** and add:
+   - subject: `@all`, permission: `Speak` → **allow**
+3. Open the ACL editor for **channel B** and add:
+   - subject: `@!in` (everyone **not** physically in this channel), permission: `Speak` → **deny**
+4. Link the two channels via right-click → **Link**.
+</Steps>
+
+Result: users in channel A can hear users from channel B, but channel A
+speakers are not heard in channel B. The `@!in` group matches anyone
+joined through a link rather than physically present, so only people
+sitting in channel B can speak through it.
+
+You can tighten this to specific user groups instead of `@all`/`@!in`
+if needed.
 
 ## Temporary channels
 
@@ -111,6 +135,14 @@ You can lock a channel with a password:
 
 Users entering the password are added to the password group for
 that channel for the duration of their session.
+
+### User experience
+
+When a user clicks a password-protected channel, Fancy Mumble shows a
+**"Password required"** dialog automatically. They type the password and
+click **Join**. If the password is correct they enter the channel; if
+not the join is rejected silently. The password is not persisted between
+sessions.
 
 ## Bulk actions
 

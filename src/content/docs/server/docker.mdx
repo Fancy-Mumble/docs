@@ -19,9 +19,8 @@ You will need:
 - A machine with a public IP, or port forwarding on your home router.
 - About five minutes.
 
-<div class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: terminal showing docker compose up bringing a server online.
-</div>
+
+<img src="/docker-compose-setup.png" alt="Terminal showing docker compose up starting the mumble-server container" />
 
 ## Option A: the interactive setup wizard (recommended)
 
@@ -147,6 +146,8 @@ variables are ignored once `MUMBLE_CUSTOM_CONFIG_FILE` is set.
    plugin.file-server.storagePath=/data/file-server-storage
    plugin.file-server.bindAddress=0.0.0.0
    plugin.file-server.port=64739
+   ; Set to true only when a reverse proxy (nginx, Caddy, Traefik, etc.) terminates TLS
+   ; in front of this port. Leave false (or remove) for direct HTTPS/plain connections.
    plugin.file-server.tlsTerminatedByProxy=true
 
    ; WebRTC SFU (screen-share relay)
@@ -189,7 +190,7 @@ variables are ignored once `MUMBLE_CUSTOM_CONFIG_FILE` is set.
 
    ```bash
    docker exec mumble-server mumble-server \
-     --ini /data/mumble_server_config.ini \
+     --ini /data/mumble-server.ini \
      --set-su-pw "your-strong-password"
    ```
 
@@ -231,9 +232,9 @@ docker run --detach \
     persist across reconnects.
   </Card>
   <Card title="Screen-share relay" icon="laptop">
-    Start a screen share. A second person should see it without any
-    extra setup. (Off by default, see
-    [Screen sharing relay](/server/features/webrtc-sfu/) to enable.)
+    Only applicable if you enabled the WebRTC SFU (off by default - see
+    [Screen sharing relay](/server/features/webrtc-sfu/)). Once enabled,
+    start a screen share and a second person should see it without any extra setup.
   </Card>
 </CardGrid>
 
@@ -255,6 +256,32 @@ The image you ran bundles a few pieces:
 
 ## Common first-run problems
 
+- **`permission denied` connecting to `/var/run/docker.sock`**: your user
+  is not in the `docker` group. Run `sudo usermod -aG docker $USER` then
+  either log out and back in, or run `newgrp docker` to apply immediately.
+  On Windows, make sure Docker Desktop is running before invoking any
+  `docker` command.
+- **`error getting credentials … exec format error`**: the Docker credential
+  helper configured in `~/.docker/config.json` is a Windows binary that
+  cannot run inside WSL. The image is public, so no credentials are needed.
+  Reset the config with `echo '{}' > ~/.docker/config.json` and retry.
+- **`Failed to set initial capabilities` and friends in the logs**: at first
+  startup the entrypoint runs the server binary briefly as root to set the
+  SuperUser password, which emits a cluster of warnings:
+  ```text
+  Failed to set initial capabilities
+  WARNING: You are running murmurd as root, without setting a uname in the ini file.
+  resource_limits {current: 0, max: 0}
+  Failed to set priority limits.
+  Failed to set final capabilities
+  ```
+  All of these come from `UnixMurmur::initialcap()` / `finalcap()` which
+  expect Linux capabilities Docker drops by default. They are **harmless**
+  and only appear during the password-setting step. The actual long-running
+  server runs unprivileged as UID/GID 10000 via `su-exec` and does not emit
+  them. Do **not** set `uname` / `MUMBLE_CONFIG_UNAME` in a Docker
+  deployment - the named OS user does not exist in the image and the server
+  will exit with `Cannot find username`.
 - **Cannot connect from outside the network**: forward port `64738/tcp`
   and `64738/udp` on your router. The screen-share relay also needs
   `10000/udp` to be reachable.
@@ -267,6 +294,12 @@ The image you ran bundles a few pieces:
 - **Voice connects but is one-way**: UDP `64738` is blocked. Voice
   falls back to TCP, but viewers may need to force TCP too. Better:
   open UDP.
+- **Logs show `plugin on_load failed` for `fancy-file-server`**: this is
+  expected when using Option B (environment variables) without configuring
+  a file server storage path. The server continues to run normally; voice,
+  chat, and all other features are unaffected. To enable the file server,
+  switch to Option C and set `plugin.file-server.storagePath` in your
+  `mumble-server.ini`.
 
 ## Next steps
 

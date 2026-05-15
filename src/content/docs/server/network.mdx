@@ -231,6 +231,70 @@ curl -sI https://your-host:64739/healthz | head -1
 
 A `Connected to ...` (TCP) and a `200 OK` (HTTP) mean you are good.
 
+## Bandwidth planning
+
+Mumble's voice bandwidth depends on the audio quality setting chosen by
+each client. The server sets a cap via [`bandwidth`](/reference/config-keys/#server-identity-and-limits).
+
+**Per-user rules of thumb:**
+
+| Scenario | Bandwidth |
+|----------|-----------|
+| Minimum (any packet loss below this) | **15.8 kbit/s** per user |
+| Typical (20 ms packets, ~50 kbit/s quality) | **65 kbit/s** per user |
+| Maximum (10 ms packets, 96 kbit/s quality) | **134 kbit/s** per user |
+
+**Server-side formula** (all speakers in one channel, everyone talking at once — the theoretical worst case):
+
+$$
+\text{incoming} = \text{quality} \times \text{users}
+$$
+$$
+\text{outgoing} = \text{quality} \times (\text{users} - 1) \times \text{users}
+$$
+$$
+\text{total} = \text{incoming} + \text{outgoing}
+$$
+
+**Example:** 16 users at 128 kbit/s each, all talking simultaneously:
+
+- incoming = 128 × 16 = 2 048 kbit/s  
+- outgoing = 128 × 15 × 16 = 30 720 kbit/s  
+- total = **32 768 kbit/s ≈ 4 MiB/s**
+
+In practice, not everyone speaks at once. A realistic 30-user server
+with a few active channels is usually well under 1 MiB/s.
+
+<Aside type="tip">
+Set `bandwidth` (bits per second) in your `.env` to cap how much
+each client may send. The client auto-adjusts its quality to stay
+within the cap.
+</Aside>
+
+## SRV DNS record
+
+An SRV record lets users connect with just a domain name — no port
+required. Fancy Mumble resolves the record automatically when a user
+types a bare domain into the server address field.
+
+Add this to your DNS zone:
+
+```dns-zone
+_mumble._tcp.yourdomain.com.  3600  IN  SRV  10  0  64738  mumble.yourdomain.com.
+```
+
+The four fields after `SRV` are: **priority** (10), **weight** (0),
+**port** (64738), **target hostname**.
+
+With the record in place, users can type `yourdomain.com` and the
+client picks up the correct host and port automatically. Without it
+they must type `mumble.yourdomain.com:64738` explicitly.
+
+<Aside type="note">
+The service label is `_mumble._tcp` — the upstream Mumble protocol
+standard. No other variant is needed.
+</Aside>
+
 ## Next step
 
 Continue with the **Feature deep-dives** to pick what to enable:
