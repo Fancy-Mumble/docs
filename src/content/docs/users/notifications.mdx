@@ -1,0 +1,90 @@
+---
+title: Notifications
+description: Pick which events get a sound and how loud.
+sidebar:
+  order: 6
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Open **Settings, Notifications** to control which events trigger a
+sound and how loud each one plays.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: notifications panel with the event list.
+</div>
+
+## Master toggle
+
+At the top of the panel is a single **master enabled** toggle. When
+off, no notification sounds play regardless of the per-event
+settings.
+
+Below that is a **native desktop notifications** toggle that controls
+whether the operating system's notification popups are shown for
+events that support them.
+
+## Events
+
+For each event you can toggle it on or off, pick a sound, and set the
+per-event volume.
+
+| Event | Description |
+|-------|-------------|
+| **Chat message** | A new message in a channel you are viewing. |
+| **Direct message** | A new private or group message. |
+| **Mention** | Someone mentioned you with `@`, `@everyone`, `@here`, or your role. |
+| **User joined server** | Someone connected to the server. |
+| **User left server** | Someone disconnected from the server. |
+| **User joined my channel** | Someone moved into your current channel. |
+| **User left my channel** | Someone moved out of your current channel. |
+| **Screen share started** | A user started sharing their screen. |
+| **Voice activity** | Someone started speaking in your channel. |
+| **Self muted** | You muted or unmuted your microphone. |
+
+## Sounds
+
+Eight built-in tones are available. Click the **play** button next
+to a sound to preview it.
+
+- **None**, no sound.
+- **Chime**, default for chat messages.
+- **Bubble**, default for direct messages.
+- **Pop**, default for someone joining the server.
+- **Ding**, default for someone leaving.
+- **Ping**, default for stream start.
+- **Drop**, an alternative subtle tone.
+- **Bell**, default for mentions.
+
+## Bulk actions
+
+The panel has two buttons:
+
+- **Enable all**: turn every event on.
+- **Disable all**: turn every event off.
+
+Useful for setting a baseline and then disabling only the events you
+do not care about.
+
+## Default sounds and volumes
+
+| Event | Enabled by default | Default sound | Volume |
+|-------|:------------------:|---------------|:------:|
+| Chat message | yes | Chime | 50% |
+| Direct message | yes | Bubble | 70% |
+| Mention | yes | Bell | 70% |
+| User joined server | yes | Pop | 40% |
+| User left server | yes | Ding | 40% |
+| User joined my channel | yes | Pop | 50% |
+| User left my channel | yes | Ding | 50% |
+| Screen share started | yes | Ping | 50% |
+| Voice activity | no | None | 30% |
+| Self muted | yes | Drop | 40% |
+
+The master toggle is **off** by default, so you need to flip it once
+before any sound plays.
+
+## Next step
+
+Continue with [Personalization & themes](/users/personalization/).

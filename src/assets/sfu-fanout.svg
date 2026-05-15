@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 282"
+     font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+     role="img"
+     aria-label="SFU fan-out: Broadcaster uploads one stream to the WebRTC SFU inside the server. The SFU fans the stream out independently to Viewer A, B, and C via UDP.">
+
+  <style>
+    /* ── dark-mode defaults ── */
+    .nf  { fill: #1e1b4b; }
+    .ns  { stroke: #7c3aed; }
+    .sf  { fill: #312e81; }
+    .ss  { stroke: #6d28d9; }
+    .vf  { fill: #14103a; }
+    .th  { fill: #e2e8f0; font-weight: 700; font-size: 13px; }
+    .ts  { fill: #a5b4fc; font-size: 11px; }
+    .td  { fill: #818cf8; font-size: 10px; }
+    .to  { fill: #6b7280; font-size: 10px; font-style: italic; }
+    .sh  { fill: #c4b5fd; font-weight: 600; font-size: 11px; }
+    .vh  { fill: #a5b4fc; font-weight: 600; font-size: 11px; }
+
+    /* Label text: paint-order gives a dark halo behind the text so it
+       stays readable even when it crosses an arrow line. */
+    .lp  {
+      fill: #c4b5fd;
+      font-size: 9.5px;
+      paint-order: stroke fill;
+      stroke: #0d0b14;
+      stroke-width: 4;
+      stroke-linejoin: round;
+    }
+    .lh  {
+      fill: #c4b5fd;
+      font-size: 9.5px;
+      font-weight: 600;
+      paint-order: stroke fill;
+      stroke: #0d0b14;
+      stroke-width: 4;
+      stroke-linejoin: round;
+    }
+    .la  {
+      fill: #6b7280; font-size: 9px;
+      paint-order: stroke fill;
+      stroke: #0d0b14;
+      stroke-width: 4;
+      stroke-linejoin: round;
+    }
+
+    #ap polygon { fill: #9333ea; }
+
+    /* ── light-mode overrides ── */
+    @media (prefers-color-scheme: light) {
+      .nf  { fill: #f5f3ff; }
+      .sf  { fill: #ede9fe; }
+      .vf  { fill: #f0ebff; }
+      .th  { fill: #1e1b4b; }
+      .ts  { fill: #4c1d95; }
+      .td  { fill: #6d28d9; }
+      .to  { fill: #9ca3af; }
+      .sh  { fill: #4c1d95; }
+      .vh  { fill: #4c1d95; }
+      .lp  { fill: #6d28d9; stroke: #f8f7ff; }
+      .lh  { fill: #6d28d9; stroke: #f8f7ff; }
+      .la  { fill: #9ca3af; stroke: #f8f7ff; }
+      #ap polygon { fill: #7c3aed; }
+    }
+  </style>
+
+  <defs>
+    <marker id="ap" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0,8 3,0 6" stroke="none"/>
+    </marker>
+  </defs>
+
+  <!-- ═══════════════════════════════════════════════════════
+       BOXES
+  ══════════════════════════════════════════════════════════ -->
+
+  <!-- Broadcaster -->
+  <rect x="10" y="100" width="140" height="78" rx="8"
+        fill="none" class="nf ns" stroke-width="2"/>
+  <text x="80" y="128" text-anchor="middle" class="th">Broadcaster</text>
+  <text x="80" y="146" text-anchor="middle" class="ts">streams desktop</text>
+  <text x="80" y="164" text-anchor="middle" class="td">to channel viewers</text>
+
+  <!-- Server -->
+  <rect x="200" y="58" width="205" height="178" rx="8"
+        fill="none" class="nf ns" stroke-width="2"/>
+  <text x="302" y="87" text-anchor="middle" class="th">Fancy Mumble</text>
+  <text x="302" y="105" text-anchor="middle" class="ts">Server</text>
+  <text x="302" y="122" text-anchor="middle" class="td">voice/control: TCP 64738</text>
+
+  <!-- SFU sub-box -->
+  <rect x="215" y="138" width="175" height="86" rx="6"
+        fill="none" class="sf ss" stroke-width="1.5"/>
+  <text x="302" y="162" text-anchor="middle" class="sh">WebRTC SFU</text>
+  <text x="302" y="180" text-anchor="middle" class="td">port 10000 UDP</text>
+  <text x="302" y="198" text-anchor="middle" class="to">receives one upload</text>
+  <text x="302" y="214" text-anchor="middle" class="to">fans out to all viewers</text>
+
+  <!-- Fan-out column header - sits above the viewer boxes, outside the
+       arrow fan so it does not overlap anything. -->
+  <text x="533" y="42" text-anchor="middle" class="lh">fan-out via UDP</text>
+
+  <!-- Viewer A -->
+  <rect x="450" y="52" width="175" height="54" rx="8"
+        fill="none" class="vf ns" stroke-width="1.5"/>
+  <text x="537" y="76" text-anchor="middle" class="vh">Viewer A</text>
+  <text x="537" y="95" text-anchor="middle" class="td">independent stream</text>
+
+  <!-- Viewer B -->
+  <rect x="450" y="128" width="175" height="54" rx="8"
+        fill="none" class="vf ns" stroke-width="1.5"/>
+  <text x="537" y="152" text-anchor="middle" class="vh">Viewer B</text>
+  <text x="537" y="171" text-anchor="middle" class="td">independent stream</text>
+
+  <!-- Viewer C -->
+  <rect x="450" y="204" width="175" height="54" rx="8"
+        fill="none" class="vf ns" stroke-width="1.5"/>
+  <text x="537" y="228" text-anchor="middle" class="vh">Viewer C</text>
+  <text x="537" y="247" text-anchor="middle" class="td">independent stream</text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ARROWS
+  ══════════════════════════════════════════════════════════ -->
+
+  <!-- 1. Broadcaster → Server top: TCP 64738 signaling.
+       Label sits ABOVE the arrow line (y=80 vs arrow midpoint y≈102). -->
+  <line x1="151" y1="118" x2="198" y2="97"
+        fill="none" class="ns" stroke-width="1.5" marker-end="url(#ap)"/>
+  <text x="174" y="81" text-anchor="middle" class="lp">TCP 64738</text>
+  <text x="174" y="94" text-anchor="middle" class="lp">control / signaling</text>
+
+  <!-- 2. Broadcaster → SFU: UDP 10000 one upload.
+       Enters the SFU box from the left side.
+       Label sits BELOW the curve (y=222 vs curve lowest point y≈178). -->
+  <path d="M 151,155 C 180,155 200,175 213,181"
+        fill="none" class="ns" stroke-width="2" marker-end="url(#ap)"/>
+  <text x="183" y="222" text-anchor="middle" class="lp">UDP 10000 &#xB7; one upload</text>
+
+  <!-- 3a–3c. SFU → Viewer A / B / C.
+       All three originate from the SFU right edge at slightly different
+       y-offsets so the fan is visually clear. No inline labels - the
+       column header above explains the protocol. -->
+  <line x1="391" y1="167" x2="448" y2="79"
+        fill="none" class="ns" stroke-width="1.5" marker-end="url(#ap)"/>
+  <line x1="391" y1="181" x2="448" y2="155"
+        fill="none" class="ns" stroke-width="1.5" marker-end="url(#ap)"/>
+  <line x1="391" y1="195" x2="448" y2="231"
+        fill="none" class="ns" stroke-width="1.5" marker-end="url(#ap)"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       BOTTOM NOTE
+  ══════════════════════════════════════════════════════════ -->
+  <text x="320" y="272" text-anchor="middle" class="la">
+    Broadcaster upload is constant regardless of viewer count &#x2014; the SFU handles every viewer independently.
+  </text>
+
+</svg>

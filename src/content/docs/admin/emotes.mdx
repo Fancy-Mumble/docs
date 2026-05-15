@@ -1,0 +1,126 @@
+---
+title: Custom emotes
+description: Upload images that everyone on the server can use as emoji in chat.
+sidebar:
+  order: 8
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Custom emotes are **images uploaded by an admin** that any member can
+use in chat with a shortcode, like `:partyparrot:`. They appear in
+the emoji picker alongside standard emoji.
+
+This feature requires the [file server](/server/features/file-server/)
+to be enabled and the **Manage emotes** permission.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: custom emotes admin tab with five uploaded emotes.
+</div>
+
+## Upload an emote
+
+<Steps>
+
+1. Open **Admin, Emotes**.
+
+2. Click **Add emote**.
+
+3. Pick an image. Supported formats:
+
+   - PNG, JPEG, GIF (animated), WebP, SVG.
+   - Max 1 MB per file.
+   - Square or near-square works best (will be cropped to the
+     emoji-grid square).
+
+4. Fill in:
+
+   - **Shortcode**: lowercase, no spaces. Used as `:shortcode:` in
+     chat.
+   - **Alias emoji**: a standard emoji that this custom one
+     "stands in for" in fallback clients.
+   - **Description** (optional): shown on hover.
+
+5. Save.
+
+</Steps>
+
+The emote is uploaded to the file server and immediately available to
+everyone. Pull-to-refresh on mobile to see new emotes.
+
+## Use an emote
+
+In chat:
+
+- Type `:` then start typing the shortcode. The picker shows
+  matching emotes.
+- Pick from the picker.
+
+Other members of the server see the image. Members on a vanilla
+client see the **alias emoji** as a fallback.
+
+## Edit or delete
+
+In the admin panel:
+
+- Click any emote to edit shortcode, alias, description.
+- Click the trash icon to delete.
+
+Deleting an emote removes it everywhere it has been used in chat
+(future loads), past chat may show a broken image until the client
+refreshes.
+
+## Permissions
+
+Two permissions control emote handling:
+
+| Permission | What it allows |
+|------------|----------------|
+| **Manage emotes** | Upload, edit, delete custom emotes. |
+| **Use custom emotes** | Insert custom emotes in chat. Default: everyone. |
+
+You can revoke **Use custom emotes** for specific roles to enforce a
+"text only" rule.
+
+## Naming guidelines
+
+- Lowercase, hyphenated. `:hype-train:`, not `:HypeTrain:`.
+- Pick distinctive names. The picker uses fuzzy match, so close names
+  can be confusing.
+- Avoid Unicode escape sequences in the shortcode. ASCII only.
+
+## Reactions
+
+Custom emotes can also be used as **reactions** on messages, with
+the same shortcode picker. Restrict this via the **Use custom emotes
+as reactions** permission if you want emojis on reactions but not
+custom ones.
+
+## Storage and limits
+
+Stored in the file server at `/data/file-server-storage/emotes/`.
+
+Default limits:
+
+```ini
+plugin.file-server.maxEmoteSizeBytes=1048576
+plugin.file-server.maxEmoteCount=1000
+```
+
+Bump these in your custom INI for very large communities.
+
+## Pitfalls
+
+- **Cannot upload**: file server is off, or you do not have the
+  **Manage emotes** permission.
+- **Cannot use**: same, plus the **Use custom emotes** permission
+  may be denied for your role.
+- **Animated GIF plays once**: most clients loop animated emotes.
+  Some embed views only play it once.
+- **SVG renders strangely**: complex SVGs with fonts or external
+  references may not render. Stick to simple shapes.
+
+## Next step
+
+Continue with [Onboarding workflow](/admin/onboarding/) to drop new
+members into the right channels with the right roles.

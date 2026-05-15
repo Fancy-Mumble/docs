@@ -1,0 +1,68 @@
+---
+title: Reactions & polls
+description: Emoji reactions and polls inside chat messages.
+sidebar:
+  order: 6
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Reactions and polls are **client-side features** that ride on top of
+the server's plugin-data transport. They do not need a dedicated
+server configuration. As long as your server is the Fancy Mumble
+fork, both features work.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: chat message with three reactions and one open poll card.
+</div>
+
+## Reactions
+
+Any user who has post permission in a channel can attach an emoji
+reaction to a message. The reaction is broadcast through the plugin-
+data channel and replicated to every Fancy client in the room.
+
+- Standard Unicode emoji are supported.
+- Custom server emotes (see [Custom emotes](/admin/emotes/)) can be
+  used as reactions as long as the server has the file-server plugin
+  enabled.
+
+There are no server-side `MUMBLE_CONFIG_*` or `plugin.*` keys to
+tune this behavior in the public configuration. The client enforces
+its own per-message limits.
+
+## Polls
+
+A user can create a poll inside a channel:
+
+- Two to ten options.
+- Single-choice or multiple-choice (the creator picks).
+- Votes are visible to other users.
+
+Polls travel through the plugin-data channel the same way reactions
+do. There is no separate retention setting; once a poll's chat
+message ages out under your persistent-chat retention, the poll goes
+with it.
+
+## Compatibility
+
+| Client | Sees reactions? | Sees polls? |
+|--------|:---------------:|:-----------:|
+| Fancy Mumble | yes | yes |
+| Vanilla Mumble | no | no |
+
+A vanilla user in a Fancy channel will see the original chat
+messages and ignore the plugin-data carrying the reaction or vote.
+
+## Pitfalls
+
+- **Reactions or polls do not appear**: confirm both users are on
+  Fancy Mumble. A mixed-client channel will display the original
+  message but skip the overlay.
+- **Cannot react**: the user does not have post permission in the
+  channel, or the message is too old (under your persistent-chat
+  retention).
+
+## Next step
+
+Continue with [Watch Together](/server/features/watch-together/).

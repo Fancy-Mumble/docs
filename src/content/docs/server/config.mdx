@@ -1,0 +1,253 @@
+---
+title: Configuration reference
+description: Three ways to configure the server, with examples and gotchas.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Code, FileTree } from '@astrojs/starlight/components';
+
+A Fancy Mumble server can be configured three ways. Pick whichever
+fits your workflow.
+
+1. **Environment variables** (`MUMBLE_CONFIG_*`). Best for Docker
+   compose, Kubernetes, and quick deployments.
+2. **A mounted INI file**. Best for fine-grained control and version-
+   tracked configurations.
+3. **Docker secrets**. Best for production password and credential
+   handling.
+
+## Where the config files live
+
+A typical project directory looks like this:
+
+<FileTree>
+- my-mumble-server/
+  - docker-compose.yml how to run the container; env-vars live here
+  - .env optional: secrets pulled into docker-compose
+  - mumble-server.ini optional: full INI mounted into the container
+</FileTree>
+
+- `docker-compose.yml` is the **one file you always create**, on your
+  host machine (anywhere you like, then `cd` into it to run
+  `docker compose up`).
+- Inside the running container, the live config the server actually
+  reads is generated at `/data/mumble_server_config.ini` on every
+  boot. **Do not** edit that file in place. It is regenerated from
+  the environment variables each restart.
+- `mumble-server.ini` is **only needed if you set `plugin.*` keys**
+  (for example for the file server). Mount it into the container as
+  shown in section 2 below.
+
+## 1. Environment variables
+
+Every server option can be set with an environment variable named
+`MUMBLE_CONFIG_<option>`. The option name is case insensitive and
+underscores are ignored, so all three of these set the database host:
+
+```text
+MUMBLE_CONFIG_dbhost
+MUMBLE_CONFIG_DBHOST
+MUMBLE_CONFIG_DB_HOST
+```
+
+Example, in `docker-compose.yml`:
+
+<Code lang="yaml" code={`environment:
+  MUMBLE_CONFIG_USERS: 100
+  MUMBLE_CONFIG_WELCOMETEXT: "Welcome to my server!"
+  MUMBLE_CONFIG_SERVER_PASSWORD: "shared-password"
+  MUMBLE_CONFIG_SENDVERSION: false
+  # Values containing special characters must be quoted:
+  MUMBLE_CONFIG_USERNAME: '"^[-_a-z0-9]{3,15}$"'
+`} title="docker-compose.yml fragment" />
+
+Or directly with docker:
+
+```bash
+docker run -e "MUMBLE_CONFIG_USERS=200" \
+           -e "MUMBLE_CONFIG_SERVER_PASSWORD=secret" \
+           ...
+```
+
+A full alphabetical list of every supported key is on the
+[Server config keys](/reference/config-keys/) page.
+
+## 2. Mounted INI file
+
+Mount your own `mumble-server.ini` when you prefer version-tracked
+configuration files over environment variables:
+
+<Code lang="yaml" code={`environment:
+  MUMBLE_CUSTOM_CONFIG_FILE: /data/mumble-server.ini
+volumes:
+  - ./mumble-server.ini:/data/mumble-server.ini:ro
+  - mumble-data:/data
+`} title="docker-compose.yml fragment" />
+
+<Aside type="caution">
+When `MUMBLE_CUSTOM_CONFIG_FILE` is set, **all `MUMBLE_CONFIG_*`
+variables are ignored**. Pick one or the other, not both.
+</Aside>
+
+A documented template ships in the repo at `mumble-server.ini.example`.
+Copy it to `mumble-server.ini` and edit to taste.
+
+## 3. Docker secrets
+
+For production, store passwords and credentials as **secrets**
+instead of environment variables (which are visible in `docker
+inspect`):
+
+```bash
+echo -n "supersecret" | docker secret create MUMBLE_CONFIG_SERVER_PASSWORD -
+echo -n "adminpass"   | docker secret create MUMBLE_SUPERUSER_PASSWORD -
+```
+
+Then reference them in compose:
+
+<Code lang="yaml" code={`services:
+  mumble-server:
+    image: ghcr.io/fancy-mumble/mumble-server:latest
+    secrets:
+      - MUMBLE_CONFIG_SERVER_PASSWORD
+      - MUMBLE_SUPERUSER_PASSWORD
+
+secrets:
+  MUMBLE_CONFIG_SERVER_PASSWORD:
+    external: true
+  MUMBLE_SUPERUSER_PASSWORD:
+    external: true
+`} title="docker-compose.yml fragment" />
+
+The entrypoint reads `/run/secrets/MUMBLE_CONFIG_*` files at boot.
+
+## Common configurations
+
+<Tabs>
+  <TabItem label="Public server">
+    ```yaml
+    environment:
+      MUMBLE_CONFIG_USERS: 100
+      MUMBLE_CONFIG_WELCOMETEXT: "Public Fancy Mumble server. Be nice."
+      MUMBLE_CONFIG_REGISTERNAME: "My Public Server"
+      MUMBLE_CONFIG_REGISTERURL: "https://my-server.example.com"
+      MUMBLE_CONFIG_REGISTERHOSTNAME: "my-server.example.com"
+      MUMBLE_CONFIG_BANDWIDTH: 558000
+      # Persistent chat
+      MUMBLE_CONFIG_PCHATENABLED: true
+      MUMBLE_CONFIG_PCHATDEFAULTMAXHISTORY: 5000
+      MUMBLE_CONFIG_PCHATDEFAULTRETENTIONDAYS: 90
+      # File server (emotes, avatars, attachments)
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_ENABLED: true
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_STORAGEPATH: /data/file-server-storage
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_BINDADDRESS: "0.0.0.0"
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_PORT: 64739
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_TLSTERMINATEDBYPROXY: true
+      # Screen-share relay - set the public IP of your server
+      MUMBLE_CONFIG_WEBRTCSFUENABLED: true
+      MUMBLE_CONFIG_WEBRTCSFUPORT: 10000
+      MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "1.2.3.4"
+    ```
+  </TabItem>
+  <TabItem label="Private friends-only">
+    ```yaml
+    environment:
+      MUMBLE_CONFIG_USERS: 20
+      MUMBLE_CONFIG_SERVER_PASSWORD: "share-with-friends"
+      MUMBLE_CONFIG_CERTREQUIRED: false
+      MUMBLE_CONFIG_ALLOWPING: false
+      # Persistent chat
+      MUMBLE_CONFIG_PCHATENABLED: true
+      MUMBLE_CONFIG_PCHATREQUIREREGISTRATION: false
+      MUMBLE_CONFIG_PCHATDEFAULTMAXHISTORY: 2000
+      MUMBLE_CONFIG_PCHATDEFAULTRETENTIONDAYS: 365
+      # File server (emotes, avatars, attachments)
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_ENABLED: true
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_STORAGEPATH: /data/file-server-storage
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_BINDADDRESS: "0.0.0.0"
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_PORT: 64739
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_TLSTERMINATEDBYPROXY: true
+      # Screen-share relay - set the public IP of your server
+      MUMBLE_CONFIG_WEBRTCSFUENABLED: true
+      MUMBLE_CONFIG_WEBRTCSFUPORT: 10000
+      MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "1.2.3.4"
+    ```
+  </TabItem>
+  <TabItem label="High-security">
+    ```yaml
+    environment:
+      MUMBLE_CONFIG_USERS: 50
+      MUMBLE_CONFIG_CERTREQUIRED: true
+      MUMBLE_CONFIG_AUTOBANATTEMPTS: 5
+      MUMBLE_CONFIG_AUTOBANTIMEFRAME: 60
+      MUMBLE_CONFIG_AUTOBANTIME: 3600
+      MUMBLE_CONFIG_SENDVERSION: false
+      MUMBLE_CONFIG_OBFUSCATE: true
+      # Persistent chat - require registration to use it
+      MUMBLE_CONFIG_PCHATENABLED: true
+      MUMBLE_CONFIG_PCHATREQUIREREGISTRATION: true
+      # File server - disabled; no binary uploads on a hardened server
+      MUMBLE_CONFIG_PLUGIN_FILE_SERVER_ENABLED: false
+      # Screen-share relay - disabled; direct P2P only
+      MUMBLE_CONFIG_WEBRTCSFUENABLED: false
+      # Push notifications - disabled
+      MUMBLE_CONFIG_PUSHENABLED: false
+    ```
+  </TabItem>
+</Tabs>
+
+## Pitfalls
+
+- **Unknown setting**: by default the server refuses to start if a
+  `MUMBLE_CONFIG_*` variable does not match a known option. Set
+  `MUMBLE_ACCEPT_UNKNOWN_SETTINGS=true` to pass-through unknown
+  values (useful for testing new options).
+- **String values with special characters**: must be quoted in YAML.
+  See the regex example above.
+- **Booleans**: lowercase `true`/`false`. Not `True`, not `yes`.
+- **Numeric values**: bare numbers in YAML, quoted in `.env`.
+- **`plugin.*` env var names**: dots and hyphens are stripped when
+  matching, so `plugin.file-server.storagePath` maps to
+  `MUMBLE_CONFIG_PLUGIN_FILE_SERVER_STORAGEPATH`. See the
+  [config keys reference](/reference/config-keys/) for the full table.
+
+## Other environment variables
+
+These are not server settings, they are container-level:
+
+| Variable | Description |
+|----------|-------------|
+| `MUMBLE_SUPERUSER_PASSWORD` | SuperUser password. A random one is logged on the first start if unset. |
+| `MUMBLE_CUSTOM_CONFIG_FILE` | Path to your own INI. Disables `MUMBLE_CONFIG_*`. |
+| `MUMBLE_CHOWN_DATA` | Set to `false` to skip taking ownership of `/data` on boot. |
+| `MUMBLE_ACCEPT_UNKNOWN_SETTINGS` | Pass through unknown options without failing. |
+| `MUMBLE_VERBOSE` | Verbose server logging. |
+| `PUID` / `PGID` | The UID and GID the server process runs as. |
+
+## Hot reload?
+
+Most settings only take effect on **server restart**. A few (welcome
+text, server password) reload when you save the config from the
+admin UI. To restart the container:
+
+```bash
+docker compose restart mumble-server
+```
+
+## Next steps
+
+<CardGrid>
+  <Card title="Open the right ports" icon="puzzle">
+    See [Ports & networking](/server/network/) for what is exposed
+    and why.
+  </Card>
+  <Card title="Disable features you do not need" icon="setting">
+    See [Customize & disable features](/server/customize/) to slim
+    the server down.
+  </Card>
+  <Card title="Full key reference" icon="document">
+    Browse every supported `MUMBLE_CONFIG_*` key on the
+    [Server config keys](/reference/config-keys/) page.
+  </Card>
+</CardGrid>

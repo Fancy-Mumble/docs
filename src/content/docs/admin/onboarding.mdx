@@ -1,0 +1,138 @@
+---
+title: Onboarding workflow
+description: Ask new members a few questions on join, then drop them into the right channels with the right roles.
+sidebar:
+  order: 9
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+The onboarding workflow lets you set up a **short join-time
+questionnaire**. Each answer maps to a set of channels and roles, so
+new members end up in the right place without manual triage from
+moderators.
+
+If you have used Discord's "Community" onboarding, this is the same
+idea.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: onboarding modal as seen by a new user, with three questions.
+</div>
+
+## What you can configure
+
+- **Default channels**: which channels everyone gets added to,
+  before the questions are asked.
+- **Up to five questions**, each with:
+  - A text label.
+  - Single-select or multi-select.
+  - Required or optional.
+  - Two to ten answers, each mapped to a set of channels and a set
+    of role names.
+- A toggle: **Ask before join** (show the modal as soon as the user
+  connects) or **Ask after join** (show on first idle moment).
+
+## Set up onboarding
+
+<Steps>
+
+1. Open **Admin, Onboarding**.
+
+2. **Default channels**: pick the channels every new member should
+   land in. Press the channel-picker, tick checkboxes, save.
+
+3. **Add a question**. Pick:
+   - Whether **multi-select** is allowed.
+   - Whether the question is **required**.
+   - Whether it should be **asked before joining the server**.
+
+4. **Add answers**. For each one, type a label, then map it to:
+   - **Channel IDs**: comma- or newline-separated list of channel
+     IDs the user gets added to if they pick this answer.
+   - **Group names**: comma- or newline-separated list of role
+     names the user gets added to.
+
+5. Repeat for up to five questions.
+
+6. Toggle **Enabled** at the top.
+
+7. Save.
+
+</Steps>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: onboarding admin panel with two questions and four answers each.
+</div>
+
+## Example: gaming community
+
+Question 1 (multi-select): *What do you play?*
+
+- *Valorant* maps to channels `valorant-text`, `valorant-voice`,
+  role `valorant-players`.
+- *CS2* maps to channels `cs2-text`, `cs2-voice`, role
+  `cs2-players`.
+- *Just hanging out* maps to channel `lounge`, role
+  `casuals`.
+
+Question 2 (single-select, required): *Time zone?*
+
+- *Europe*, *Americas*, *Asia* each map to a regional role for
+  scheduling pings.
+
+A new member who picks Valorant + CS2 + Europe ends up in five
+channels and gets three roles. Moderators do nothing.
+
+## Show before or after join
+
+- **Ask before join**: the modal opens before the user can see the
+  channel tree. Forces them to answer.
+- **Ask after join** (default): the user is in the default channels
+  immediately, the modal appears once. They can dismiss and finish
+  later.
+
+Pick **before join** when answers gate access to your community.
+
+## Skipping and re-running
+
+A user can **come back** to the questionnaire later from **Settings,
+Server, Re-run onboarding**. Their previous answers pre-fill.
+
+A user who **dismisses** the modal does not get auto-popped again,
+but next time the admin saves a new revision (changes a question),
+everyone is re-prompted.
+
+## Version control
+
+Each save bumps a **revision number**. Clients only show the modal
+once per revision. Bump the revision to re-prompt everyone, for
+example after adding a new channel.
+
+## Visibility
+
+Onboarding only works on Fancy Mumble servers and clients. Users on
+vanilla clients are not prompted, and skip straight to the default
+channels.
+
+## Pitfalls
+
+- **New users land nowhere**: you did not set any default channels.
+  Add at least one.
+- **Wrong roles**: the role name in an answer must match an existing
+  role exactly. Typos result in silently dropped role assignments.
+- **Modal does not appear**: the user is on a vanilla client, or the
+  server is on an older version. Onboarding requires Fancy server
+  0.3.1 or newer.
+
+## Permissions
+
+A user with the **Manage onboarding** permission can edit the
+workflow. By default only `Administrator` has it.
+
+## Next step
+
+You have completed the admin section. From here:
+
+- **Troubleshoot a problem**, see [Common issues](/troubleshooting/common-issues/).
+- **Reference**, browse the [Permission flags](/reference/permissions/)
+  and [Server config keys](/reference/config-keys/) pages.

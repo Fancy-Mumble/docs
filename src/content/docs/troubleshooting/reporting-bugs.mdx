@@ -1,0 +1,138 @@
+---
+title: Reporting bugs
+description: A checklist for filing a bug report that gets fixed.
+sidebar:
+  order: 6
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+A good bug report saves everyone time. Use this checklist before
+hitting **Submit**.
+
+## Which repo?
+
+| You are reporting | Where to file |
+|-------------------|---------------|
+| The app crashes, misrenders, or behaves wrong | [FancyMumbleNext, app](https://github.com/Fancy-Mumble/FancyMumbleNext/issues) |
+| The server crashes, accepts a bad config, fails to start | [Fancy-Mumble/mumble-server](https://github.com/Fancy-Mumble/mumble-server/issues) |
+| The Docker image misbehaves, build issues, entrypoint issues | [Fancy-Mumble/mumble-docker](https://github.com/Fancy-Mumble/mumble-docker/issues) |
+| The docs (this site) | [Fancy-Mumble/docs](https://github.com/Fancy-Mumble/docs/issues) |
+
+When in doubt, file on the app repo. A maintainer will move it.
+
+## The good report
+
+<Card title="Template" icon="document">
+
+```markdown
+**Summary**: one-line description.
+
+**Steps to reproduce**:
+1. Open the app.
+2. ...
+3. ...
+
+**Expected**: what should have happened.
+**Observed**: what actually happened.
+
+**Versions**:
+- App: x.y.z (from Help, About).
+- Server: x.y.z (from server log on startup).
+- OS: Windows 11 / Ubuntu 24.04 / Android 15.
+
+**Network**: home Wi-Fi / corporate / mobile.
+
+**Logs**: attached (redacted), generated with log level = debug.
+
+**Screenshots**: attached if visual.
+```
+
+</Card>
+
+## What makes a report easy to fix
+
+<CardGrid>
+  <Card title="Minimum reproduction" icon="document">
+    Strip down to the smallest steps that show the problem. "Connect,
+    join channel, click X" beats "I have used the app for three
+    weeks and yesterday Y stopped working".
+  </Card>
+  <Card title="One bug per issue" icon="document">
+    Two unrelated bugs need two issues. They get fixed independently
+    and shipped in different releases.
+  </Card>
+  <Card title="Versions" icon="document">
+    "Latest" is not a version. Help, About, copy the exact string.
+    Maintainers reproduce against a specific build.
+  </Card>
+  <Card title="Logs" icon="document">
+    Always attach debug logs. See
+    [Debug logging](/troubleshooting/debug-logging/).
+  </Card>
+</CardGrid>
+
+## What makes a report hard to fix
+
+- "It does not work" with no further detail.
+- A 1000-line screenshot of the bug screen with no log.
+- Multiple unrelated issues in one report.
+- A wall of text describing how you feel about the bug. Save that for
+  the comment thread.
+
+## Security issues
+
+**Do not** file security issues as public GitHub issues.
+
+Instead, email the maintainers privately or use the GitHub "Security
+advisories" feature on the repo. Both are linked from the repo's
+**Security** tab.
+
+## Feature requests
+
+Open as a regular issue, but use the **enhancement** label. Include:
+
+- The problem you are trying to solve.
+- The expected behavior.
+- Optional: a sketch of how it could work.
+
+Maintainers prefer "problem-shaped" requests (here is a pain) over
+"solution-shaped" ones (please add this exact button).
+
+## Voting and following
+
+You can:
+
+- **Subscribe** to an issue to get notified about updates.
+- Add a **thumbs-up** reaction to "vote" for an issue. Comments like
+  "+1" are discouraged, use the reaction.
+
+## Pull requests
+
+If you can fix it yourself, even better:
+
+<Steps>
+1. Fork the repo.
+2. Create a branch.
+3. Open a draft PR early to discuss approach.
+4. Link the issue with `Fixes #123`.
+5. Add a test if you can.
+</Steps>
+
+Read the `CONTRIBUTING.md` in the repo first for code style rules.
+
+## Triage timeline
+
+Maintainers triage new issues within a few days. If your issue gets
+no reply after a week:
+
+- Add more context (logs, repro, video).
+- Tag the issue in the project's discussion channel.
+
+Persistence with patience is the right balance.
+
+## Thank you
+
+Bug reports are the only way the maintainers know something is
+broken. Every well-shaped issue makes the project better. Thanks
+for taking the time.

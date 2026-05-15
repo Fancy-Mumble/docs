@@ -1,0 +1,189 @@
+---
+title: Setup wizard
+description: Walk through every server setting with an interactive wizard, in your terminal or a graphical window.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, Tabs, TabItem, Code, Card, CardGrid } from '@astrojs/starlight/components';
+
+If you prefer "click Next a few times" over "edit YAML", the **setup
+wizard** walks you through every value in your `.env` file. It comes
+in two flavours:
+
+- **Terminal**: pure Python standard library, no extra installs.
+- **Graphical**: a multi-step window with form validation.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: setup wizard GUI on the third step.
+</div>
+
+## Prerequisites
+
+- Python 3.8 or newer on the machine running the wizard.
+- The Fancy Mumble Docker repository checked out locally:
+
+  ```bash
+  git clone https://github.com/Fancy-Mumble/mumble-docker
+  cd mumble-docker
+  ```
+
+## Run the wizard
+
+<Tabs>
+  <TabItem label="Terminal (any OS)">
+    ```bash
+    python -m setup_wizard
+    ```
+  </TabItem>
+  <TabItem label="Graphical (Linux/macOS/Windows)">
+    Install the GUI dependency once:
+
+    ```bash
+    python -m pip install -r setup_wizard/requirements.txt
+    ```
+
+    Then launch:
+
+    ```bash
+    python -m setup_wizard --gui
+    ```
+  </TabItem>
+</Tabs>
+
+You can also invoke through the tools entry point:
+
+```bash
+python -m tools setup           # terminal
+python -m tools setup --gui     # graphical
+```
+
+## What the wizard asks
+
+The wizard is a multi-step form. Each step is validated before you
+can move on.
+
+<Steps>
+
+1. **Source tree**. Point the wizard at your local server source
+   checkout, or click **Clone** to let the wizard download it for you.
+
+2. **Image and container names**. Pick the Docker image tag and the
+   container name. Defaults are fine for most.
+
+3. **Ports**. Confirm the ports for voice (64738), the file server
+   (64739), and the screen-share relay (10000). Change them if you
+   need to run two servers on the same machine.
+
+4. **Runtime user**. The UID and GID the server runs as inside the
+   container. Default is 10000:10000. Change to match the owner of
+   your data volume if you bind-mount a host folder.
+
+5. **SuperUser password**. Either type one, click **Generate** for a
+   strong random one, or leave blank. If you leave it blank, the
+   server will print a random password to the log on the first start.
+
+6. **Optional file mounts**. Bind-mount a custom config file, a
+   Firebase credentials JSON, or extra plugin libraries.
+
+7. **Firebase push credentials**. If you want push notifications,
+   point the wizard at your service-account JSON. It will base64
+   encode the file into the `.env` so credentials never live on a
+   bind-mounted host path.
+
+</Steps>
+
+When you click **Save .env** on the last step, the wizard writes
+`.env` next to your `docker-compose.yml`. You can review the file by
+hand if you want.
+
+## Re-running the wizard
+
+You can re-run the wizard later to change one value without redoing
+all the others. The wizard reads the existing `.env` and pre-fills
+every prompt with the current value.
+
+```bash
+python -m setup_wizard
+```
+
+<Aside type="tip">
+The wizard is non-destructive. It will not overwrite a config you set
+by hand outside the wizard, as long as you keep the file format
+intact.
+</Aside>
+
+## Starting the server
+
+With the `.env` written, start the container:
+
+```bash
+docker compose up -d
+```
+
+Or, if you want to rebuild the image locally first (for example
+because you changed the source tree):
+
+```bash
+python -m tools dev-build
+```
+
+## Setting the SuperUser password later
+
+If you left the password blank, find the auto-generated one with:
+
+```bash
+docker logs mumble-server 2>&1 | grep -i superuser
+```
+
+Or set a new one at any time:
+
+```bash
+docker exec mumble-server mumble-server \
+  --ini /data/mumble_server_config.ini \
+  --set-su-pw "your-strong-password"
+```
+
+## What is in the .env
+
+A typical `.env` looks like this:
+
+```ini
+# Image
+MUMBLE_IMAGE=ghcr.io/fancy-mumble/mumble-server:latest
+CONTAINER_NAME=mumble-server
+
+# Ports
+MUMBLE_PORT=64738
+MUMBLE_FILE_PORT=64739
+MUMBLE_SFU_PORT=10000
+
+# Runtime
+PUID=10000
+PGID=10000
+
+# Server identity
+MUMBLE_SUPERUSER_PASSWORD=...
+
+# Push (optional, set to enable)
+MUMBLE_FCM_CREDENTIALS_BASE64=...
+```
+
+Every other server option can be added as a `MUMBLE_CONFIG_*` entry,
+see the [Configuration reference](/server/config/).
+
+## Next steps
+
+<CardGrid>
+  <Card title="Tune your config" icon="setting">
+    Browse the [Configuration reference](/server/config/) to set
+    welcome message, user limits, retention, and more.
+  </Card>
+  <Card title="Enable features" icon="seti:default">
+    Walk through the **Feature deep-dives** to turn on push, the
+    screen-share relay, and link previews.
+  </Card>
+  <Card title="Set up the admin" icon="seti:lock">
+    Take ownership with [SuperUser & first login](/admin/superuser/).
+  </Card>
+</CardGrid>

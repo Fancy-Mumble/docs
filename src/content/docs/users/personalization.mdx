@@ -1,0 +1,103 @@
+---
+title: Personalization & themes
+description: Themes, fonts, chat background, channel viewer style, bubble style, font size.
+sidebar:
+  order: 7
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Open **Settings, Personalize** to change how the app looks. None of
+these settings touch what other people see, they are purely your own.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: personalization panel with the live preview.
+</div>
+
+## Theme
+
+Fancy Mumble ships with eleven themes. Click a swatch card to apply
+it instantly.
+
+- **Dark** (default)
+- **Light**
+- **Apprentice**
+- **Mobel**
+- **Rose**
+- **Inversa**
+- **Hearth**
+- **Macchiato**
+- **Midnight Pretenders**
+- **Ply**
+- **Guardbase**
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: theme swatch grid with the live preview applied to a chat panel.
+</div>
+
+## Channel viewer style
+
+The left sidebar comes in three looks:
+
+<Tabs>
+  <TabItem label="Classic" icon="seti:default">
+    Closest to traditional Mumble. Compact tree with bracket-style
+    branches. Best for big servers with deep channel trees.
+  </TabItem>
+  <TabItem label="Flat (default)" icon="seti:default">
+    Compact one-line-per-channel view. Looks like a chat-app sidebar.
+  </TabItem>
+  <TabItem label="Modern" icon="seti:default">
+    Large channel cards.
+  </TabItem>
+</Tabs>
+
+## Bubble style (chat messages)
+
+Three looks for individual chat messages:
+
+- **Bubbles** (default): rounded chat bubbles, like a messenger app.
+- **Flat**: clean rows, like a classic forum.
+- **Compact**: dense, several lines fit per visible row.
+
+## Chat background
+
+Drop an image or pick a color to set the background of the chat
+column.
+
+- **Fit**: pick **Cover** (fills, may crop) or **Tile** (repeats).
+- **Dim**: darken the image so text stays readable. 0 to 100%.
+- **Blur**: blur the image. The blur is calculated in the backend,
+  so very large values may take a moment to re-process.
+
+<Aside type="tip">
+The original image is stored locally and re-processed when you
+change blur or dim, so you can iterate without re-uploading.
+</Aside>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: chat with a blurred background.
+</div>
+
+## Font
+
+Pick from a curated list of fonts. The default is your system font.
+
+## Font size
+
+Three sizes: small, **medium** (default), large.
+
+## Compact mode
+
+A toggle that hides avatars and tightens the chat spacing for a
+denser layout.
+
+## Resetting
+
+The **Danger Zone** at the bottom of **Settings, Advanced** has a
+**Reset** button that restores everything to defaults.
+
+## Next step
+
+Continue with [Keyboard shortcuts](/users/shortcuts/).

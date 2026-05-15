@@ -1,0 +1,134 @@
+---
+title: Channels
+description: Create channels, organize them into a tree, set descriptions, and tune per-channel features.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Channels are the rooms in your server. Users sit in one channel at a
+time for voice; chat is per channel.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: channel tree on the left with a "Voice" parent and three child channels.
+</div>
+
+## Create a channel
+
+<Steps>
+1. Right-click an existing channel (or the root) and pick **Add
+   channel**.
+2. Fill in:
+   - **Name**: shown in the sidebar.
+   - **Description**: a small text shown when users hover the
+     channel.
+   - **Position**: integer that controls sort order. Lower is higher
+     up.
+   - **Temporary**: if checked, the channel disappears when the last
+     user leaves. Great for ad-hoc breakout rooms.
+   - **Max users**: 0 for unlimited.
+3. Save.
+</Steps>
+
+## Channel tree
+
+Channels can nest as deep as you like. Drag a channel onto another
+to make it a child.
+
+## Edit an existing channel
+
+Right-click, **Edit channel**. The dialog has several tabs:
+
+| Tab | What is in there |
+|-----|------------------|
+| **General** | Name, description, position, max users, temporary. |
+| **ACL** | Access rules. See [Channel ACL](/admin/acl/). |
+| **Groups** | Per-channel groups. See [Groups](/admin/groups/). |
+| **Persistent chat** | Retention days, message cap, delete ACL. |
+| **Notifications** | Default notification settings for the channel. |
+| **Audio** | Bandwidth caps, codec overrides. |
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: channel-edit dialog with the ACL tab open.
+</div>
+
+## Linking channels
+
+You can **link** two channels so that voice flows between them. Users
+in either channel hear each other.
+
+<Steps>
+1. Right-click channel A, **Link**.
+2. Click channel B.
+3. Both channels show a small link indicator.
+4. To unlink, right-click and pick **Unlink**.
+</Steps>
+
+Linking is symmetric and persists across restarts.
+
+## Temporary channels
+
+Create with the **Temporary** checkbox. Useful for ad-hoc rooms:
+
+- Disappears when the last user leaves.
+- Cannot have persistent chat (no point).
+- Cannot be linked.
+
+A common pattern is to grant **Create channel** in the lobby to
+everyone, with the rule that those channels must be temporary. This
+gives users freedom to spin up rooms without the channel tree
+ballooning.
+
+## Speaking and listening limits
+
+Two distinct permissions for voice:
+
+- **Speak**: send audio in this channel.
+- **Listen**: receive audio in this channel without entering it. New
+  in the Fancy fork.
+
+The Listen permission lets a user *whisper-listen* to a channel from
+elsewhere. Useful for moderators who want to keep tabs.
+
+## Default channel
+
+The **default channel** is where new users land. Pick it from
+**Admin, Server settings, Default channel**. Pick a low-permission
+channel so new users do not stumble into a private room.
+
+## Channel password
+
+You can lock a channel with a password:
+
+<Steps>
+1. Edit the channel.
+2. ACL tab.
+3. Add a deny rule on `Enter` for `@everyone`.
+4. Add an allow rule on `Enter` for a group called `pwd_room_name`.
+5. Set a channel password under General.
+</Steps>
+
+Users entering the password are added to the password group for
+that channel for the duration of their session.
+
+## Bulk actions
+
+To move all users out of a channel:
+
+- Right-click, **Move all users to...**, pick destination.
+
+To clear chat history (persistent chat must be on):
+
+- Right-click, **Persistent chat, Purge**.
+
+## Channel viewer styles
+
+Users can pick how their channel sidebar looks under
+[Personalization](/users/personalization/). The choice is per-user,
+the channel data is the same.
+
+## Next step
+
+Continue with [Registered users](/admin/users/) to manage the people
+in your server.

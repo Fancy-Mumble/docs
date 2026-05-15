@@ -1,0 +1,304 @@
+---
+title: Screen sharing relay
+description: One upload, many downloads. Make screen sharing smooth for everyone in the channel.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/components';
+import PlantUML from '../../../../components/PlantUML.astro';
+
+The screen-share relay (technically a Selective Forwarding Unit, or
+SFU) is a small service inside the server that takes **one screen-
+share upload** from a broadcaster and **fans it out** to every viewer
+without the broadcaster doing extra work.
+
+Without the relay, screen sharing still works on a local network, but
+falls back to peer-to-peer, which is unreliable behind strict NAT or
+across the internet.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: diagram of broadcaster uploading once, server fanning out to N viewers.
+</div>
+
+## When you want it
+
+- You have **more than two or three viewers** for a typical share.
+- Your users are spread across the internet.
+- Some users sit behind corporate NAT or carrier-grade NAT.
+
+If you only ever do 1-on-1 calls on the same network, you may not
+need it.
+
+<Aside type="tip" title="Where do these settings go?">
+The `ports:` and `environment:` lines below belong in your
+`docker-compose.yml` (the same file you started the server with).
+See [Configuration reference](/server/config/) for the file layout.
+</Aside>
+
+## Turn it on
+
+```yaml
+ports:
+  - "10000:10000/udp"
+environment:
+  MUMBLE_CONFIG_WEBRTCSFUENABLED: true
+  MUMBLE_CONFIG_WEBRTCSFUPORT: 10000
+  MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "203.0.113.5"
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `webrtcsfuenabled` | `false` | Master toggle. |
+| `webrtcsfuport` | `10000` | UDP port the relay listens on. |
+| `webrtcsfupublicip` | `127.0.0.1` | Address that **viewers** use to reach the relay. **Must be reachable**. |
+| `webrtcsfumodulepath` | (built-in) | Override if you want a custom relay binary. |
+
+<Aside type="caution" title="The public IP matters">
+Set `webrtcsfupublicip` to an address that your users can actually
+reach.
+
+- Public server: your server's public IP.
+- Home server with port forwarding: your public IP (not your LAN IP).
+- Test server on the same machine as the client: `127.0.0.1`.
+- Behind a load balancer: the load balancer's public IP.
+
+Do **not** set it to `0.0.0.0`, that is not a valid candidate.
+</Aside>
+
+## Networking checklist
+
+<Steps>
+1. UDP port **10000** is open in the firewall (or whatever you set
+   `webrtcsfuport` to).
+2. UDP port **10000** is forwarded from your router to the server
+   (home setups).
+3. The public IP your server **advertises** matches the one the
+   internet can reach. Check with
+   `curl -s https://ifconfig.me` from the server.
+</Steps>
+
+## Verify it is working
+
+After a restart, the logs should include:
+
+```text
+webrtc-sfu: listening on 0.0.0.0:10000/udp (public 203.0.113.5)
+```
+
+Then ask two clients to test:
+
+<Steps>
+1. Client A starts a screen share.
+2. Client B should see a thumbnail in the **stream grid**.
+3. If B sees a black thumbnail, the data path is broken. Check the
+   public IP and the firewall first.
+</Steps>
+
+<Aside type="note" title="Client indicator">
+The client shows which mode is active through two visual cues:
+
+**Screen-share button tooltip** (hover before starting a share):
+- **"Share screen (server-relayed)"** - the SFU is reachable and will be used.
+- **"Share screen (no SFU – peer-to-peer)"** - no SFU is configured or reachable; the share still works on a local network but will upload once per viewer.
+
+**Live indicators while a share is active** - colour tells you the transport at a glance:
+- **Red** LIVE badge (sidebar) and red broadcast banner = server-relayed via the SFU.
+- **Amber** LIVE badge and amber broadcast banner with a **P2P** pill = peer-to-peer, no SFU involved.
+
+If your server has the SFU enabled but users see amber indicators, double-check
+`webrtcsfupublicip` and the firewall.
+</Aside>
+
+## How the pieces talk to each other
+
+<PlantUML alt="Broadcaster uploads once to the WebRTC SFU inside the server; the SFU fans the stream out independently to each viewer." code={`
+@startuml
+left to right direction
+
+component "Broadcaster\\nstreams desktop\\nto channel viewers" as Bc
+
+package "Fancy Mumble Server" as SrvBox {
+  component "WebRTC SFU\\nport 10000 UDP\\nreceives one upload\\nfans out to all viewers" as SFU
+}
+
+component "Viewer A\\nindependent stream" as VA
+component "Viewer B\\nindependent stream" as VB
+component "Viewer C\\nindependent stream" as VC
+
+Bc --> SrvBox : TCP 64738  ·  control / signaling
+Bc --> SFU : UDP 10000  ·  one upload
+SFU --> VA : UDP
+SFU --> VB : UDP
+SFU --> VC : UDP
+
+note bottom
+  Broadcaster upload is constant regardless of viewer count.
+  The SFU handles every viewer independently.
+end note
+@enduml
+`} />
+
+- The broadcaster's app uploads one stream to the relay over **UDP**.
+- The relay fans the stream out to every viewer independently.
+- All the **signaling** (ICE negotiation, offer/answer) travels over the
+  existing **TCP** voice/control port. The relay only carries media.
+- The broadcaster's upload bandwidth stays **constant** regardless of
+  viewer count - that is the whole point.
+
+### Optional: behind a reverse proxy (nginx / Traefik / Caddy)
+
+A reverse proxy in front of the server is a common setup for TLS
+termination or port consolidation. Two ports are involved and they
+behave differently:
+
+| Port | Protocol | Proxy support |
+|------|----------|---------------|
+| 64738 (voice/control) | TCP | Standard TCP/HTTP proxy |
+| 10000 (SFU media) | **UDP** | Needs explicit UDP forwarding |
+
+The TCP side (signaling) passes through any standard TCP proxy with no
+special config. The UDP side requires the proxy to support raw UDP
+forwarding - not every proxy does by default.
+
+<Aside type="caution" title="UDP is not HTTP">
+WebRTC media uses raw UDP datagrams, not HTTP. An HTTP reverse proxy
+(nginx in `http {}` mode, Traefik HTTP routers, Caddy `reverse_proxy`)
+will not forward it. You need the stream/UDP layer of the proxy.
+</Aside>
+
+<Tabs>
+  <TabItem label="nginx">
+    nginx's `stream {}` block handles raw TCP and UDP. Add it alongside
+    your `http {}` block in `nginx.conf`:
+
+    ```nginx
+    stream {
+      server {
+        listen 10000 udp;
+        # Replace with the address of the host running mumble-server.
+        proxy_pass 127.0.0.1:10000;
+        proxy_timeout 10s;
+        proxy_responses 1;
+      }
+    }
+    ```
+
+    Tell the SFU to advertise the **proxy's** public IP, not the
+    server's internal address:
+
+    ```yaml
+    environment:
+      MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "203.0.113.5"  # proxy public IP
+    ```
+
+    The `http {}` side (TLS termination, WebSocket for the control port)
+    uses a standard `proxy_pass` directive and is not shown here.
+  </TabItem>
+
+  <TabItem label="Traefik">
+    Traefik supports UDP entry points natively. Add a UDP entry point in
+    `traefik.yml`:
+
+    ```yaml
+    entryPoints:
+      sfu-udp:
+        address: ":10000/udp"
+    ```
+
+    Then label the `mumble-server` container so Traefik routes it:
+
+    ```yaml
+    labels:
+      - "traefik.udp.routers.sfu.entrypoints=sfu-udp"
+      - "traefik.udp.services.sfu.loadbalancer.server.port=10000"
+    ```
+
+    Set the advertised IP to the Traefik host's public address:
+
+    ```yaml
+    environment:
+      MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "203.0.113.5"
+    ```
+  </TabItem>
+
+  <TabItem label="Caddy">
+    The standard Caddy binary does not support raw UDP proxying. The
+    community `layer4` plugin adds it:
+
+    ```caddyfile
+    {
+      layer4 {
+        :10000 {
+          @sfu udp
+          route @sfu {
+            proxy 127.0.0.1:10000
+          }
+        }
+      }
+    }
+    ```
+
+    You need a custom Caddy build that includes the `layer4` module.
+    For most setups nginx or Traefik are simpler choices for UDP.
+  </TabItem>
+</Tabs>
+
+<Aside type="note" title="You may not need a UDP proxy at all">
+If the proxy and the server share the same public IP (e.g. both run on
+the same host), skip the UDP proxy entirely. Map the SFU port directly
+from the host and set `webrtcsfupublicip` to that host's public IP.
+The proxy handles TLS for the control port; UDP goes straight to the
+firewall rule.
+</Aside>
+
+## Without the relay
+
+If `webrtcsfuenabled=false` (or the library is missing), the app
+falls back to direct peer-to-peer for screen sharing:
+
+- Works fine on a local network.
+- Works for two clients with no NAT.
+- Often fails behind strict NAT.
+- Broadcaster's upload scales linearly with viewer count.
+
+## Capacity planning
+
+A modest virtual server can host a relay for a few dozen viewers. For
+heavier use:
+
+- Each 720p stream is about 1 to 2 Mbps. Multiply by viewer count.
+- A 1 vCPU virtual server can handle around 20 to 30 viewer streams.
+- For a busy server, run the relay on a separate node and point
+  `webrtcsfupublicip` at that node.
+
+## TURN servers (advanced)
+
+If your users sit behind extremely strict firewalls (some corporate
+networks, mobile carriers), even the relay may not be reachable on
+UDP 10000. The next step is a **TURN server** that relays media over
+443/TCP. Fancy Mumble does not yet ship a built-in TURN, but you can
+point clients at any standard TURN by setting their STUN/TURN config.
+
+## Disabling
+
+```yaml
+environment:
+  MUMBLE_CONFIG_WEBRTCSFUENABLED: false
+```
+
+Existing streams stop immediately on restart. Clients fall back to
+peer-to-peer.
+
+## Pitfalls
+
+- **Black thumbnails**: public IP is wrong or unreachable.
+- **Logs say "library not found"**: the SFU binary was not built into
+  your image. Either rebuild with the relay enabled (see
+  [Building from source](/server/build/)) or use the official image.
+- **One-way streams**: ICE could not pick a candidate. Check the
+  client's WebRTC stats from Expert mode.
+
+## Next step
+
+Continue with [File server](/server/features/file-server/).

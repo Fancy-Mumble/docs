@@ -1,0 +1,133 @@
+---
+title: Channel ACL
+description: Per-channel permission overrides. The fine-grained control beyond roles.
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+
+ACL stands for Access Control List. Each channel has its own list of
+rules that grant or deny specific permissions to specific users or
+groups. Channel ACLs **layer on top of** roles.
+
+ACLs are powerful, but easy to over-engineer. Most servers do fine
+with mostly-roles plus a handful of per-channel ACL tweaks.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: channel ACL tab with three rules and the inheritance indicator.
+</div>
+
+## Opening the ACL editor
+
+<Steps>
+1. Right-click a channel, **Edit**.
+2. Switch to the **ACL** tab.
+</Steps>
+
+You see a list of rules, each with:
+
+- **Subject**: a group (`@everyone`, `@Member`, `@auth`, custom) or a
+  specific user.
+- **Permission**: what is being controlled.
+- **Allow / Deny**.
+- **Apply to**: this channel only, or this channel and all
+  sub-channels.
+
+## How rules combine
+
+For a given user trying to do something in a channel:
+
+1. The server walks up the channel tree from this channel to the
+   root, collecting **inherited** rules along the way.
+2. Plus the rules on this channel.
+3. It applies them in **order**.
+4. **The last matching Allow or Deny wins**.
+
+In practice:
+
+- Put **specific** rules (a user, or a small group) **lower** in the
+  list so they override the broader ones.
+- Put **broad** rules (`@everyone`) **higher**.
+
+## Built-in groups
+
+| Group | Members |
+|-------|---------|
+| `@everyone` | All connected users, including anonymous. |
+| `@auth` | Anyone registered on the server. |
+| `@in` | Anyone in this channel. |
+| `@sub` | Anyone in this channel or any sub-channel. |
+| `@out` | Anyone not in this channel. |
+| `@all` | Same as `@everyone`. |
+
+You can also reference any **role** (see
+[Roles & permissions](/admin/roles/)) and any **custom group** (see
+[Groups](/admin/groups/)).
+
+## Common recipes
+
+<Tabs>
+  <TabItem label="Private moderator channel">
+    1. Deny `Enter` to `@everyone`.
+    2. Allow `Enter` to `@Moderator`.
+    3. Allow `Speak` and `Write` to `@Moderator`.
+    4. Apply to "this channel only".
+  </TabItem>
+  <TabItem label="Read-only announcements">
+    1. Allow `Enter` to `@everyone`.
+    2. Deny `Speak` and `Write` to `@everyone`.
+    3. Allow `Write` to `@Moderator` and `@Member` (only if they
+       should also post).
+    4. Apply to "this channel only".
+  </TabItem>
+  <TabItem label="Voice-only, no chat">
+    1. Allow `Enter` and `Speak` to `@everyone`.
+    2. Deny `Write` to `@everyone`.
+    3. Apply to "this channel only".
+  </TabItem>
+  <TabItem label="Inherits everything">
+    1. Leave the ACL empty.
+    2. The channel inherits all rules from its parent.
+  </TabItem>
+</Tabs>
+
+## Inheritance
+
+Rules with **Apply to: this channel and all sub-channels** propagate
+down the tree. A rule with **this channel only** does not.
+
+The ACL tab shows a small indicator next to each rule:
+
+- Solid border: this rule is set on this channel.
+- Dashed border: this rule is inherited from a parent.
+
+Click a dashed rule to either edit it on the parent or override it on
+this channel.
+
+## Audit and debug
+
+Right-click a user, **Test permissions**. A panel shows every
+permission that user has on the current channel, with the source
+rule for each. Use this to debug confusing setups.
+
+## Performance
+
+ACL evaluation is fast (milliseconds), even for deep trees. The
+practical limit is human readability, not server load. If your ACL
+tab is more than a screen of rules, simplify with roles.
+
+## Pitfalls
+
+- **A user has more permissions than expected**: a higher-up channel
+  has an `Allow ... to sub-channels` rule. Trace upward.
+- **A user has fewer permissions than expected**: a Deny rule
+  somewhere. Use **Test permissions** to find it.
+- **Cannot enter the channel I just created**: you forgot to add an
+  Allow rule for yourself. Either fix it with SuperUser or add an
+  `Allow Enter` for `@Moderator`.
+
+## Next step
+
+Continue with [Groups](/admin/groups/) for the per-channel-tree
+groupings that are not full roles.

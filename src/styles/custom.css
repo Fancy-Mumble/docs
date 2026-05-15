@@ -1,0 +1,338 @@
+/* Fancy Mumble brand tweaks for Starlight. */
+
+/*
+ * Accent palette - applies to both themes.
+ * Dark-mode values here; light-mode overrides below.
+ * Starlight's own CSS is inside @layer rules; our unlayered rules win
+ * over them, so we only override what we actually want to change.
+ */
+:root {
+  --sl-color-accent-low: #2a1a3e;
+  --sl-color-accent: #7e57c2;
+  --sl-color-accent-high: #d1c4e9;
+}
+
+/*
+ * Dark-mode gray scale & background.
+ * Scoped to [data-theme="dark"] so these values do NOT bleed into
+ * light mode (where Starlight needs to swap --sl-color-black → white).
+ */
+:root[data-theme="dark"] {
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #eaeaea;
+  --sl-color-gray-2: #c2c2c2;
+  --sl-color-gray-3: #8b8b8b;
+  --sl-color-gray-4: #585858;
+  --sl-color-gray-5: #383838;
+  --sl-color-gray-6: #272727;
+  --sl-color-black: #17151c;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #ede7f6;
+  --sl-color-accent: #5e35b1;
+  --sl-color-accent-high: #311b92;
+}
+
+/* A subtle gradient on the hero used by the landing page splash. */
+.hero-grad {
+  background: linear-gradient(
+    135deg,
+    rgba(126, 87, 194, 0.18),
+    rgba(38, 198, 218, 0.12) 50%,
+    rgba(255, 138, 101, 0.10)
+  );
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-block: 1.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Liquid-glass top bar.
+ *
+ * Starlight renders the top header as `<header class="header">` inside
+ * the `.page` grid. We give it a translucent background plus a backdrop
+ * blur so the page content shows through softly, matching the glass
+ * look the Fancy Mumble client uses.
+ *
+ * `--sl-color-bg-nav` is the design-token Starlight uses for the
+ * header's background, so we redefine it as semi-transparent rather
+ * than touching `.header` directly. The blur is applied to the header
+ * element itself.
+ * ------------------------------------------------------------------ */
+:root {
+  --sl-color-bg-nav: rgba(23, 21, 28, 0.55); /* dark theme default */
+}
+
+:root[data-theme="light"] {
+  --sl-color-bg-nav: rgba(255, 255, 255, 0.55);
+}
+
+header.header {
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  background-color: var(--sl-color-bg-nav);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="light"] header.header {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Strip the inner div's own background so it doesn't sit on top of
+ * the outer header's glass surface. */
+div.header {
+  background: none;
+}
+
+/* The mobile sidebar uses the same nav background token. Match the
+ * glass look there too so the look stays consistent when the burger
+ * menu is open on small screens. */
+@media (max-width: 50rem) {
+  starlight-menu-button + nav,
+  mobile-starlight-toc nav {
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+  }
+}
+
+/* Fallback for browsers without backdrop-filter: keep the bar legible
+ * by using a more opaque background. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root {
+    --sl-color-bg-nav: rgba(23, 21, 28, 0.92);
+  }
+  :root[data-theme="light"] {
+    --sl-color-bg-nav: rgba(255, 255, 255, 0.92);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Platform heading.
+ *
+ * Hidden via CSS - the SVG icon inside is moved into the tab list
+ * button by the inline script in astro.config.mjs so it appears in
+ * the clickable tab header rather than as a heading below the tabs.
+ * Keeping the element in the DOM (hidden) lets the script still read
+ * the SVG even when the tab panel is inactive.
+ * ------------------------------------------------------------------ */
+.platform-heading {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ *
+ * Tab button icon alignment.
+ *
+ * When the script injects an SVG icon into a `[role="tab"]` anchor,
+ * the button needs to be a flex container so the icon and label sit
+ * side by side. Starlight's default tab buttons are inline-flex in
+ * newer versions, but we ensure it here to be safe.
+ * ------------------------------------------------------------------ */
+.tablist-wrapper [role="tab"] {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* SVG injected into the tab button. fill:currentColor lets it inherit
+ * Starlight's selected / unselected text colour automatically. */
+.tablist-wrapper [role="tab"] > svg {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
+  fill: currentColor;
+  /* Prevent the SVG from picking up Starlight's default icon styles. */
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------ *
+ * PlantUML inline diagrams - layout.
+ *
+ * The PlantUML.astro component fetches an SVG from the public server
+ * at build time and inlines it here. We centre it, cap the width, and
+ * round the corners. The light purple background keeps the diagram
+ * legible in both dark and light themes.
+ * ------------------------------------------------------------------ */
+.plantuml {
+  margin-block: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.plantuml img,
+.plantuml svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.6rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+}
+
+.plantuml-fallback {
+  font-style: italic;
+  color: var(--sl-color-gray-3);
+}
+
+/* ------------------------------------------------------------------ *
+ * PlantUML diagram colors.
+ *
+ * Starlight always sets data-theme synchronously before paint, so we
+ * use only :root[data-theme] selectors - no @media fallbacks needed.
+ *
+ * :root[data-theme="dark"]  wins over the unstyled default on equal
+ * specificity because it appears last in this file.
+ *
+ * Attribute selectors target SVG presentation attributes baked by
+ * PlantUML.  They MUST use uppercase hex (PlantUML uppercases all
+ * color values in its SVG output; attribute selectors are case-sensitive).
+ * ------------------------------------------------------------------ */
+
+/* ── Light ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] .plantuml [fill="#EDE7F6"] { fill: #ede7f6; }
+:root[data-theme="light"] .plantuml [fill="#F5F3FF"] { fill: #f5f3ff; }
+:root[data-theme="light"] .plantuml [fill="#FFF8E1"] { fill: #fff8e1; }
+:root[data-theme="light"] .plantuml [fill="#F3E5F5"] { fill: #f3e5f5; }
+
+:root[data-theme="light"] .plantuml .entity text:first-of-type       { fill: #1e1b4b; }
+:root[data-theme="light"] .plantuml .entity text:not(:first-of-type) { fill: #4c1d95; }
+:root[data-theme="light"] .plantuml .cluster text                    { fill: #1e1b4b; }
+:root[data-theme="light"] .plantuml [fill="#311B92"]   { fill: #311b92; }
+:root[data-theme="light"] .plantuml [fill="#4A148C"]   { fill: #4a148c; }
+:root[data-theme="light"] .plantuml [fill="#5E35B1"]   { fill: #5e35b1; }
+:root[data-theme="light"] .plantuml [fill="#9E9E9E"]   { fill: #9e9e9e; }
+:root[data-theme="light"] .plantuml [stroke="#9E9E9E"] { stroke: #9e9e9e; }
+:root[data-theme="light"] .plantuml [fill="#FFFFFF"]   { fill: #ffffff; }
+:root[data-theme="light"] .plantuml [stroke="#FFFFFF"] { stroke: #ffffff; }
+:root[data-theme="light"] .plantuml .link text,
+:root[data-theme="light"] .plantuml .link tspan {
+  fill: #6d28d9;
+  stroke: #f8f7ff;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+/* ── Dark ────────────────────────────────────────────────────────── */
+/* Appears after the light block so it wins on equal specificity when
+ * data-theme="dark" is set, regardless of the OS color scheme. */
+
+:root[data-theme="dark"] .plantuml [fill="#EDE7F6"] { fill: #1e1b4b; }
+:root[data-theme="dark"] .plantuml [fill="#F5F3FF"] { fill: #1a1730; }
+:root[data-theme="dark"] .plantuml [fill="#FFF8E1"] { fill: #1a1730; }
+:root[data-theme="dark"] .plantuml [fill="#F3E5F5"] { fill: #1e1b4b; }
+
+:root[data-theme="dark"] .plantuml .entity text:first-of-type       { fill: #e2e8f0; }
+:root[data-theme="dark"] .plantuml .entity text:not(:first-of-type) { fill: #a5b4fc; }
+:root[data-theme="dark"] .plantuml .cluster text                    { fill: #e2e8f0; }
+:root[data-theme="dark"] .plantuml [fill="#311B92"]   { fill: #e2e8f0; }
+:root[data-theme="dark"] .plantuml [fill="#4A148C"]   { fill: #a5b4fc; }
+:root[data-theme="dark"] .plantuml [fill="#5E35B1"]   { fill: #9333ea; }
+:root[data-theme="dark"] .plantuml [fill="#9E9E9E"]   { fill: #6b7280; }
+:root[data-theme="dark"] .plantuml [stroke="#9E9E9E"] { stroke: #6b7280; }
+:root[data-theme="dark"] .plantuml [fill="#FFFFFF"]   { fill: #1e1b4b; }
+:root[data-theme="dark"] .plantuml [stroke="#FFFFFF"] { stroke: #4c1d95; }
+:root[data-theme="dark"] .plantuml .link text,
+:root[data-theme="dark"] .plantuml .link tspan {
+  fill: #c4b5fd;
+  stroke: #0d0b14;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+}
+
+/* ------------------------------------------------------------------ *
+ * Glossary table.
+ *
+ * Two-column layout: term on the left, definition on the right.
+ * Borders are invisible; the term column is kept narrow and
+ * top-aligned so the word never wraps under its own definition.
+ * ------------------------------------------------------------------ */
+.glossary {
+  width: 100%;
+  border-collapse: collapse;
+  border: none;
+}
+
+.glossary td {
+  border: none;
+  padding: 0.35rem 0.75rem 0.35rem 0;
+  vertical-align: top;
+  line-height: var(--sl-line-height);
+}
+
+.glossary td:first-child {
+  white-space: nowrap;
+  padding-right: 1.5rem;
+  color: var(--sl-color-white);
+}
+
+.glossary td > small {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--sl-color-gray-3);
+  margin-bottom: 0.1rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Icon list items.
+ *
+ * When a markdown list item starts with an astro-icon SVG the bullet
+ * dot looks wrong: the dot appears on the first line, the icon shifts
+ * down, and the text wraps separately. These rules replace the bullet
+ * with the icon and lay everything out as a single flex row.
+ *
+ * Two rendering variants are handled:
+ *   - Tight list  → MDX emits  <li><svg> text</li>
+ *   - Loose list  → MDX emits  <li><p><svg> text</p></li>
+ *
+ * Usage in MDX (no wrapper needed - just a normal list):
+ *   - <Icon name="lucide:server" size={18} /> **Servers**, your label.
+ * ------------------------------------------------------------------ */
+
+/* ── Tight list: <li> > <svg> ── */
+.sl-markdown-content li:has(> svg:first-child) {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+/* ── Loose list: <li> > <p> > <svg> ── */
+.sl-markdown-content li:has(> p:first-child > svg:first-child) {
+  list-style: none;
+}
+.sl-markdown-content li:has(> p:first-child > svg:first-child) > p:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-block: 0;
+}
+
+/* Colour the icon using the accent palette, same as Starlight's own
+ * icons. `color` propagates as currentColor into both fill-based
+ * (Simple Icons) and stroke-based (Lucide) SVGs. */
+.sl-markdown-content li:has(> svg:first-child) > svg:first-child,
+.sl-markdown-content li:has(> p:first-child > svg:first-child) > p:first-child > svg:first-child {
+  flex-shrink: 0;
+  color: var(--sl-color-accent-high);
+}
+
+/* Boxed screenshot placeholder pattern. */
+.screenshot-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  border: 2px dashed var(--sl-color-gray-4);
+  border-radius: 0.75rem;
+  color: var(--sl-color-gray-3);
+  font-style: italic;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0,
+      transparent 12px,
+      rgba(126, 87, 194, 0.06) 12px,
+      rgba(126, 87, 194, 0.06) 24px
+    );
+}

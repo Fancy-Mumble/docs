@@ -1,0 +1,141 @@
+---
+title: Files and images
+description: Share files and images with three access modes (public link, password, session-only) and control who can download.
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Fancy Mumble lets you share files and images right in chat. You pick
+**who can download**, and for **how long**.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: chat with an image attachment card and a file attachment card.
+</div>
+
+## How to share something
+
+<Steps>
+
+1. In the chat composer, click the **paperclip** <Icon
+   name="lucide:paperclip" size={18} /> button. You can also
+   **drag-and-drop** a file onto the chat window, or **paste** an
+   image from the clipboard.
+
+2. The **Share file** dialog opens. Pick an access mode (see below),
+   add an optional message, and click **Upload**.
+
+3. The file is uploaded to the server. A progress bar shows below
+   the chat. Once finished, a small attachment card appears as a
+   chat message.
+
+</Steps>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Share file dialog with the three access modes.
+</div>
+
+## Access modes
+
+You get three modes when sharing. Pick the one that fits.
+
+<CardGrid>
+  <Card title="Public" icon="external">
+    **Anyone with the link can download.** Use for files you would be
+    okay posting publicly.
+  </Card>
+  <Card title="Password" icon="seti:lock">
+    **Recipients must enter the password you set.** Share the password
+    out-of-band (in chat, in a private message, in a different
+    channel). Good when you want a known group to access it.
+  </Card>
+  <Card title="Session" icon="seti:default">
+    **Only users currently connected to this server can download.**
+    The link stops working when they disconnect. Default option. Great
+    for ephemeral sharing.
+  </Card>
+</CardGrid>
+
+<Aside type="note">
+If your admin has restricted public and password modes for your role,
+they will be disabled in the dialog with a tooltip explaining why.
+You can still use the **session** mode in that case.
+</Aside>
+
+## What kinds of files
+
+Any file works. Images and short clips get a preview card with a
+thumbnail, click to view full size. Other files show as a card with
+filename, size, and a download button.
+
+| File type | Preview |
+|-----------|---------|
+| Images (PNG, JPG, GIF, WebP, SVG, AVIF) | Inline thumbnail and lightbox |
+| Audio (MP3, WAV, Opus) | Inline player |
+| Video (MP4, WebM) | Inline player |
+| PDFs | Filename card |
+| Everything else | Filename card with size |
+
+Maximum file size is set by the server (see
+[File server](/server/features/file-server/)). The default is about
+**50 MB** per file.
+
+## Downloading
+
+- Click the attachment card to download.
+- Files are downloaded to the **Downloads panel**, accessible from
+  the chat sidebar. From there you can re-open, locate on disk, or
+  re-share.
+- For **password-protected** files you will be prompted for the
+  password the first time. Tick **Remember** to skip the prompt next
+  time on this session.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: downloads panel with three recent items.
+</div>
+
+## Image sharing tips
+
+- **Paste from clipboard**: hit `Ctrl+V` (or `Cmd+V`) in the chat box
+  to paste a screenshot or copied image. The Share dialog opens
+  pre-filled.
+- **Drag a screenshot tool window** to drop a screenshot directly.
+- **Compress before sharing**: very large images can take a while to
+  upload. Resize first if you do not need full resolution.
+- **Animated GIFs** stay animated. Use the GIF picker (Klipy) inside
+  the composer to search for reaction GIFs.
+
+## Retention
+
+- **Public** files stay until the admin removes them or until the
+  retention policy on the server expires them (default 90 days).
+- **Password** files stay until the admin removes them.
+- **Session** files are auto-removed shortly after every recipient
+  has disconnected.
+
+Your server admin can adjust each of these on the server side, see
+[File server](/server/features/file-server/) for details.
+
+## Limits on a vanilla server
+
+If you connect to a server that does not have the Fancy Mumble file
+server enabled:
+
+- File sharing is **not available**, the paperclip button is hidden.
+- You can still paste **small inline images** directly into chat as
+  long as the server's `imagemessagelength` allows it (usually a
+  couple of MB).
+
+## Removing a shared file
+
+- Right-click your own message and pick **Delete** to remove the file
+  from chat and the server.
+- If you cannot delete a file you uploaded, your admin has restricted
+  the *delete* permission. Ask a moderator.
+
+## Next step
+
+Continue with [Chat features](/users/chat/) for everything else you
+can do with text.

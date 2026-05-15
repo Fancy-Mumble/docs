@@ -1,0 +1,222 @@
+---
+title: Audio configuration
+description: Every audio setting in Fancy Mumble, explained.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Audio is the number one thing people fiddle with in voice chat. This
+page walks every control under **Settings, Voice**, what it does, when
+to change it, and the trade-off.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: full audio panel with sections expanded.
+</div>
+
+<Aside type="tip">
+Hidden controls? Some advanced sliders only appear in **Expert mode**.
+Turn it on under **Settings, Advanced, Expert Mode**.
+</Aside>
+
+## Input and output devices
+
+Two side-by-side dropdowns at the top of the panel:
+
+- **Input Device** is your microphone. *System default* picks whatever
+  the operating system is currently using. Pick a specific device by
+  name if you have multiple mics.
+- **Output Device** is where audio is played. Same logic.
+
+Each has a **volume slider** from 0% to 200%. Past 100% the app
+amplifies digitally, so it can clip if pushed too high.
+
+<Aside type="caution">
+Some USB headsets expose two output endpoints (game and chat). Pick
+the *game* or *handset* endpoint for Mumble. The *chat* endpoint is
+mono and narrow-band on some products.
+</Aside>
+
+## Activation mode
+
+Three radio buttons decide **when you transmit**:
+
+<CardGrid>
+  <Card title="Voice Activation" icon="seti:audio">
+    Mic transmits when speech is detected. Threshold driven, default.
+    The noise removal runs on the input.
+  </Card>
+  <Card title="Continuous" icon="error">
+    Always transmit. No noise removal, no gate. Use only in studio
+    rooms or for recording.
+  </Card>
+  <Card title="Push to Talk" icon="puzzle">
+    Transmit only while a key is held. Pick the key with the **PTT
+    key** recorder below.
+  </Card>
+</CardGrid>
+
+### PTT key recording
+
+When push to talk is selected a **shortcut recorder** appears. Click
+it, press the key combination you want, then release. Most modifier
+combos work (`Ctrl+Alt+Z`, mouse side buttons, single keys, and more).
+The key works globally, even when the app is not focused.
+
+## Noise removal
+
+Available **only in Voice Activation mode**. Push-to-talk and
+Continuous bypass the noise remover. Pick from a dropdown:
+
+| Algorithm | Speed | Quality | Best for |
+|-----------|:-----:|:-------:|----------|
+| **DeepFilterNet** | Heavy | Best | Modern computers, keyboard or family noise |
+| **RNNoise** | Light | Very good | Most setups, default |
+| **OMLSA-IMCRA** | Medium | Good | Smooth output, AC hum |
+| **Spectral subtraction** | Very light | Basic | Steady backgrounds |
+| **None** | n/a | n/a | Studio mic in a quiet room |
+
+You can **switch live**. Test by speaking while a steady noise source
+is running (fan, AC) and compare.
+
+<Aside type="note">
+Algorithms that were not compiled into your build will not appear in
+the dropdown.
+</Aside>
+
+### Expert: per-algorithm controls
+
+In Expert mode an **Advanced controls** strip appears for each
+algorithm. Common knobs:
+
+- **Attenuation limit**: how much noise the algorithm is allowed to
+  remove.
+- **Noise floor adapt rate**: how fast the algorithm learns new noises.
+- **Smoothing window**: how many frames are averaged for the cleanup.
+
+The defaults are tuned per algorithm. Do not change them unless you
+can hear the difference and have time to A/B test.
+
+## Auto sensitivity
+
+A toggle that **continuously re-fits** the voice-activation threshold
+to your room. Recommended for most users.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: VAD threshold slider plus auto-sensitivity toggle plus calibrate meter.
+</div>
+
+### Calibrate (live level meter)
+
+Hit **Calibrate** under the threshold slider. Three visual elements
+appear:
+
+- **Fill bar**: instant level.
+- **Peak indicator**: a small marker that decays over time.
+- **Threshold line**: a vertical line at the current threshold.
+
+Speak naturally, the fill should comfortably cross the line. Stay
+silent, the fill should drop below. Adjust the threshold (or turn on
+auto sensitivity) until both are true.
+
+## Audio Processing, Auto Gain
+
+| Control | Range | Default | Description |
+|---------|-------|---------|-------------|
+| **Auto Gain** toggle | n/a | On | Pushes quiet speech up to a target loudness. |
+| **Max Amplification** | 1 to 40 dB | 20 dB | Ceiling on how much the auto-gain may add. |
+
+A higher max can rescue distant speakers, but also makes background
+noise louder. Pair with a stronger noise removal algorithm.
+
+## Compression
+
+| Control | Range | Default | What |
+|---------|-------|---------|------|
+| **Quality** (bitrate) | 8 to 320 kbps | 56 kbps | Higher is better quality and more bandwidth. |
+| **Audio per packet** | 10, 20, 40, 60 ms | 20 ms | Smaller is lower latency and more packets per second. |
+
+<Aside type="tip">
+On cellular or shared Wi-Fi, **40 or 60 ms** at **24 to 32 kbps** is
+the most resilient. On a wired connection bump to **96 kbps and 20 ms**
+for music-quality voice.
+</Aside>
+
+## Network
+
+<Tabs>
+  <TabItem label="UDP (default)" icon="seti:default">
+    Voice flows over UDP for minimum latency. This is what you want.
+  </TabItem>
+  <TabItem label="Force TCP" icon="warning">
+    Sends all audio through the existing control connection. Adds a
+    little latency, but **passes through any firewall that allows the
+    initial connect**. Toggle this under **Voice, Network**.
+  </TabItem>
+</Tabs>
+
+## Expert section
+
+Visible only when Expert mode is on.
+
+### Gate Close Ratio (hysteresis)
+
+The gate has two thresholds, open and close. The close threshold is
+the open threshold times this ratio (default 0.8). Lower ratio is
+more aggressive cut-off, and possibly clips the ends of sentences.
+
+### Hold Frames
+
+Number of frames to keep the gate open after audio drops below the
+close threshold. Each frame is the *audio-per-packet* duration.
+Increase if your *t/s/p/k* sounds get cut.
+
+### Legacy audio backend <Badge text="Desktop only" variant="caution" />
+
+The default audio backend supports modern Linux (PipeWire and Pulse),
+Windows, and macOS. Toggle this to fall back to the legacy backend for
+niche setups. Takes effect on the next voice toggle.
+
+## Audio statistics <Badge text="Expert" variant="caution" />
+
+Live packet counters per connection:
+
+```
+To Client (server sent):    good   late   lost (n%)   resync
+From Client (we received):  good   late   lost (n%)   resync
+```
+
+- **good**: packets received in order.
+- **late**: out of order, or older than the buffer head.
+- **lost**: never arrived.
+- **resync**: codec resync events after a long pause.
+
+> Sustained **more than 2% loss** is bad. Try **Force TCP** or a lower
+> bitrate.
+
+## Quick recipes
+
+<CardGrid>
+  <Card title="Gaming on a noisy keyboard" icon="puzzle">
+    Activation: Voice. Noise removal: **DeepFilterNet**. Bitrate: 64
+    kbps. Frame: 20 ms.
+  </Card>
+  <Card title="Podcasting" icon="approve-check">
+    Activation: **Continuous**. Noise removal: None. Bitrate: **128
+    kbps**. Frame: 10 ms. Use a hardware pop filter.
+  </Card>
+  <Card title="Cell-data mobile" icon="phone">
+    Activation: Voice. Noise removal: RNNoise. Bitrate: 24 kbps.
+    Frame: 60 ms. **Force TCP** on.
+  </Card>
+  <Card title="Streaming + Discord overlay" icon="laptop">
+    Activation: Push to Talk. Noise removal: RNNoise. Bitrate: 56
+    kbps. Pick a side-button mouse for the PTT key.
+  </Card>
+</CardGrid>
+
+## Still broken?
+
+Continue to [Audio problems](/troubleshooting/audio/).

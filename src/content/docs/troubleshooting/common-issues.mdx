@@ -1,0 +1,72 @@
+---
+title: Common issues
+description: First-line checks for the problems we see most often.
+sidebar:
+  order: 1
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Most problems fall into one of four buckets. Pick the closest match
+and follow the link for the deep dive.
+
+<CardGrid>
+  <Card title="Audio is broken" icon="seti:audio">
+    No sound out, no sound in, mic cuts, robot voice, echo. Start at
+    [Audio problems](/troubleshooting/audio/).
+  </Card>
+  <Card title="Cannot connect" icon="warning">
+    Connection refuses, times out, drops, or asks for a password
+    when you do not have one. Start at
+    [Connection problems](/troubleshooting/connection/).
+  </Card>
+  <Card title="Screen share does not work" icon="laptop">
+    Black thumbnail, never appears, only some viewers see it. Start
+    at [Screen-share problems](/troubleshooting/screen-share/).
+  </Card>
+  <Card title="Something else" icon="document">
+    Send debug logs to a developer with the steps in
+    [Debug logging](/troubleshooting/debug-logging/).
+  </Card>
+</CardGrid>
+
+## Quick sanity checks
+
+Before diving into a specific page, try these:
+
+### The app
+
+- **Restart the app**. Many transient bugs go away.
+- **Update the app** to the latest version. Get it from
+  [fancy-mumble.com](https://fancy-mumble.com/) or the
+  [GitHub releases page](https://github.com/Fancy-Mumble/FancyMumbleNext/releases).
+- **Try a different network**. Tether to your phone for a quick A/B.
+
+### The server
+
+- **Check the server is up**: `ping your-host` or
+  `nc -zv your-host 64738`.
+- **Check the server logs**: `docker compose logs -f mumble-server`.
+- **Restart the server** if you can afford a moment of downtime.
+
+### Your account
+
+- **Try a different identity**. Settings, Identities, new identity,
+  reconnect.
+- **Try as SuperUser** (server admin only) to rule out a permission
+  issue.
+
+## When you cannot find a solution
+
+- **Search existing issues** in the
+  [client repo](https://github.com/Fancy-Mumble/FancyMumbleNext/issues)
+  or
+  [server repo](https://github.com/Fancy-Mumble/mumble-server/issues).
+- **Open a new issue** with the information from
+  [Reporting bugs](/troubleshooting/reporting-bugs/).
+
+<Aside type="tip" title="Have logs ready">
+Most developers will ask for **debug logs** as the first reply. Save
+yourself a round trip and have them ready before opening the issue.
+See [Debug logging](/troubleshooting/debug-logging/).
+</Aside>

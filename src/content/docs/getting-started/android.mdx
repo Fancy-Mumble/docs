@@ -1,0 +1,97 @@
+---
+title: Mobile (Android)
+description: Fancy Mumble on Android, including install, permissions, push notifications, and the mobile UI.
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Fancy Mumble runs on Android with all of the core features (talking,
+chat, screen-share viewing, file sharing, custom emotes) and a few
+small adjustments for touch.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: phone screenshot of the chat view in portrait mode.
+</div>
+
+## Install
+
+See the [installer page](/getting-started/install/) and pick the
+**Android** tab.
+
+## Permissions
+
+On the first launch Android will ask for:
+
+| Permission | Why | Required? |
+|------------|-----|-----------|
+| **Microphone** | To send your voice. | Yes, talking does not work without it. |
+| **Notifications** | To show push notifications when the app is closed. | Optional, but you will miss messages without it. |
+| **Photos and files** | To attach files and images in chat. | Optional, only asked when you tap the paperclip. |
+
+You can revisit these in **Android settings, Apps, Fancy Mumble,
+Permissions**.
+
+## Push notifications
+
+If the server supports it (see [Push notifications](/server/features/push/)),
+you will get a notification when:
+
+- a new chat message arrives in a channel you follow,
+- *(optional)* someone reacts to your message,
+- *(optional)* a user joins a channel you watch.
+
+Tap a notification to open the app on that channel.
+
+<Aside type="caution" title="Battery savers">
+Some phone makers ship aggressive battery optimizers that delay push
+notifications. Open **Settings, Battery, Fancy Mumble** and pick
+**Unrestricted** to keep notifications on time.
+</Aside>
+
+## Mobile-only UI bits
+
+The desktop layout is rebalanced for touch:
+
+<CardGrid>
+  <Card title="Mobile call controls" icon="phone">
+    A floating bar at the bottom with mute, deafen, leave, and stream
+    toggles. Auto-hides when no audio is active.
+  </Card>
+  <Card title="Channel drawer" icon="bars">
+    Channels live in a left drawer, swipe from the edge or tap the
+    menu button to open.
+  </Card>
+  <Card title="Member sheet" icon="seti:default">
+    Tap a user to open a bottom-sheet with their profile, frame,
+    banner, and actions (private message, mute, kick).
+  </Card>
+  <Card title="Message action sheet" icon="comment-alt">
+    Long-press a message to reply, react, copy, pin, or delete.
+  </Card>
+</CardGrid>
+
+## Battery and data
+
+- Audio uses around 20 to 96 kbps depending on the **bitrate** slider.
+- A one-hour call is about 10 to 40 MB.
+- Watching a screen share takes about 1 to 3 Mbps per stream.
+- File downloads use whatever the file weighs, once.
+
+Force **TCP** mode (Settings, Voice, Network) on flaky cell data. It
+adds a little latency but avoids packet-loss audio glitches.
+
+## Known mobile limits
+
+- **You cannot broadcast a screen** from a phone yet. You can still
+  *view* desktop shares.
+- **Whiteboard input** is view-only on mobile.
+- **PTT key recording** picks a software button instead of a hardware
+  key.
+
+## Next step
+
+Continue with [Profile customization](/users/profile/) and
+[Audio configuration](/users/audio/). Both work the same on mobile.

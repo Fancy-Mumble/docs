@@ -1,0 +1,77 @@
+---
+title: Link previews
+description: Server-rendered preview cards for URLs in chat.
+sidebar:
+  order: 5
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+When a user pastes a URL in chat, the server can fetch the page, pull
+out the Open Graph tags, and send a preview card back. Other Fancy
+Mumble clients render the card inline.
+
+Rendering on the server has two advantages:
+
+- Every client sees the same preview, even if they cannot reach the
+  target site.
+- The target site only sees one fetch per shared link, not one per
+  client.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: a chat message with a link-preview card showing title, snippet, and image.
+</div>
+
+## How it works
+
+When a Fancy Mumble client posts a chat message that contains a URL,
+it sends a `FancyLinkPreviewRequest` to the server. The server:
+
+1. Validates the URL is safe to fetch (rejects private IP ranges to
+   avoid Server-Side Request Forgery).
+2. Rate-limits the request per session.
+3. Fetches the page.
+4. Parses the HTML for Open Graph tags (`og:title`, `og:image`,
+   `og:description`, plus `twitter:` fallbacks).
+5. Returns a `FancyLinkPreviewResponse` containing the metadata and
+   the preview image encoded inline as base64 bytes.
+
+The receiving Fancy clients render the card. Preview images travel
+inside the protobuf message, **not** through the file server.
+
+## Privacy
+
+Link previewing means the server fetches URLs that users paste.
+Consider:
+
+- The server's IP is logged by the target site.
+- A user who can post in chat can trigger arbitrary outbound fetches.
+
+The server refuses to fetch RFC 1918 (private) IP ranges by default,
+which mitigates the most obvious abuse.
+
+<Aside type="caution" title="Built-in safety">
+The validator rejects `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`,
+and `127.0.0.0/8` to avoid Server-Side Request Forgery against
+internal services on the host network.
+</Aside>
+
+## Configuration
+
+There are no documented server `MUMBLE_CONFIG_*` keys or `plugin.*`
+keys for link previews in the example config. The behavior is
+controlled in-code. If you need to disable it for your deployment,
+contact the maintainers or build a server image without the
+`LinkPreviewPlugin` compiled in.
+
+## Pitfalls
+
+- **No previews ever**: confirm the server can reach the public
+  internet. Try `docker exec mumble-server curl -sI https://example.com`.
+- **A specific site never previews**: it might return JavaScript-
+  rendered Open Graph that the server cannot parse, or it might
+  block the server's user-agent.
+
+## Next step
+
+Continue with [Reactions & polls](/server/features/reactions/).

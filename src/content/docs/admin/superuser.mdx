@@ -1,0 +1,139 @@
+---
+title: SuperUser & first login
+description: Take ownership of your fresh server with the SuperUser admin account.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Every Mumble server has a built-in **SuperUser** account. It is the
+one account that bypasses every ACL on the server, so it is what you
+use to **bootstrap your community**. Once you have set up roles and
+registered users, you will almost never log in as SuperUser again.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: admin panel after first SuperUser login, with empty role and user lists.
+</div>
+
+## Set the SuperUser password
+
+If you set `MUMBLE_SUPERUSER_PASSWORD` in your Docker setup, you
+already have a password. Skip ahead.
+
+If not, the password was randomly generated on the first boot. Find
+it in the logs:
+
+```bash
+docker logs mumble-server 2>&1 | grep -i superuser
+```
+
+Or set a new one any time:
+
+```bash
+docker exec mumble-server mumble-server \
+  --ini /data/mumble_server_config.ini \
+  --set-su-pw "your-strong-password"
+```
+
+<Aside type="caution">
+Anyone with the SuperUser password can do anything on the server.
+Keep the password in a secure place (your password manager). Do not
+share it.
+</Aside>
+
+## Log in as SuperUser
+
+<Steps>
+1. Open Fancy Mumble.
+2. Connect to your server.
+3. When the wizard asks for a username, type `SuperUser`.
+4. When the password dialog appears, paste your password.
+5. The admin button <Card icon="seti:lock" /> in the header is now
+   enabled.
+</Steps>
+
+The first time you do this on a fresh server, the SuperUser is the
+**only** account, and everyone else who connects is unauthenticated.
+
+## First steps on a fresh server
+
+The big checklist:
+
+<Steps>
+
+1. **Set up the welcome text** in **Admin, Server settings**, so new
+   joiners see a friendly message.
+
+2. **Create your top-level channels**: lobby, voice, off-topic, and
+   so on. See [Channels](/admin/channels/).
+
+3. **Create a "Moderator" role** with channel-management and mute
+   permissions, and assign it to your most-trusted friends.
+   See [Roles & permissions](/admin/roles/).
+
+4. **Create a "Member" role** that gives chat write access to the
+   right channels, and decide whether you want to require registration
+   to chat.
+
+5. **Set up the onboarding flow** if you want new members to pick
+   their interests on first join. See
+   [Onboarding workflow](/admin/onboarding/).
+
+6. **Upload a few custom emotes** as a community starter pack. See
+   [Custom emotes](/admin/emotes/).
+
+7. **Take a backup**. See [Upgrade & backup](/server/upgrade/).
+
+</Steps>
+
+## Disable SuperUser after setup
+
+For ongoing administration, you should **not use SuperUser**. Instead:
+
+<Steps>
+1. Connect with your own user account.
+2. As SuperUser, register your account: right-click your name, **Register**.
+3. As SuperUser, give your account the **Administrator** role.
+4. Disconnect.
+5. Reconnect as your normal user. Verify you have admin access.
+</Steps>
+
+You can either:
+
+- **Keep SuperUser as a break-glass account** (recommended), or
+- **Disable it** by leaving the password unset and starting the server
+  fresh. Hard to reverse, so be sure.
+
+## When to use SuperUser
+
+Only in two situations:
+
+- You locked yourself out of the admin role and need to fix the ACL.
+- A bug or accident has corrupted permissions and only the
+  unconditional-bypass account can fix it.
+
+For everything else, use a regular admin account.
+
+## Recovering from "I locked myself out"
+
+If you accidentally removed your own admin role:
+
+<Steps>
+1. Find the SuperUser password (or reset it as above).
+2. Log in as SuperUser.
+3. Restore your role.
+4. Log out again.
+</Steps>
+
+## Pitfalls
+
+- **Cannot log in as SuperUser**: the password is wrong. Reset it
+  with the `--set-su-pw` command.
+- **SuperUser is registered as a regular user**: not possible by
+  design. SuperUser is hard-coded outside the user table.
+- **Lost the password**: same fix, `--set-su-pw` to set a new one.
+
+## Next step
+
+Continue with [Channels](/admin/channels/) to set up your space.

@@ -1,0 +1,263 @@
+---
+title: File server
+description: Built-in file storage for custom emotes, avatars, and chat attachments.
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, FileTree } from '@astrojs/starlight/components';
+import PlantUML from '../../../../components/PlantUML.astro';
+import { MUMBLE_DOCKER_BRANCH } from '../../../../lib/github';
+
+The file server is the part of Fancy Mumble that handles:
+
+- **Custom server emote** images.
+- **Chat file attachments** (the share dialog).
+
+It is an HTTP service that listens on **port 64739** by default. The
+listener speaks **plain HTTP** - TLS is **not built in**. On a private
+network that is fine; on the public internet, put it behind a
+TLS-terminating reverse proxy (see
+[Behind a reverse proxy](#behind-a-reverse-proxy) below) so that
+clients reach it as **HTTPS**.
+
+Without it, file sharing and custom emotes are unavailable, the
+buttons are hidden in the app.
+
+<Aside type="note" title="What is NOT handled here">
+- **Avatars** are stored inside the main server database
+  (`mumble-server.sqlite`) as a user texture, not on the file
+  server. They survive backup and restore as part of the database.
+- **Link preview images** are sent inline in the link-preview
+  response message (as a base64-encoded payload, see
+  [Link previews](/server/features/link-previews/)). They are not
+  stored on the file server.
+</Aside>
+
+<PlantUML alt="File server reachable directly via plain HTTP on a LAN, or via HTTPS through a TLS-terminating reverse proxy on the public internet" code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam arrowColor #5e35b1
+skinparam noteBorderColor #9575cd
+skinparam noteBackgroundColor #f3e5f5
+skinparam noteFontColor #4a148c
+
+top to bottom direction
+
+component "Mumble Client\\ndesktop / mobile" as App
+component "Browser" as Web
+component "Reverse Proxy\\nnginx · Traefik · Caddy\\n//(optional)//" as RP
+component "File Server\\nport 64739  plain HTTP" as FS
+
+App --> RP : HTTPS 443
+Web --> RP : HTTPS 443
+RP --> FS : HTTP 64739 (behind proxy)
+App ..> FS : HTTP 64739 (direct, LAN only)
+Web ..> FS : HTTP 64739 (direct, LAN only)
+
+note bottom of FS
+  No built-in TLS.
+  Skip the proxy only on
+  a trusted private network.
+end note
+@enduml
+`} />
+
+## Turn it on
+
+The Docker image ships with the file server already enabled. The
+defaults are:
+
+```ini
+plugin.file-server.enabled=true
+plugin.file-server.storagePath=/data/file-server-storage
+plugin.file-server.bindAddress=0.0.0.0
+plugin.file-server.port=64739
+plugin.file-server.tlsTerminatedByProxy=true
+; plugin.file-server.baseUrl=https://your-domain.example/files
+; plugin.file-server.allowedOrigins=https://your-domain.example
+```
+
+### Where does the config file live?
+
+On a fresh container started with the official image, the config
+file is generated at boot under:
+
+```text
+/data/mumble_server_config.ini
+```
+
+This is the file the entrypoint script writes whenever you change a
+`MUMBLE_CONFIG_*` environment variable. It is regenerated on every
+container start, so editing it directly does **not** survive a
+restart unless you also set `MUMBLE_CUSTOM_CONFIG_FILE` to point at
+a file you own.
+
+To set `plugin.*` keys for the first time:
+
+<Steps>
+1. Copy the sample config out of the image to your host:
+
+   ```bash
+   docker cp mumble-server:/data/mumble_server_config.ini ./mumble-server.ini
+   ```
+
+   Or grab the template from the Docker repo at
+   <a href={`https://github.com/Fancy-Mumble/mumble-docker/blob/${MUMBLE_DOCKER_BRANCH}/mumble-server.ini.example`}>`mumble-server.ini.example`</a>.
+
+2. Edit the `plugin.file-server.*` keys to your taste.
+
+3. Mount the file back into the container and tell the entrypoint
+   to use it instead of the env-var-generated one:
+
+   ```yaml
+   environment:
+     MUMBLE_CUSTOM_CONFIG_FILE: /data/mumble-server.ini
+   volumes:
+     - ./mumble-server.ini:/data/mumble-server.ini:ro
+     - mumble-data:/data
+   ```
+
+4. Restart the container:
+
+   ```bash
+   docker compose up -d --force-recreate mumble-server
+   ```
+</Steps>
+
+<Aside type="caution">
+Once `MUMBLE_CUSTOM_CONFIG_FILE` is set, **all `MUMBLE_CONFIG_*`
+environment variables are ignored**. Put everything (file-server
+keys plus the regular voice and chat settings) in the mounted INI.
+</Aside>
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `plugin.file-server.enabled` | `true` | Master toggle. |
+| `plugin.file-server.storagePath` | `/data/file-server-storage` | Where files live on disk. Must be absolute. |
+| `plugin.file-server.bindAddress` | `127.0.0.1` (with safer default in the image) | Address to listen on. Use `0.0.0.0` to expose directly. |
+| `plugin.file-server.port` | `64739` | TCP port. |
+| `plugin.file-server.tlsTerminatedByProxy` | `false` | Set to `true` when a reverse proxy handles TLS. |
+| `plugin.file-server.baseUrl` | unset | Public URL clients use. Falls back to `http://host:port` when empty. |
+| `plugin.file-server.allowedOrigins` | unset | Comma-separated CORS origins. Empty blocks browser usage. |
+| `plugin.file-server.maxUploadSizeBytes` | `52428800` (50 MB) | Per-file upload limit. |
+| `plugin.file-server.retentionDays` | `90` | How long public files live. |
+
+## Expose the port
+
+In `docker-compose.yml`:
+
+```yaml
+ports:
+  - "64739:64739/tcp"
+```
+
+Without this port exposed externally, the file server is only
+reachable from inside the container. Useful if you put a reverse
+proxy in front and only expose the proxy.
+
+## Behind a reverse proxy
+
+Recommended for any deployment reachable from the public internet.
+The proxy accepts **HTTPS** from clients and forwards it as plain
+**HTTP** to the file server. Tell the file server to trust the proxy
+headers:
+
+```ini
+plugin.file-server.tlsTerminatedByProxy=true
+plugin.file-server.baseUrl=https://files.example.com
+plugin.file-server.allowedOrigins=https://files.example.com
+```
+
+A minimal nginx config:
+
+```nginx
+server {
+  listen 443 ssl http2;
+  server_name files.example.com;
+
+  ssl_certificate     /etc/letsencrypt/live/files.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/files.example.com/privkey.pem;
+
+  client_max_body_size 100m;
+
+  location / {
+    proxy_pass http://mumble-server:64739;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
+
+## Storage layout
+
+<FileTree>
+- /data/file-server-storage/
+  - emotes/ custom server emotes, keyed by shortcode
+  - attachments/ chat attachments
+    - public/ public-mode uploads
+    - password/ password-protected uploads
+    - session/ session-only uploads (cleaned up)
+  - index.sqlite metadata, not file data
+</FileTree>
+
+Back up the whole `file-server-storage` folder along with the
+`mumble-server.sqlite` database for a complete backup.
+
+## Access modes (recap)
+
+When a user uploads a file, they pick one of three modes. See
+[Files and images](/users/file-sharing/) for the user view.
+
+| Mode | Who can download | Lifetime |
+|------|------------------|----------|
+| Public | Anyone with the link | `retentionDays` |
+| Password | Anyone with the link AND the password | `retentionDays` |
+| Session | Only currently connected users | A short while after every recipient disconnects |
+
+You can restrict who is allowed to use public/password modes per
+role. See [Permission flags](/reference/permissions/).
+
+## Disk usage
+
+For a 50-user server, plan for roughly:
+
+- **Avatars**: 100 KB per user. Negligible.
+- **Custom emotes**: 50 KB per emote, often a few hundred per server.
+- **Attachments**: this is the variable. A busy media-sharing server
+  can use 10 GB or more per month. Cap with `maxUploadSizeBytes` and
+  `retentionDays`.
+
+Add monitoring on `/data/file-server-storage` to catch surprises.
+
+## Disabling
+
+```ini
+plugin.file-server.enabled=false
+```
+
+The client UI hides the file-attach controls when no
+`fancy-file-server-config` message is received. Existing avatars
+and emotes still work as long as the storage directory and database
+are intact.
+
+## Pitfalls
+
+- **Paperclip is missing in chat**: the file server is not enabled, or
+  the client cannot reach the port. Check
+  `curl -I http://server:64739/healthz` from a client machine.
+- **CORS errors in browser builds**: set `allowedOrigins` to your web
+  client's URL.
+- **Uploads fail with 413**: `maxUploadSizeBytes` is too small, or
+  your reverse proxy's `client_max_body_size` is.
+- **Files stay forever**: `retentionDays=0` is "forever". Set to a
+  positive number for cleanup.
+
+## Next step
+
+Continue with [Link previews](/server/features/link-previews/).

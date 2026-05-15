@@ -1,0 +1,116 @@
+---
+title: Your first voice call
+description: Move into a channel, choose between Push-to-Talk and Voice Activation, and verify everyone can hear you.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+You are connected. Here is how to start **talking**.
+
+## 1. Move into a channel
+
+Mumble does not have one big room, channels are explicit. In the left
+sidebar:
+
+- Single-click a channel to **view** it. You will not leave your current
+  channel, but you can see who is in the other channel and read its
+  chat.
+- Double-click a channel to **join** it. Your avatar moves there, and you
+  can talk to the people in that channel.
+- Right-click a channel for the context menu (rename, ACL, link, and
+  more).
+
+The channel you are in is highlighted, and your name appears beneath
+the channel in the user list.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: channel sidebar with the active channel highlighted.
+</div>
+
+## 2. Pick an activation mode
+
+Open **Settings, Voice** (or click your avatar then Settings). Three
+modes are available:
+
+<CardGrid>
+  <Card title="Voice Activation (default)" icon="seti:audio">
+    Your mic transmits when speech is detected. Threshold based. The
+    AI noise removal cleans the result.
+  </Card>
+  <Card title="Push to Talk (PTT)" icon="puzzle">
+    Audio only flows while a key is held. Pick the key with the
+    shortcut recorder. Best for noisy rooms or for podcasters.
+  </Card>
+  <Card title="Continuous" icon="error">
+    Always on, no gate, no noise removal. Use only when you need full
+    fidelity and the room is silent.
+  </Card>
+</CardGrid>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Voice panel with the three radio options.
+</div>
+
+## 3. Calibrate
+
+Hit the **Calibrate** button on the Voice panel. A live level meter
+pops up so you can:
+
+- Speak normally. The green fill should comfortably cross the
+  threshold line.
+- Stop talking. The fill should drop back below the line.
+
+If your voice barely crosses the line, lower the **Threshold** or
+boost **Microphone Volume**. If the line is constantly below ambient
+noise, raise the threshold.
+
+<Aside type="tip" title="Auto sensitivity">
+Turn on **Auto Sensitivity** to let the app learn your room
+automatically. It tracks your background noise over the first ten
+seconds or so and adjusts the threshold for you.
+</Aside>
+
+## 4. Test in a Test channel
+
+Most servers have a *Test* or *Lobby* channel. Join it, hit your
+push-to-talk key (or just talk if you are on Voice Activation), and
+watch the green ring appear around your avatar. That ring is the
+speaking indicator.
+
+You can also watch the local level meter in the header.
+
+## 5. Mute and deafen
+
+Two icons sit at the top of the window:
+
+- <Icon name="lucide:mic-off" size={18} /> Mute outgoing audio.
+- <Icon name="lucide:headphone-off" size={18} /> Deafen (mute plus do
+  not receive any audio).
+
+Push-to-talk users almost always leave themselves toggled-mute and
+rely on the push-to-talk key instead.
+
+## 6. Adjust on the fly
+
+| If... | Then... |
+|-------|---------|
+| Background noise leaks through | Switch noise removal to **DeepFilterNet**. It is the heaviest and cleanest option. |
+| Voice cuts at the start of sentences | Raise **Hold Frames** in Voice, Expert. |
+| Audio is choppy on Wi-Fi | Lower the bitrate, or enable **Force TCP** in Voice, Network. |
+| You sound quiet | Enable **Auto Gain** in Voice, Audio Processing. |
+
+Full details on the [Audio configuration](/users/audio/) page.
+
+## You are live
+
+That is it, you are now a fully operational Mumble user. Recommended
+next stops:
+
+<Steps>
+1. Pretty up your account, see [Profile customization](/users/profile/).
+2. Set per-event notification sounds, see [Notifications](/users/notifications/).
+3. Bind a global mute key, see [Keyboard shortcuts](/users/shortcuts/).
+</Steps>

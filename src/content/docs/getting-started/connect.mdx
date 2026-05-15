@@ -1,0 +1,160 @@
+---
+title: Connect to a server
+description: How to join a server with Fancy Mumble, including password prompts and the public server list.
+sidebar:
+  order: 2
+---
+
+import { Steps, Tabs, TabItem, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import PlantUML from '../../../components/PlantUML.astro';
+import { Icon } from 'astro-icon/components';
+
+You have installed the app. Now you need somewhere to talk. This page
+covers three ways to connect:
+
+1. A server address from a friend or admin (most common).
+2. Browsing the **Public server list**.
+3. Your own self-hosted server (see [Docker quick start](/server/docker/)).
+
+## The Connect screen
+
+When you open Fancy Mumble it shows the **Connect** screen. Three views
+are available from the bottom strip:
+
+- <Icon name="lucide:server" size={18} /> **Servers**, your saved servers (default).
+- <Icon name="lucide:globe" size={18} /> **Public**, browse the global directory.
+- <Icon name="lucide:plus" size={18} /> **Wizard**, add a new server step by step.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Connect screen with the three view tabs.
+</div>
+
+## Quick-add a server
+
+<Steps>
+
+1. Tap the **+** button (or **Wizard** at the bottom).
+
+2. **Server address**: type the address you were given, for example
+   `mumble.example.org` or `mumble.example.org:64738`. If no port is
+   given, the default `64738` is used.
+
+   <Aside type="note">
+   In **Normal mode** the port and label fields are hidden, so you only
+   need to enter the address and your name. Turn on **Expert mode**
+   under [Privacy & advanced settings](/users/privacy/) if you need
+   the extra fields.
+   </Aside>
+
+3. **Your identity**: pick a username. This is the name others will
+   see. 3 to 15 characters, letters, numbers, dashes, or underscores
+   by default. Some servers allow other patterns.
+
+4. **Give it a name** (Expert only): a friendly label like *Saturday
+   D&D*. Leave it blank to use the server address.
+
+5. Click **Save**. The server now appears in your **Servers** list.
+
+</Steps>
+
+## Connect
+
+Click any saved server card to connect. The status indicator goes
+through these stages:
+
+<PlantUML alt="Connection state flow: idle, connecting, bootstrapping, connected" code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam stateBackgroundColor #ede7f6
+skinparam stateBorderColor #7c3aed
+skinparam stateFontColor #311b92
+skinparam arrowColor #5e35b1
+
+left to right direction
+
+[*] --> Idle
+Idle --> Connecting : connect
+Connecting --> Bootstrapping : handshake complete
+Bootstrapping --> Connected : channels & users loaded
+Connected --> [*] : disconnect
+@enduml
+`} />
+
+The progress bar stays up not just during the connection handshake
+but also while channels, users, and your own session are fetched, so
+you do not land on an empty room.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: server card showing the "connecting" spinner.
+</div>
+
+## Password-protected servers
+
+If the server is locked with a password, Fancy Mumble pops up a small
+dialog after the handshake.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: the password dialog for a locked server.
+</div>
+
+Type the password and click **Retry**. The app offers to **remember**
+the password in your operating system's secure storage so you do not
+get asked again.
+
+## Untrusted certificate?
+
+The first time you connect to a server, the app pins the server's
+identity. If that identity later changes (for example, the server was
+reinstalled), the app refuses to connect and shows you the new details.
+
+- If the change is legitimate (the admin told you), click **Accept**.
+- If you did not expect a change, **close the dialog** and ask the
+  admin to confirm.
+
+<Aside type="caution">
+Fancy Mumble does not silently accept changed certificates. That is a
+feature, not a bug. It protects you from someone impersonating the
+server.
+</Aside>
+
+## Browse public servers
+
+The **Public** tab lists servers from the global directory. You can
+filter by **country**, **users online**, and **name**. Click a row to
+connect (no save required).
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: public server list with the filter row.
+</div>
+
+<Aside type="note">
+Public servers are not vetted. Treat them like a random group chat,
+do not share private information.
+</Aside>
+
+## Common connection issues
+
+<CardGrid>
+  <Card title="Wrong address or port" icon="error">
+    The most common cause. Double-check the address. The default port
+    is **64738**.
+  </Card>
+  <Card title="Server is rejecting you" icon="warning">
+    Older servers may not understand the newer handshake. Ask the
+    admin to update the server.
+  </Card>
+  <Card title="Voice does not connect" icon="warning">
+    Corporate firewall blocking 64738? Try **Force TCP** under
+    [Audio settings](/users/audio/#network).
+  </Card>
+  <Card title="Identity changed" icon="error">
+    See "Untrusted certificate" above. Do not accept unless the admin
+    told you the server was reinstalled.
+  </Card>
+</CardGrid>
+
+If none of these help, see [Connection problems](/troubleshooting/connection/).
+
+## Next step
+
+Continue with [Your first voice call](/getting-started/first-call/).

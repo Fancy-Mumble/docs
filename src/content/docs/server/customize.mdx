@@ -1,0 +1,130 @@
+---
+title: Customize & disable features
+description: Trim the server to your community's needs. Turn off features you do not use, restrict who can use what.
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+
+Fancy Mumble ships with everything on by default. That is friendly
+for first-time setups, but you may want to disable features for
+performance, privacy, or simplicity.
+
+This page is the **master toggle reference**. Each row points to the
+detailed page.
+
+<Aside type="tip" title="Where do these settings go?">
+The `MUMBLE_CONFIG_*` block lives in the `environment:` section of
+your `docker-compose.yml` (next to where you started the server).
+The `plugin.*` block lives in a mounted INI file (typically
+`./mumble-server.ini` on your host). See
+[Configuration reference](/server/config/) for the file layout.
+</Aside>
+
+## Master toggles
+
+In `docker-compose.yml`:
+
+```yaml
+environment:
+  # Voice and registration
+  MUMBLE_CONFIG_USERS: 100
+  MUMBLE_CONFIG_CERTREQUIRED: false
+  MUMBLE_CONFIG_REGISTERHOSTNAME: "my-server.example.com"
+
+  # Persistent chat
+  MUMBLE_CONFIG_PCHATENABLED: true
+
+  # Push notifications
+  MUMBLE_CONFIG_PUSHENABLED: false
+
+  # Screen-share relay
+  MUMBLE_CONFIG_WEBRTCSFUENABLED: true
+  MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "203.0.113.5"
+```
+
+In your mounted INI file (only the file server has user-facing
+plugin keys today):
+
+```ini
+plugin.file-server.enabled=true
+plugin.file-server.storagePath=/data/file-server-storage
+plugin.file-server.port=64739
+```
+
+<Aside type="note" title="No plugin keys for the other features">
+Link previews, reactions, polls, Watch Together, the whiteboard,
+and onboarding **do not have public `plugin.*` configuration keys**
+in the current server. They are either always on (and ride the
+existing plugin-data transport between clients) or controlled in
+the client UI. To disable any of them server-wide you would need to
+build a custom server image without the relevant plugin compiled
+in.
+</Aside>
+
+## What you can actually toggle today
+
+The list of features that have a public server-side on/off switch is
+small. The bullets below are the keys that exist in
+`mumble-server.ini.example`:
+
+| Feature | Toggle | Default |
+|---------|--------|:-------:|
+| Persistent chat | `pchatenabled` | on |
+| Push notifications (FCM) | `pushenabled` | off |
+| Screen-share relay | `webrtcsfuenabled` | off |
+| File server | `plugin.file-server.enabled` | on |
+
+Everything else (reactions, polls, link previews, Watch Together,
+whiteboard, onboarding) is either hard-wired on in the server build
+or is a client-side feature. To disable any of those server-wide you
+would need to build a custom server image.
+
+## Restricting features per role and channel
+
+What you **can** control is **who is allowed to use** a given feature,
+via roles and channel ACLs. See:
+
+- [Roles & permissions](/admin/roles/) for server-wide bundles.
+- [Channel ACL](/admin/acl/) for per-channel overrides.
+
+The exact set of permission flags depends on your server version.
+Open **Admin, Roles**, click **New role**, then look at the
+**Permissions** tab to see the list your server actually exposes.
+
+## "Maintenance mode"
+
+If you need to take the server temporarily out of public use:
+
+```yaml
+environment:
+  MUMBLE_CONFIG_SERVER_PASSWORD: "maintenance"
+  MUMBLE_CONFIG_WELCOMETEXT: "Server in maintenance. Back at 18:00 UTC."
+```
+
+Existing users stay connected, new users need the password.
+
+## Pause incoming registrations
+
+```yaml
+environment:
+  MUMBLE_CONFIG_ALLOWREGISTRATION: false
+```
+
+Existing registered users keep their accounts.
+
+## Read-only channels
+
+Per channel:
+
+1. Admin, Channels, **Edit**.
+2. ACL tab.
+3. Add a rule that denies `Speak` and `Write` to `@everyone` and
+   allows it for a specific role.
+4. Save.
+
+## Next step
+
+Continue with [Building from source](/server/build/) if you want to
+customize the image itself.

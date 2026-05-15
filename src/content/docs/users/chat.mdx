@@ -1,0 +1,184 @@
+---
+title: Chat features
+description: Formatted text, mentions, emoji, GIFs, polls, reactions, pinning, replies, read receipts.
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+The chat in Fancy Mumble is more than a plain text box. This page
+walks every feature you will use day to day.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: chat composer with formatting toolbar.
+</div>
+
+## Formatting
+
+Use the toolbar above the composer or markdown shortcuts:
+
+| Effect | Markdown | Shortcut |
+|--------|----------|----------|
+| **Bold** | `**bold**` | `Ctrl+B` |
+| *Italic* | `*italic*` | `Ctrl+I` |
+| `Inline code` | `` `code` `` | `Ctrl+E` |
+| ~~Strikethrough~~ | `~~text~~` | |
+| Link | `[label](url)` | |
+| Block quote | `> quote` | |
+| Bulleted list | `- item` | |
+| Numbered list | `1. item` | |
+| Code block | ``` ```lang ``` | |
+| Heading | `# H1`, `## H2` | |
+
+Code blocks support syntax highlighting if you put the language after
+the opening fence, like ` ```python `.
+
+## Mentions
+
+Type **`@`** to open a picker with users and roles. Arrow keys to
+navigate, **Enter** to insert.
+
+- `@username` mentions one user. They get a highlight in their chat
+  and (optionally) a notification.
+- `@role` mentions everyone in a server role.
+- `@here` mentions everyone currently online in this channel.
+- `@everyone` mentions every member of the channel (needs permission).
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: mentions popover above the composer.
+</div>
+
+## Emoji and custom emotes
+
+Type **`:`** to open the emoji picker. It contains:
+
+- **Standard emoji** (Unicode).
+- **Custom server emotes** uploaded by your admin. Use them with
+  shortcodes like `:partyparrot:`.
+
+<Aside type="tip">
+The picker shows recently used emoji at the top, so your favorites
+are one keystroke away.
+</Aside>
+
+## GIFs
+
+Click the **GIF** button <Icon name="lucide:file-image" size={18} />
+in the toolbar to open the GIF browser. Search by keyword or pick
+from trending. Click a GIF to insert it as an attachment.
+
+GIFs are served from the Klipy network. The app does not ship with a
+shared key, so you need to provide **your own** Klipy API key before
+searching works. Configure it under
+[Advanced settings, Klipy API key](/users/privacy/#klipy-api-key-gif-browser).
+Server-side GIF search (one key for everyone) is on the roadmap, see
+[Fancy-Mumble/FancyMumble#82](https://github.com/Fancy-Mumble/FancyMumble/issues/82).
+
+## Polls
+
+Click the **poll** button <Icon name="lucide:bar-chart-3" size={18} />
+in the toolbar:
+
+<Steps>
+1. Type the **question**.
+2. Add **2 to 10 options**. The dialog will not let you send fewer
+   than two non-empty options.
+3. Tick **Multiple choice** if voters should be able to pick more
+   than one option.
+4. Click **Send**.
+</Steps>
+
+Voters click an option to cast their vote. Results are visible live
+to everyone in the channel.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: poll card with three options and a live vote count.
+</div>
+
+## Reactions
+
+Hover a message and click the **smiley** <Icon name="lucide:smile-plus"
+size={18} /> button to attach a reaction. Click an existing reaction
+to add yours to the count. Click it again to remove yours.
+
+## Replies and quotes
+
+Right-click any message and pick **Reply**. The selected message is
+quoted above the composer. Recipients see a small "in reply to" header
+above your new message.
+
+To **quote** without replying, pick **Quote** instead. The quoted text
+goes into the composer prefixed with `>` so you can edit it.
+
+## Pinned messages
+
+If you have permission, you can pin important messages to the top of
+the channel:
+
+<Steps>
+1. Right-click a message, pick **Pin**.
+2. The message is added to the **Pinned messages** tray at the top of
+   the chat.
+3. Click the tray to expand and jump to any pinned message.
+4. Pick **Unpin** from the context menu to remove it.
+</Steps>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: pinned-messages tray expanded with two pins.
+</div>
+
+## Read receipts
+
+If the server has read receipts enabled, each of your messages shows
+a small indicator on the right:
+
+- One tick: delivered to the server.
+- Two ticks (grey): everyone in the channel has it loaded.
+- Two ticks (filled): everyone has scrolled past it (read).
+
+Hover the ticks to see exactly who has read the message.
+
+## Multi-select and bulk actions
+
+- **Shift-click** a range of messages, or **long-press** on mobile,
+  to enter multi-select mode.
+- A toolbar appears with **Copy**, **Delete**, and **Forward**.
+- Press **Esc** to leave multi-select.
+
+## Mentions and notifications
+
+You can control which mention types make your phone or desktop
+notify, see [Notifications](/users/notifications/).
+
+## Markdown preview
+
+The composer shows a **live preview** of formatting as you type, so
+you can see what the message will look like before sending.
+
+## Drafts and persistence
+
+- Your drafts are kept per channel, switching channels and back keeps
+  what you were typing.
+- Persistent chat (server feature) means your sent messages are still
+  there after you reconnect, see
+  [Persistent chat](/server/features/persistent-chat/).
+
+## Etiquette and limits
+
+| Limit | Default |
+|-------|---------|
+| Message length | 5 MB of formatted text |
+| Inline image | up to 1 MB |
+| Mentions per message | 50 |
+| Emoji per message | 50 |
+| Polls per channel per hour | unlimited |
+
+Your admin can change these, see
+[Configuration reference](/server/config/).
+
+## Next step
+
+Continue with [Notifications](/users/notifications/) to set what
+should ping you, when, and how.

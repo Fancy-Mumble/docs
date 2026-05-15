@@ -1,0 +1,196 @@
+---
+title: Privacy & identities
+description: Identities, certificates, what the server sees about you, expert mode, and the advanced settings.
+sidebar:
+  order: 9
+---
+
+import { Steps, Aside, Card, CardGrid, Badge } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Fancy Mumble keeps your data minimal. There is no analytics, no
+account, no email required. You and the server you connect to is the
+only relationship.
+
+This page covers what the server sees, how to control your identity,
+and the advanced settings that change how the app talks to it.
+
+## Identities
+
+An **identity** is your "passport" between servers. It bundles:
+
+- A **default username**.
+- A **client certificate** (a small file that proves it is you).
+- A **per-identity profile** (avatar, bio, banner, name style).
+
+You can have multiple identities. For example one for a gaming
+server, one for a work group, one for an anonymous community.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: identities panel with three saved identities.
+</div>
+
+### Create a new identity
+
+<Steps>
+1. Open **Settings, Identities**.
+2. Go to the section **Create new identity**.
+3. Pick a label (only visible to you).
+4. Set the default username.
+5. The app generates a new certificate automatically.
+6. Click **Create**.
+</Steps>
+
+### Use an identity
+
+When you connect to a server, the **active identity** is sent. To
+switch identity for the next connection:
+
+- In Expert mode, the connect wizard has an **Identity** dropdown.
+- In Normal mode, the app picks the identity associated with the
+  saved server (if any).
+
+### Import or export
+
+You can **export** an identity as an encrypted `.fmid` file. Useful
+for moving to a new computer.
+
+- **Export**: Identities, pick one, **Export**. Set a password.
+- **Import**: Identities, **Import**, pick the file, enter the
+  password.
+
+<Aside type="caution">
+The exported file contains your private certificate. Anyone with the
+file and the password can impersonate you on servers where you are
+registered. Treat it like a password file.
+</Aside>
+
+### Registration
+
+On most servers you can **register** an identity. Registration tells
+the server "this certificate belongs to this username", so the same
+name always maps to you.
+
+- Right-click your name in the user list, pick **Register**.
+- The server may require an admin to approve it.
+
+Registered users can be granted roles and have permission to use
+specific features.
+
+## What the server sees
+
+When you connect, the server receives:
+
+| Item | Always sent | Note |
+|------|:-----------:|------|
+| Your username | yes | What you typed in the wizard. |
+| Your certificate hash | yes | Used for identity. |
+| Your public IP | yes | The server logs it for moderation. |
+| Your client version | yes | "Fancy Mumble 0.2.x". |
+| Your operating system | yes (basic) | "Windows", "Linux", "Android". No version detail. |
+| Your local time zone | optional | For displaying timestamps to others. |
+| Your microphone activity | yes when transmitting | But not the audio itself when muted. |
+
+What the server **does not** see:
+
+- The audio itself unless you are transmitting. Mute means mute.
+- Your saved servers, your bios, your themes, your screenshots.
+- Any data from other servers you have connected to.
+
+## Expert mode
+
+Toggle **Expert mode** under **Settings, Advanced** to reveal extra
+controls across the app:
+
+- Audio: gate close ratio, hold frames, legacy backend, audio
+  statistics.
+- Profile: identity selector, custom CSS, registered certificate
+  display.
+- Connect: port, server label.
+- Settings: developer mode, log level.
+
+Turning Expert mode off only **hides the advanced controls**, it
+does not undo their values. Any changes you made while in Expert
+mode (for example, a custom voice gate threshold or a non-default
+audio backend) stay in effect. To revert specific values, switch
+Expert mode back on, set them back to defaults, then turn Expert
+mode off again. The **Reset** button at the bottom of Advanced
+restores all settings to defaults.
+
+## Developer mode <Badge text="Expert" variant="caution" />
+
+Inside Expert mode there is a separate **Developer mode** toggle that
+shows:
+
+- Memory stats in the status bar.
+- Offloaded message counts.
+- The reload-app button in the menu.
+
+This is for power users who want to monitor the app's footprint. The
+default is off.
+
+## Klipy API key (GIF browser)
+
+The GIF browser uses a third-party service called Klipy. At the
+moment you must provide **your own** Klipy API key to use it. The
+app does not ship with a shared key.
+
+<Aside type="note" title="Server-side GIF search is on the roadmap">
+There is currently no way for a server owner to configure one key
+for all users, so each user has to set up their own. Server-side
+GIF search is being tracked at
+[Fancy-Mumble/FancyMumble#82, Add Gif Search Support for the Server Side](https://github.com/Fancy-Mumble/FancyMumble/issues/82).
+</Aside>
+
+<Steps>
+1. Sign up at the Klipy site and create an app to get an API key.
+2. Open **Settings, Advanced, Klipy API key**.
+3. Paste your key and save.
+</Steps>
+
+Without a key, the GIF picker button still appears, but searching
+returns an error.
+
+## Auto-reconnect
+
+If the network drops, the app tries to reconnect for the next few
+minutes. Turn off **Auto-reconnect** under Advanced if you prefer a
+manual approach.
+
+## Auto-update <Badge text="Desktop only" variant="caution" />
+
+By default the app checks for updates on launch and installs them in
+the background. Turn off **Auto-update on startup** to opt out and
+update manually.
+
+## Time format
+
+Pick how timestamps are shown in chat:
+
+- **Auto** (follows your system).
+- **12-hour** (with AM/PM).
+- **24-hour**.
+
+Plus a separate toggle to **convert times to your local timezone**
+when other users have a different one set.
+
+## Log level
+
+For troubleshooting. Default is `info`. Set to `debug` or `trace`
+when a developer asks for it. See
+[Debug logging](/troubleshooting/debug-logging/).
+
+## Reset
+
+The **Reset** button at the bottom of Advanced restores **everything
+except your saved servers and identities** to defaults. A confirm
+dialog asks twice.
+
+## Next step
+
+You have completed the user section. From here:
+
+- **Server owner?** Head to [Docker quick start](/server/docker/).
+- **Server admin?** Head to [SuperUser & first login](/admin/superuser/).
+- **Something broken?** Head to
+  [Common issues](/troubleshooting/common-issues/).

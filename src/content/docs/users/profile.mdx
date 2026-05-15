@@ -1,0 +1,192 @@
+---
+title: Profile customization
+description: Avatars, banners, bios, name styles, frames, nameplates, animated effects, and per-identity profiles.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Your **profile** is what others see when they click your name in the
+sidebar. Fancy Mumble lets you make it look the way you want.
+
+Open it from **Settings, Profile**.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: full Profile panel with the live preview card on the right.
+</div>
+
+## What you can change
+
+<CardGrid stagger>
+  <Card title="Username" icon="seti:default">
+    Your **default username** is what gets pre-filled in the connect
+    wizard. Servers may also store a registered name, see
+    [Identities](/users/privacy/#identities).
+  </Card>
+  <Card title="Avatar" icon="seti:image">
+    A square picture. Crop with the built-in editor.
+  </Card>
+  <Card title="Banner" icon="seti:image">
+    Wide image shown on top of your profile card. Plain image or
+    animated gradient.
+  </Card>
+  <Card title="Bio" icon="document">
+    A small text editor with bold, italic, color, and inline images.
+  </Card>
+  <Card title="Name style" icon="seti:default">
+    Font, weight, italic, color, gradient, glow. Live preview.
+  </Card>
+  <Card title="Decoration" icon="setting">
+    A small icon next to your name (sparkle, fire, ice, rainbow, gold,
+    neon, glitch).
+  </Card>
+  <Card title="Nameplate" icon="seti:image">
+    Gradient background behind your name in user lists.
+  </Card>
+  <Card title="Avatar frame" icon="setting">
+    A colored or animated ring around your avatar.
+  </Card>
+  <Card title="Animated effect" icon="seti:default">
+    Subtle effects on your card: particles, sparkle, snow, embers.
+  </Card>
+  <Card title="Custom CSS" icon="seti:default">
+    Expert-only. Drop custom styles into the card for your power-user
+    friends.
+  </Card>
+</CardGrid>
+
+## Step by step: change your avatar
+
+<Steps>
+
+1. Open **Settings, Profile**.
+2. Click the avatar circle (or the **Edit avatar** button).
+3. **Drag and drop** or **browse** for a PNG, JPG, GIF, or WebP.
+4. The image editor opens. Crop to a square. The round mask is just
+   how it looks, the file itself stays square.
+5. (Optional) Toggle **GIF** to keep the source animated.
+6. Click **Save**.
+
+   <Aside type="tip">
+   On a Fancy Mumble server the avatar is uploaded to the server's
+   file storage and shared on demand. On a vanilla server it is
+   embedded inline.
+   </Aside>
+
+</Steps>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: avatar editor with crop handles and a round preview.
+</div>
+
+## Step by step: pick a banner
+
+The banner sits **above** your profile card.
+
+<Steps>
+1. **Settings, Profile, Edit banner**.
+2. Drop an image, or pick a **preset gradient**.
+3. (Optional) Tweak the **vertical offset** so the focal point is
+   centered.
+4. Click **Save**.
+</Steps>
+
+## Writing a bio
+
+The bio editor supports:
+
+- **Bold**, *italic*, underline.
+- Text **color** (a 12-swatch quick-pick palette plus a custom picker).
+- Inline images (pasted, dropped, or from a URL, resized to 400x400
+  max).
+- Links.
+
+The bio is shown to other people when they click your name. Length is
+capped at 2000 characters.
+
+<Aside type="caution" title="HTML in comments">
+Servers can disable rich rendering with `allowhtml=false`. In that
+case other users will see your bio as plain text. Fancy Mumble servers
+allow HTML by default.
+</Aside>
+
+## Name style
+
+The **Name Style** section lets you restyle how *your* name renders in
+chat and in the sidebar. These styles only show to other Fancy Mumble
+users, vanilla Mumble shows your plain username.
+
+<Tabs>
+  <TabItem label="Font" icon="document">
+    Pick from a curated list (system, monospace, serif, display,
+    pixel, handwritten).
+  </TabItem>
+  <TabItem label="Color and gradient" icon="seti:image">
+    Solid color, or a two-stop diagonal gradient. Toggle **gradient**
+    and pick start and end swatches.
+  </TabItem>
+  <TabItem label="Weight, italic" icon="document">
+    Bold, italic. Combinable.
+  </TabItem>
+  <TabItem label="Glow" icon="seti:default">
+    Adds a soft glow around the text. Pick color and **size** (1 to
+    10 pixels).
+  </TabItem>
+</Tabs>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: name style live preview with a glow plus gradient combo.
+</div>
+
+## Nameplates, frames, decorations, effects
+
+Four layers stack on your card. All four are optional and can be
+combined.
+
+| Layer | Where it shows | Examples |
+|-------|----------------|----------|
+| **Frame** | Ring around your avatar | None, Gold, Neon, Animated |
+| **Decoration** | Small icon next to name | Sparkle, Fire, Ice, Rainbow, Gold, Neon, Glitch |
+| **Nameplate** | Gradient behind name in lists | Ocean, Amethyst, Sunset, Gold, Silver, Rainbow, Dark |
+| **Effect** | Animated overlay on the card | Particles, Sparkle, Snow, Embers |
+
+The **live preview** card on the right of the panel updates as you
+pick.
+
+## Per-identity profiles
+
+If you use **multiple [identities](/users/privacy/#identities)**, for
+example one for a gaming server and one for work, Fancy Mumble keeps a
+**separate profile per identity**. Switching identity automatically
+loads the right one.
+
+<Aside type="note">
+The first time you use multiple identities, your existing global
+profile is copied into each. You can then edit each one independently.
+</Aside>
+
+## Limits
+
+| Field | Limit |
+|-------|-------|
+| Bio | 2000 characters |
+| Avatar | 256x256, around 80 KB after compression |
+| Inline bio image | 400x400, around 80 KB |
+| Banner | up to about 1 MB |
+
+## Troubleshooting
+
+- **Bio colors and images are missing**, the server has disabled
+  rich rendering.
+- **Avatar reverts after reconnect**, the server's file storage is
+  offline. The app falls back to the inline avatar.
+- **Name style is invisible to a friend**, they are on a vanilla
+  client.
+- **Save button is disabled**, the username field is empty.
+
+## Next step
+
+Continue with [Audio configuration](/users/audio/) so people can
+actually hear the well-dressed you.

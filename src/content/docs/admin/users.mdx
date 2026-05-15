@@ -1,0 +1,141 @@
+---
+title: Registered users
+description: Register, edit, and remove users on your server.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+A **registered user** is one who has tied their certificate to a
+specific username on your server. Registered users can:
+
+- Always log in with the same name (no impersonation).
+- Receive roles.
+- Get specific permissions in ACLs.
+- Persist things like a per-server bio.
+
+This page covers the **Registered users** tab in the admin panel.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: registered users tab listing eight users with role badges.
+</div>
+
+## Register a user
+
+There are two flows.
+
+### Self-registration (user asks)
+
+The user right-clicks their own name in the user list and picks
+**Register**. Depending on your settings, this either:
+
+- **Auto-approves** (default for many servers).
+- **Queues for admin approval**.
+
+Configure the gate with:
+
+```yaml
+environment:
+  MUMBLE_CONFIG_ALLOWREGISTRATION: true
+  MUMBLE_CONFIG_REGISTRATIONREQUIRESAPPROVAL: false
+```
+
+### Admin-initiated
+
+You can register a user even if they have not asked:
+
+<Steps>
+1. Right-click the user in the user list, **Register**.
+2. Confirm the username.
+3. The certificate is bound to that name.
+</Steps>
+
+## Manage from the admin panel
+
+Open **Admin, Users**. You get a searchable table with:
+
+- **Name**.
+- **Last seen** (date).
+- **Registered on**.
+- **Roles** (badges).
+- **Email** (optional, set by the user).
+- **Comment**.
+
+Per-row actions:
+
+- **Edit**: change the display name and email.
+- **Manage roles**: assign and revoke roles.
+- **Change password**: only if the user uses password auth (rare).
+- **Force-deregister**: removes the binding. Their certificate becomes
+  unrecognized.
+- **Kick**: disconnect now, no permanent effect.
+- **Ban**: see [Ban list](/admin/bans/).
+
+## Bulk import
+
+You can populate registered users from a CSV. Useful when migrating
+from another platform.
+
+```csv
+name,email,certificate_hash
+alice,alice@example.com,SHA1:1234...
+bob,bob@example.com,SHA1:5678...
+```
+
+Import from **Admin, Users, Import**. Each row creates a registered
+user. The certificate hash binds it to a real user as soon as they
+connect.
+
+## Display names
+
+Registered users can pick a **display name** that differs from their
+username. The username is the unique key (used in ACLs); the display
+name is what other users see in the sidebar.
+
+Combine with [name styles](/users/profile/#name-style) for fun.
+
+## Per-user permissions
+
+You can give a permission to one user without making a role:
+
+<Steps>
+1. Edit the channel where the permission applies.
+2. ACL tab, **Add rule**.
+3. Pick the user from the dropdown (not a group).
+4. Pick the permission and Allow or Deny.
+</Steps>
+
+This is fine for a one-off, but **prefer roles** for anything that
+might apply to more than one person.
+
+## Searching
+
+The user table supports:
+
+- **Free text** in the search box (name, email, comment).
+- **Filter by role**: pick from the dropdown.
+- **Sort** by clicking column headers.
+
+## Removing a user
+
+Two distinct operations:
+
+- **Deregister**: removes the certificate binding. The user can
+  reconnect anonymously or under a new name.
+- **Ban**: see [Ban list](/admin/bans/).
+
+You usually want **Ban** plus **Deregister** for a permanent removal.
+
+## Pitfalls
+
+- **Cannot find a user**: they may not be registered. Anonymous
+  users only show in the live user list, not the admin table.
+- **User has no roles**: that is the default. Assign at least one
+  role to give them any non-default permissions.
+- **"This username is already taken"**: someone else owns the
+  username. Names are unique.
+
+## Next step
+
+Continue with [Roles & permissions](/admin/roles/).

@@ -1,0 +1,255 @@
+---
+title: Ports & networking
+description: Which ports the server uses, what they do, and how to expose them.
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+import PlantUML from '../../../components/PlantUML.astro';
+import { Icon } from 'astro-icon/components';
+
+The Fancy Mumble server uses up to four ports. Only the first one is
+strictly required.
+
+| Port | Protocol | Purpose | Required? |
+|------|----------|---------|-----------|
+| **64738** | TCP and UDP | Voice and control | yes |
+| **64739** | TCP | File server - plain HTTP (emotes, avatars, attachments) | for file features |
+| **10000** | UDP | Screen-share relay | for smooth screen sharing |
+| **6502** | TCP | Admin RPC (Ice) | rarely, internal |
+
+<PlantUML alt="Diagram showing client traffic flowing into each server port" code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam arrowColor #5e35b1
+skinparam packageBorderColor #7c3aed
+skinparam packageBackgroundColor #f5f3ff
+skinparam packageFontColor #311b92
+
+left to right direction
+
+component "Mumble Client\\ndesktop / mobile" as Client
+component "Browser" as Browser
+
+package "Server Host" #transparent;line.dashed {
+  component "Reverse Proxy\\nnginx · Traefik · Caddy\\n//(optional)//" as RP
+
+  package "Fancy Mumble Server" as Srv {
+    component "TCP/UDP 64738\\nVoice & Control" as P1
+    component "UDP 10000\\nScreen-share Relay" as P3
+    component "TCP 64739\\nFile Server (HTTP)" as P2
+    component "TCP 6502  Admin RPC\\n//(loopback only by default)//" as P4
+    component "Push Relay\\n→ Firebase" as Push
+  }
+}
+
+cloud "Firebase Cloud Messaging\\n//(optional)//" as FCM
+
+Client --> P1 : always required
+Client --> P3 : screen sharing
+Client --> P4 : admin tools only
+Client --> RP : HTTPS 443
+Browser --> RP : HTTPS 443
+RP --> P2 : HTTP 64739
+Client ..> P2 : HTTP 64739 (direct, LAN only)
+Browser ..> P2 : HTTP 64739 (direct, LAN only)
+Push ..> FCM : HTTPS 443
+@enduml
+`} />
+
+## Port-by-port walk-through
+
+### 64738, voice and control
+
+The classic Mumble port. Used for:
+
+- The initial **TLS handshake** that authenticates the connection.
+- **Control messages** (channel updates, chat, user actions).
+- **Voice** (UDP preferred for low latency, TCP fallback).
+
+This is the only port you absolutely must expose. Without it nobody
+can connect.
+
+Open both TCP and UDP. Modern routers and firewalls treat them as
+two distinct rules.
+
+### 64739, file server
+
+Used for:
+
+- **Uploading and downloading files** that were shared in chat.
+- **Custom server emote** images.
+- **Avatar uploads** from the profile editor.
+- **Link preview images** rendered server-side.
+
+The file server speaks **plain HTTP** - there is no built-in TLS. Traffic
+on this port is unencrypted unless you put a TLS-terminating reverse proxy
+in front. For anything beyond a private LAN, a reverse proxy is strongly
+recommended.
+
+If you skip this port, the **paperclip button in chat is hidden** and
+avatars fall back to the older inline-only mode.
+
+You can put a **reverse proxy in front** (recommended for production)
+to terminate TLS, add caching, and so on. See [File server](/server/features/file-server/).
+
+### 10000, screen-share relay
+
+Used for:
+
+- **One incoming WebRTC stream** from each broadcaster.
+- **Many outgoing WebRTC streams** to viewers.
+
+Without this port (or without the relay enabled), screen sharing
+falls back to direct peer-to-peer, which is less reliable behind
+strict NATs.
+
+### 6502, admin RPC
+
+Used for:
+
+- The **legacy Ice administrative interface**.
+- Third-party authentication scripts.
+
+By default this port is **only bound to localhost inside the
+container**. Expose it (and set up authentication) only if you have
+a specific tool that needs it.
+
+## Exposing the ports
+
+<Tabs>
+  <TabItem label="docker compose" icon="seti:docker">
+    ```yaml
+    ports:
+      - "64738:64738/tcp"
+      - "64738:64738/udp"
+      - "64739:64739/tcp"
+      - "10000:10000/udp"
+      # Only if you need admin RPC from outside the host:
+      # - "127.0.0.1:6502:6502/tcp"
+    ```
+  </TabItem>
+  <TabItem label="plain docker" icon="seti:docker">
+    ```bash
+    docker run \
+      -p 64738:64738/tcp \
+      -p 64738:64738/udp \
+      -p 64739:64739/tcp \
+      -p 10000:10000/udp \
+      ...
+    ```
+  </TabItem>
+</Tabs>
+
+## Public IP for screen sharing
+
+The screen-share relay needs to **advertise a reachable IP address**
+to viewers. Set it with:
+
+```yaml
+environment:
+  MUMBLE_CONFIG_WEBRTCSFUENABLED: true
+  MUMBLE_CONFIG_WEBRTCSFUPORT: 10000
+  MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "203.0.113.5"
+```
+
+- For a **public server**, use the public IP.
+- For a **home server with a public DNS**, use the IP that DNS
+  resolves to.
+- For **local testing**, use `127.0.0.1`.
+- Do **not** use `0.0.0.0`, it is not a valid candidate and viewers
+  will fail to connect.
+
+## Behind a reverse proxy
+
+You can put the **file server** (64739) behind nginx, Caddy, or
+Traefik. The server expects you to set:
+
+```ini
+plugin.file-server.tlsTerminatedByProxy=true
+plugin.file-server.baseUrl=https://files.example.com
+plugin.file-server.allowedOrigins=https://files.example.com
+```
+
+The voice port (64738) cannot easily go behind a generic HTTP proxy
+since it is a custom binary protocol. Use TCP-level passthrough or a
+dedicated TLS-terminating load balancer if needed.
+
+<Aside type="caution" title="Do not proxy UDP voice through TCP">
+Modifying UDP voice through a TCP-only proxy adds latency and ruins
+quality. Either expose UDP directly or rely on the client's
+**Force TCP** fallback.
+</Aside>
+
+## Firewall and NAT
+
+If the server is on a home network, forward each port from your
+router:
+
+- TCP 64738 to the server.
+- UDP 64738 to the server.
+- TCP 64739 to the server (optional).
+- UDP 10000 to the server (optional).
+
+For IPv6, open the same ports in the AAAA firewall rules.
+
+For UFW (Ubuntu firewall):
+
+```bash
+sudo ufw allow 64738/tcp
+sudo ufw allow 64738/udp
+sudo ufw allow 64739/tcp
+sudo ufw allow 10000/udp
+```
+
+For firewalld (Fedora and friends):
+
+```bash
+sudo firewall-cmd --add-port=64738/tcp --permanent
+sudo firewall-cmd --add-port=64738/udp --permanent
+sudo firewall-cmd --add-port=64739/tcp --permanent
+sudo firewall-cmd --add-port=10000/udp --permanent
+sudo firewall-cmd --reload
+```
+
+## Quick health-check
+
+From another host:
+
+```bash
+# Voice port (TCP)
+nc -zv your-host 64738
+
+# File server (HTTP)
+curl -sI https://your-host:64739/healthz | head -1
+```
+
+A `Connected to ...` (TCP) and a `200 OK` (HTTP) mean you are good.
+
+## Next step
+
+Continue with the **Feature deep-dives** to pick what to enable:
+
+<CardGrid>
+  <Card title="Persistent chat" icon="seti:lock">
+    Encrypted, server-stored chat history.
+    [Learn more](/server/features/persistent-chat/).
+  </Card>
+  <Card title="Push notifications" icon="phone">
+    Notify mobile users when the app is closed.
+    [Learn more](/server/features/push/).
+  </Card>
+  <Card title="Screen-share relay" icon="laptop">
+    One upload, many downloads.
+    [Learn more](/server/features/webrtc-sfu/).
+  </Card>
+  <Card title="File server" icon="document">
+    Emotes, avatars, file uploads.
+    [Learn more](/server/features/file-server/).
+  </Card>
+</CardGrid>

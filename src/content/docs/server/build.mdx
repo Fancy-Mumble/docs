@@ -1,0 +1,175 @@
+---
+title: Building from source
+description: Build your own server image, point at a fork, or change CMake flags.
+sidebar:
+  order: 6
+---
+
+import { Steps, Aside, Tabs, TabItem, Code } from '@astrojs/starlight/components';
+
+Most server owners use the pre-built image. You only need to build
+from source if you:
+
+- Need a feature not yet shipped.
+- Want to change the compile-time flags (for example, enable extras
+  that are off by default in the official image).
+- Are running on an architecture without a pre-built image.
+
+## Quick build
+
+<Steps>
+
+1. Clone the Docker repo:
+
+   ```bash
+   git clone https://github.com/Fancy-Mumble/mumble-docker
+   cd mumble-docker
+   ```
+
+2. Build the image:
+
+   ```bash
+   docker build .
+   ```
+
+   This pulls the server source from GitHub, compiles it, builds the
+   bundled plugin libraries, and produces a runtime image. Takes
+   about 10 minutes on a modern machine.
+
+3. Tag it and use it in your compose file:
+
+   ```bash
+   docker tag <built-image-id> my-fancy-mumble:dev
+   ```
+
+   ```yaml
+   services:
+     mumble-server:
+       image: my-fancy-mumble:dev
+   ```
+
+</Steps>
+
+## Build arguments
+
+| Argument | Default | Purpose |
+|----------|---------|---------|
+| `MUMBLE_GIT_REPO` | `https://github.com/Fancy-Mumble/mumble-server` | Source repository. |
+| `MUMBLE_GIT_BRANCH` | `1.6.x` | Branch to build. |
+| `MUMBLE_VERSION` | `latest` | Tag or commit hash to check out. |
+| `MUMBLE_CMAKE_ARGS` | `-Dwebrtc-sfu=OFF` | Extra CMake flags. |
+| `MUMBLE_BUILD_NUMBER` | empty | Build number embedded in the binary. |
+| `PUID` / `PGID` | `10000` | UID and GID of the `mumble` user in the image. |
+
+### Example, enable the screen-share relay at compile time
+
+The default image **builds the relay library** but does **not enable
+it via CMake** for upstream parity. The pre-built image already
+includes the library; rebuild with the flag if you want it linked in
+by default:
+
+```bash
+docker build \
+  --build-arg MUMBLE_CMAKE_ARGS="-Dwebrtc-sfu=ON" \
+  .
+```
+
+### Example, build a specific tag
+
+```bash
+docker build \
+  --build-arg MUMBLE_VERSION=v1.6.0 \
+  .
+```
+
+### Example, build from your own fork
+
+```bash
+docker build \
+  --build-arg MUMBLE_GIT_REPO=https://github.com/youruser/mumble \
+  --build-arg MUMBLE_GIT_BRANCH=my-feature \
+  .
+```
+
+## Different image variants
+
+The repo ships several Dockerfiles for different use cases:
+
+| Dockerfile | Purpose |
+|------------|---------|
+| `Dockerfile` | The default. Produces a small runtime image. |
+| `Dockerfile.debug` | Same but with debug symbols and verbose logging. |
+| `Dockerfile.dev` | Mounts your local source tree for hot rebuilds. |
+| `Dockerfile.vanilla` | Builds the upstream Mumble server (no Fancy features). |
+
+Pick with `-f`:
+
+```bash
+docker build -f Dockerfile.debug .
+```
+
+## Running a different UID/GID
+
+The server runs as UID 10000 by default. To match your host user
+(useful for bind-mounts on a Linux desktop):
+
+```bash
+docker build --build-arg PUID=1000 --build-arg PGID=1000 .
+```
+
+Or pass at runtime (if the container starts as root):
+
+```yaml
+environment:
+  PUID: 1000
+  PGID: 1000
+```
+
+## Local development with hot rebuilds
+
+The repository has a helper:
+
+```bash
+python -m tools dev-build
+```
+
+This:
+
+1. Picks up your `.env`.
+2. Mounts your local source if `Dockerfile.dev` is used.
+3. Re-runs the build with the cached layers.
+4. Restarts the container.
+
+Useful when you are iterating on a patch you intend to upstream.
+
+## Build issues
+
+- **"Permission denied while trying to connect to the Docker daemon
+  socket"**: you are not in the `docker` group.
+- **`apt-get` fails with "not valid yet"**: clock skew in BuildKit.
+  The Dockerfiles already pass `-o Acquire::Check-Date=false` to work
+  around this, but a manual run might miss it.
+- **CMake cannot find a dependency**: the build image lags upstream.
+  Pull `latest` and retry, or pin to a known-good
+  `MUMBLE_VERSION`.
+
+## Verifying the build
+
+The freshly built image should start the same way as the official
+one. Look for these log lines:
+
+```text
+mumble-server 1.6.x.<build>
+plugin file-server: loaded
+plugin webrtc-sfu: loaded
+plugin push-fcm: loaded
+plugin link-previews: loaded
+```
+
+If any plugin is missing, the corresponding feature will be
+unavailable. Rebuild with the CMake flag for the missing one.
+
+## Next step
+
+Continue with [Upgrade & backup](/server/upgrade/) to keep your build
+fresh.

@@ -1,0 +1,74 @@
+---
+title: Fancy Mumble
+description: Modern voice chat, persistent encrypted chat, AI noise suppression, screen sharing, and more.
+template: splash
+hero:
+  tagline: A modern, feature-rich voice chat for gaming, podcasts, communities, and study groups.
+  image:
+    file: ../../assets/logo.svg
+  actions:
+    - text: Get started in 5 minutes
+      link: /getting-started/install/
+      icon: right-arrow
+      variant: primary
+    - text: Set up a server
+      link: /server/docker/
+      icon: external
+      variant: secondary
+    - text: Visit fancy-mumble.com
+      link: https://fancy-mumble.com/
+      icon: external
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+## Pick your starting point
+
+<CardGrid>
+  <Card title="Join a server" icon="open-book">
+    Install the app, connect to a server your admin gave you, and start talking.
+
+    [Install the app →](/getting-started/install/)
+  </Card>
+  <Card title="Run a server" icon="rocket">
+    Get a fully featured Fancy Mumble server running with Docker in under 5 minutes.
+
+    [Docker quick start →](/server/docker/)
+  </Card>
+  <Card title="Administer a server" icon="setting">
+    Manage channels, roles, ACLs, onboarding, emotes, and bans.
+
+    [SuperUser & first login →](/admin/superuser/)
+  </Card>
+  <Card title="Troubleshoot" icon="warning">
+    Audio glitches, connection drops, screen-share failures, and how to get the right info to a developer.
+
+    [Common issues →](/troubleshooting/common-issues/)
+  </Card>
+</CardGrid>
+
+## How the pieces fit together
+
+Fancy Mumble has three parts that work as one:
+
+| Part | What it does |
+|------|--------------|
+| **The app** | The program you install on your computer or phone to talk and chat. |
+| **The server** | A program someone runs (maybe you) that everyone connects to. |
+| **The Docker image** | A pre-packaged server with an interactive setup wizard for fast deployment. |
+
+:::tip[Want a tour first?]
+Take the [60-second UI tour](/welcome/tour/) before diving in.
+:::
+
+<div class="hero-grad">
+
+### Need help right now?
+
+- <Icon name="lucide:wifi-off" size={20} /> Connection fails on first start, see [Connection problems](/troubleshooting/connection/)
+- <Icon name="lucide:mic-off" size={20} /> Mic is silent, see [Audio problems](/troubleshooting/audio/)
+- <Icon name="lucide:monitor-off" size={20} /> Screen share shows a black screen, see [Screen-share problems](/troubleshooting/screen-share/)
+- <Icon name="lucide:bug" size={20} /> How do I send debug logs to a developer? see [Debug logging](/troubleshooting/debug-logging/)
+
+</div>

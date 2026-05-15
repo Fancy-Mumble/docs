@@ -1,0 +1,19 @@
+/*
+ * Structural SVG styles injected into every PlantUML-generated diagram.
+ *
+ * COLOR rules do NOT live here - they are in src/styles/custom.css where
+ * they can reference Starlight's :root[data-theme] attribute.
+ *
+ * This file only sets things that are independent of color scheme:
+ *   - Font family.
+ *   - Bold first line inside entity groups (heading treatment).
+ */
+
+text, tspan {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* First <text> in a component/node group = the heading line. */
+.entity text:first-of-type {
+  font-weight: 700;
+}

@@ -1,0 +1,220 @@
+---
+title: Upgrade & backup
+description: Keep your server up to date, back up your data, restore from a backup.
+sidebar:
+  order: 7
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+
+Two things you should do regularly. Both take minutes.
+
+## What to back up
+
+Three things matter:
+
+| Item | Where | Why |
+|------|-------|-----|
+| The **server database** | `/data/mumble-server.sqlite` (in the volume) | Channels, users, ACLs, chat history. |
+| The **file storage** | `/data/file-server-storage/` (in the volume) | Avatars, emotes, attachments. |
+| Your **`.env` file** | on the host | Server settings, secrets. |
+
+The whole `/data` volume covers items 1 and 2. Back up the host-side
+config separately.
+
+## Back up
+
+The simplest approach is to stop the server, copy the volume, and
+restart:
+
+<Steps>
+1. Stop the server:
+
+   ```bash
+   docker compose stop mumble-server
+   ```
+
+2. Copy the volume:
+
+   ```bash
+   docker run --rm \
+     -v mumble-data:/source:ro \
+     -v "$(pwd)":/dest \
+     alpine \
+     tar -czf /dest/mumble-backup-$(date +%F).tar.gz -C /source .
+   ```
+
+3. Restart the server:
+
+   ```bash
+   docker compose start mumble-server
+   ```
+
+4. Also back up your `.env`:
+
+   ```bash
+   cp .env "/secure/place/.env-mumble-$(date +%F)"
+   ```
+</Steps>
+
+You can also back up **without stopping** if you accept the small risk
+of an inconsistent SQLite snapshot. For production it is safer to
+stop briefly.
+
+## Schedule it
+
+A cron job that runs the steps above weekly is enough for most
+servers. Adjust the retention to your taste:
+
+```bash
+# /etc/cron.weekly/mumble-backup
+#!/bin/bash
+set -e
+cd /srv/mumble
+docker compose stop mumble-server
+docker run --rm \
+  -v mumble-data:/source:ro \
+  -v /backups/mumble:/dest \
+  alpine \
+  tar -czf /dest/mumble-$(date +%F).tar.gz -C /source .
+docker compose start mumble-server
+find /backups/mumble -mtime +60 -delete
+```
+
+Make it executable and you are done.
+
+## Restore from a backup
+
+<Steps>
+1. Stop the server:
+
+   ```bash
+   docker compose stop mumble-server
+   ```
+
+2. Remove the existing volume:
+
+   ```bash
+   docker volume rm mumble-data
+   docker volume create mumble-data
+   ```
+
+3. Restore:
+
+   ```bash
+   docker run --rm \
+     -v mumble-data:/dest \
+     -v "$(pwd)":/source \
+     alpine \
+     tar -xzf /source/mumble-backup-2026-05-01.tar.gz -C /dest
+   ```
+
+4. Start the server:
+
+   ```bash
+   docker compose start mumble-server
+   ```
+
+5. Reset the SuperUser password if needed:
+
+   ```bash
+   docker exec mumble-server mumble-server \
+     --ini /data/mumble_server_config.ini \
+     --set-su-pw "new-password"
+   ```
+</Steps>
+
+## Upgrade
+
+The official image is published to `ghcr.io/fancy-mumble/mumble-server:latest`.
+
+<Steps>
+1. Take a backup (see above).
+2. Pull the new image:
+
+   ```bash
+   docker compose pull mumble-server
+   ```
+
+3. Recreate the container:
+
+   ```bash
+   docker compose up -d mumble-server
+   ```
+
+4. Watch the logs for migration messages:
+
+   ```bash
+   docker compose logs -f mumble-server
+   ```
+
+5. Connect with a client and sanity-check that channels, chat history,
+   and avatars are all there.
+</Steps>
+
+<Aside type="tip" title="Pin a version">
+For production, pin to a specific tag instead of `latest`:
+
+```yaml
+image: ghcr.io/fancy-mumble/mumble-server:1.6.1
+```
+
+That way you control when you upgrade.
+</Aside>
+
+## Rollback
+
+If an upgrade goes wrong:
+
+<Steps>
+1. Stop the server.
+2. Restore the previous backup (see "Restore" above).
+3. Set the image back to the previous tag.
+4. Start the server.
+</Steps>
+
+The database schema is **only ever** added to in minor versions, never
+removed, so rolling back the binary is safe as long as you also
+restore the database.
+
+## Migrating to a new host
+
+<Steps>
+1. On the old host: stop the server, take a backup.
+2. Copy the backup file and `.env` to the new host.
+3. On the new host: install Docker, copy your `docker-compose.yml`,
+   restore from the backup, start the server.
+4. Update DNS to point at the new host.
+5. Once you have confirmed it works, retire the old server.
+</Steps>
+
+If you also change the public IP, update `webrtcsfupublicip` in your
+config or screen sharing will be broken until you do.
+
+## Database growth
+
+The two big spenders are persistent chat and link previews:
+
+- Lower `pchatdefaultretentiondays` to clear out old messages.
+- Lower `plugin.file-server.retentionDays` to clear out old files.
+
+Then run `VACUUM` once to reclaim space:
+
+```bash
+docker exec mumble-server sqlite3 /data/mumble-server.sqlite "VACUUM;"
+```
+
+## What if the database is corrupted?
+
+Restore from the most recent backup. Mumble's SQLite database is
+normally robust, but a disk failure or a sudden power-cut can
+truncate it. Backups are your friend.
+
+## Next step
+
+You are done with the server section. Continue with the admin pages
+to learn how to manage users, channels, and permissions:
+
+- [SuperUser & first login](/admin/superuser/)
+- [Channels](/admin/channels/)
+- [Roles & permissions](/admin/roles/)

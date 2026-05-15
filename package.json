@@ -1,0 +1,22 @@
+{
+  "name": "fancy-mumble-docs",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "diagrams": "node scripts/generate-diagrams.mjs",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.36.0",
+    "@iconify-json/lucide": "^1.2.0",
+    "@iconify-json/simple-icons": "^1.2.82",
+    "astro": "^5.16.0",
+    "astro-icon": "^1.1.5",
+    "sharp": "^0.34.0"
+  }
+}

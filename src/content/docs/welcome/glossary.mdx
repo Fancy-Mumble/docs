@@ -1,0 +1,43 @@
+---
+title: Glossary
+description: Quick definitions of the terms used across the docs.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+<table class="glossary">
+<tbody>
+<tr><td>**ACL**</td><td><small>Access Control List</small> A list of allow and deny rules attached to a channel that decides who may enter, speak, listen, write in chat, and so on. See [Channel ACL](/admin/acl/).</td></tr>
+<tr><td>**Auto-gain**</td><td><small>AGC - Automatic Gain Control</small> Software amplification that pushes quiet speech up to a target loudness so you do not have to live-adjust the slider.</td></tr>
+<tr><td>**Bitrate**</td><td>How much network bandwidth one audio stream uses. Higher is better quality and more upload. Configured under [Audio settings](/users/audio/).</td></tr>
+<tr><td>**Certificate**</td><td>A small file your app uses to prove who you are when connecting to a server. Stays on your machine.</td></tr>
+<tr><td>**Channel**</td><td>A folder-like room for users and chat history. Channels can nest.</td></tr>
+<tr><td>**Custom emote**</td><td>An image uploaded by a server admin that everyone in the server can use in chat as a shortcode, like `:partyparrot:`.</td></tr>
+<tr><td>**Deafened**</td><td>You can neither send nor hear audio. Implies muted.</td></tr>
+<tr><td>**File server**</td><td>The part of a Fancy Mumble server that stores avatar uploads, custom emotes, and shared files. Runs on port 64739 by default.</td></tr>
+<tr><td>**Frame**</td><td>Decorative ring around your avatar. See [Profile customization](/users/profile/).</td></tr>
+<tr><td>**Group**</td><td>A named bundle of users used inside ACLs. Groups can be inherited across channels.</td></tr>
+<tr><td>**Identity**</td><td>A combination of your default username and a saved certificate. You can have separate identities for separate servers or communities.</td></tr>
+<tr><td>**Mumble server**</td><td><small>also called Murmur</small> The program that everyone connects to. Fancy Mumble adds extra features on top.</td></tr>
+<tr><td>**Nameplate**</td><td>A gradient background behind your name in user lists.</td></tr>
+<tr><td>**Onboarding**</td><td>A few questions the server asks new members at join time. Their answers decide which channels they end up in and which roles they get. See [Onboarding workflow](/admin/onboarding/).</td></tr>
+<tr><td>**Opus**</td><td>The audio format Mumble uses. Open, low-latency, excellent quality.</td></tr>
+<tr><td>**Persistent chat**</td><td>Chat that stays on the server (encrypted), so you see the conversation history when you reconnect.</td></tr>
+<tr><td>**PTT**</td><td><small>Push-to-Talk</small> Voice transmits only while a key is held.</td></tr>
+<tr><td>**Reaction**</td><td>An emoji attached to a chat message.</td></tr>
+<tr><td>**Register**</td><td>Tell the server "this certificate belongs to this username", so the same name always maps to the same person.</td></tr>
+<tr><td>**Role**</td><td>A server-wide named bundle of permissions plus a display style (color, badge). Easier to manage than raw ACL groups. See [Roles & permissions](/admin/roles/).</td></tr>
+<tr><td>**Self-signed**</td><td>A certificate generated locally instead of issued by a certificate authority. Mumble servers do not need authority-signed certificates because the trust model is "trust the first time, then remember".</td></tr>
+<tr><td>**SFU**</td><td><small>Selective Forwarding Unit</small> A part of the server that takes one screen-share stream and re-broadcasts it to every viewer. Means the broadcaster only has to upload once.</td></tr>
+<tr><td>**SuperUser**</td><td>The built-in admin account on every Mumble server. Cannot be registered. Bypasses all ACLs. See [SuperUser & first login](/admin/superuser/).</td></tr>
+<tr><td>**VAD**</td><td><small>Voice Activity Detection</small> Sends audio only when speech is detected. Threshold based.</td></tr>
+<tr><td>**Whisper**</td><td>Send voice only to specific users or channels instead of everyone in your current channel.</td></tr>
+</tbody>
+</table>
+
+<Aside type="note">
+Do not see a term? [Open an issue](https://github.com/Fancy-Mumble/FancyMumbleNext/issues)
+and we will add it.
+</Aside>

@@ -1,0 +1,146 @@
+---
+title: Screen sharing
+description: Stream a window or your full desktop to everyone in the channel, with optional drawing on top.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Fancy Mumble lets you share what is on your screen with everyone in
+your channel. The server fans your single upload out to every viewer,
+so it stays smooth even with many people watching.
+
+You can also **draw on top of any stream** with the built-in whiteboard,
+which is great for "look at this" moments.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: stream grid with three active streams and a focus view.
+</div>
+
+## Start sharing your screen
+
+<Steps>
+
+1. Click the **Screen share** button <Icon name="lucide:monitor-up"
+   size={20} /> in the call-control area (bottom of the chat panel,
+   or the call bar at the top).
+
+2. Pick what to share:
+   - **Entire screen**: everything on the selected monitor.
+   - **Window**: a specific application window (private notes stay
+     private).
+   - **Browser tab** (when running through a browser): one tab only.
+
+3. Confirm. A small indicator appears under your name to show you are
+   broadcasting.
+
+4. To stop, click the same button again or use the **Stop sharing**
+   bar at the top of the window.
+
+</Steps>
+
+<Aside type="tip">
+You can be in a different channel from your viewers and still send to
+your home channel. As long as you have permission to broadcast in
+that channel, the server will deliver your stream.
+</Aside>
+
+## Watching someone share
+
+When anyone in your channel starts streaming, a thumbnail appears in
+the **stream grid** between the chat and the member list.
+
+- **Click a thumbnail** to make that stream the focus view (large
+  center window).
+- **Click the focus view** again to return to the grid.
+- **Pop out** with the <Icon name="lucide:picture-in-picture-2"
+  size={18} /> button to detach the stream as its own floating
+  window. Useful when you want chat on one monitor and the stream on
+  another.
+- **Resize** the focus view by dragging its corner.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: focused stream view with the grid above and the pop-out button.
+</div>
+
+## Multi-stream
+
+Up to a handful of people can broadcast at the same time. Each one
+shows as a tile in the grid. The focus view tracks whichever tile was
+clicked last.
+
+If your channel uses a *presentation* setup (one presenter, many
+viewers) the admin can set a permission so only the presenter may
+broadcast. See [Permission flags](/reference/permissions/).
+
+## Drawing on top (whiteboard)
+
+Anyone watching can **draw on top** of the focused stream:
+
+<Steps>
+1. Open the focus view of the stream you want to mark up.
+2. Click the **pencil** button <Icon name="lucide:pencil" size={18} />
+   in the stream toolbar.
+3. Pick a color and brush size.
+4. Draw with the mouse or with touch. Other viewers see your strokes
+   live.
+5. Click the <Icon name="lucide:eraser" size={18} /> button to clear
+   your own strokes, or the **trash** to clear everyone's strokes (if
+   you have permission).
+</Steps>
+
+<Aside type="note">
+Strokes are tied to the stream, not the channel. When the broadcaster
+stops sharing, the strokes are cleared.
+</Aside>
+
+## Watch Together
+
+In the same area, the **Watch Together** feature lets one person play
+a video URL that is synchronized across the channel. Pause and seek
+events propagate to every viewer.
+
+Open it from the **Watch Together** menu next to the screen-share
+button.
+
+## Tips
+
+<CardGrid>
+  <Card title="Share a specific window" icon="laptop">
+    Sharing the full desktop is convenient, but a single window keeps
+    private windows (calendar, messages, banking) hidden.
+  </Card>
+  <Card title="Resolution and frame rate" icon="setting">
+    The server caps each stream at a reasonable bitrate. Use a smaller
+    window for sharper text, or full screen for video.
+  </Card>
+  <Card title="Audio sharing" icon="seti:audio">
+    On Windows and most browsers, the picker offers an **Also share
+    system audio** checkbox. Useful for music, games, or video calls.
+  </Card>
+  <Card title="Privacy first" icon="approve-check">
+    The picker is system-provided. Fancy Mumble cannot start a stream
+    of something you did not explicitly choose.
+  </Card>
+</CardGrid>
+
+## When sharing does not work
+
+- **Black screen** at the viewer: see
+  [Screen-share problems](/troubleshooting/screen-share/).
+- **Cannot start the stream**: your operating system blocks screen
+  capture for the app. Grant permission under system Privacy
+  settings.
+- **The button is missing**: the server does not have the screen-share
+  relay enabled. See
+  [Screen sharing relay](/server/features/webrtc-sfu/) for the server
+  side.
+- **Viewers cannot hear audio**: re-tick the **Also share system
+  audio** box when starting the stream.
+
+## Next step
+
+Continue with [Files and images](/users/file-sharing/) to share
+documents and screenshots through chat.

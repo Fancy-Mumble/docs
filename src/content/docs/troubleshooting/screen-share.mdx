@@ -1,0 +1,170 @@
+---
+title: Screen-share problems
+description: Black thumbnails, never appears, one-way streams, choppy video. A checklist.
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Screen sharing involves three moving parts. When something goes
+wrong, identify which one.
+
+1. **You** the broadcaster: your operating system has to grant
+   screen-capture permission.
+2. **The server**: has to relay the stream to viewers (if the relay
+   is enabled), or pass through the signaling for peer-to-peer.
+3. **The viewer**: has to reach the server's relay UDP port.
+
+## "I cannot start a screen share"
+
+You picked a window or screen but the stream never starts.
+
+<Steps>
+
+1. **Permission**. On macOS, screen capture requires explicit
+   permission per app:
+   - System Settings, Privacy & Security, Screen Recording, tick
+     Fancy Mumble.
+   - Quit and restart the app after granting.
+
+2. On Windows 10/11, no permission is required, but ensure
+   **Background apps** are allowed to capture.
+
+3. On Linux (Wayland), the screen-share picker uses the portal API.
+   Some Wayland compositors (Sway, KDE, GNOME) need a portal
+   helper installed. Try `xdg-desktop-portal-wlr` on Sway.
+
+4. Your antivirus may block screen capture. Add the app to the
+   allow list.
+
+</Steps>
+
+## "Viewers see a black thumbnail"
+
+The most common screen-share problem. It means data is not
+reaching the viewer.
+
+<Steps>
+
+1. (Server owner) Confirm the relay is **enabled**:
+   ```yaml
+   MUMBLE_CONFIG_WEBRTCSFUENABLED: true
+   ```
+
+2. (Server owner) Confirm the **public IP** is right and reachable:
+   ```yaml
+   MUMBLE_CONFIG_WEBRTCSFUPUBLICIP: "203.0.113.5"
+   ```
+   It must be the address that **viewers** can reach. Not
+   `0.0.0.0`, not the LAN IP of the server.
+
+3. (Server owner) Confirm **UDP 10000** is open in both the
+   firewall and the router forwarder.
+
+4. (Viewer) Confirm UDP 10000 is not blocked by the viewer's
+   firewall.
+
+</Steps>
+
+If the relay is disabled, the app falls back to peer-to-peer, which
+fails behind strict NAT.
+
+## "Viewer sees the stream but it is choppy"
+
+Bandwidth is the limit. Each stream is ~1 to 2 Mbps for 720p.
+
+- The broadcaster's upload is too slow. Test with
+  [fast.com](https://fast.com).
+- Many viewers are pulling from the relay on a slow link. Upgrade
+  the relay host.
+- Try sharing **a single window** instead of the full desktop, the
+  encoder gets a simpler frame.
+
+## "Stream works for some viewers but not others"
+
+Different viewer networks:
+
+- One viewer is behind a strict NAT, the others are not.
+- One viewer's ISP blocks UDP 10000. They can connect to the
+  server but not to the relay.
+
+Workaround: on the affected viewer's side, ask them to test the
+relay port:
+
+```bash
+nc -uvz your-server 10000
+```
+
+If that fails, they need to talk to their ISP or use a different
+network.
+
+## "I cannot hear the streamed audio"
+
+The system-audio toggle was not checked when starting the share.
+
+- (Broadcaster) Stop the stream, re-start it, **tick "Also share
+  system audio"** in the system picker.
+- On Linux, audio sharing only works with PipeWire. PulseAudio
+  alone cannot route system audio to a tab.
+
+## "Whiteboard strokes do not show up"
+
+- The broadcaster has the **Whiteboard, draw** permission denied
+  for their role. Check roles.
+
+## "Cannot pop the stream into its own window"
+
+- On some platforms (older Linux versions) the pop-out window may
+  fail to start because of a graphics driver issue. Update graphics
+  drivers and retry.
+
+## Server-side diagnosis
+
+(For server owners)
+
+Check the server logs for the relay:
+
+```bash
+docker compose logs -f mumble-server | grep webrtc-sfu
+```
+
+Look for:
+
+```text
+webrtc-sfu: listening on 0.0.0.0:10000/udp (public 203.0.113.5)
+```
+
+When a broadcaster connects:
+
+```text
+webrtc-sfu: new broadcaster session=42 channel=3
+```
+
+And per viewer:
+
+```text
+webrtc-sfu: new viewer session=43 broadcaster=42 ice-state=connected
+```
+
+If you see `ice-state=failed`, the viewer cannot reach the relay
+over UDP. That is the firewall problem above.
+
+## "The library is missing"
+
+Server log says `webrtc-sfu: library not found`. The relay was not
+compiled into your build. Either:
+
+- Use the official image (`ghcr.io/fancy-mumble/mumble-server:latest`),
+  which includes the relay.
+- Rebuild your custom image with
+  `--build-arg MUMBLE_CMAKE_ARGS="-Dwebrtc-sfu=ON"`.
+
+## Still broken?
+
+[Open a bug report](/troubleshooting/reporting-bugs/) with:
+
+- Whether the relay is enabled.
+- The public IP setting (redact the actual IP).
+- Server logs filtered to `webrtc-sfu`.
+- Whether the issue is for all viewers or only some.

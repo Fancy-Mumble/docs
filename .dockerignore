@@ -1,0 +1,32 @@
+# Build outputs — regenerated inside the container.
+dist/
+.astro/
+
+# Dependencies — reinstalled via npm ci inside the container.
+node_modules/
+
+# Git history and CI config — not needed at runtime.
+.git/
+.github/
+.gitignore
+
+# Editor / AI assistant state.
+.claude/
+.vscode/
+.idea/
+
+# Local environment overrides.
+.env
+.env.production
+
+# OS artifacts.
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dev-only scripts (diagram regeneration is a manual local task,
+# not part of the Docker build).
+scripts/
+
+# Test / preview output — not needed inside the image.
+*.log

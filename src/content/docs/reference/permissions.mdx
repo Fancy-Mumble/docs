@@ -1,0 +1,92 @@
+---
+title: Permission flags
+description: How permissions work in Mumble, plus how to discover the full list your server exposes.
+sidebar:
+  order: 2
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Permissions are the building blocks of ACLs and roles. Each one is a
+single yes/no that controls one specific action.
+
+This page intentionally does **not** list every permission flag by
+name. The exact set depends on your server version, the Fancy fork
+adds a few extras compared to upstream Mumble, and the names show
+up exactly as labels in the admin UI.
+
+## Where to see the live list
+
+The authoritative list is in your own admin panel:
+
+<Card title="In the app" icon="seti:lock">
+
+1. Connect to your server as an admin.
+2. Open **Admin, Roles**.
+3. Click **New role** (or open an existing one).
+4. Switch to the **Permissions** tab.
+
+You will see every flag with its label and a short description.
+
+</Card>
+
+Or, if you want the source of truth, the C++ class `ChanACL` in the
+server repo (`src/ACL.h`) enumerates the bit flags, and the Fancy
+fork adds entries listed in its `README.md` (DeleteMessage,
+KeyOwner, plus a handful of others).
+
+## The categories you will see
+
+In broad strokes the permissions split into:
+
+- **Channel entry and voice**: `Traverse`, `Enter`, `Speak`,
+  `Whisper`, `MuteDeafen`, `Move`, `Make channel`, `Make temporary
+  channel`, `Link channel`, `Listen`.
+- **Text chat**: send messages, embed images, mention everyone.
+- **Administration**: `Write ACL`, `Kick`, `Ban`, `Register`,
+  `Reset user content`.
+- **Fancy extensions**: delete persistent chat messages, key
+  ownership for encrypted channels, file-server access modes, and so
+  on. The exact list grows with the fork.
+
+## How rules combine
+
+Within a role or an ACL rule:
+
+- **Allow** grants the permission.
+- **Deny** explicitly takes it away.
+- **Deny overrides Allow** when both match.
+
+Channel ACLs evaluate top-down, with rules from parent channels
+inherited unless you override them. See [Channel ACL](/admin/acl/)
+for the full mechanics.
+
+## Special subjects in ACLs
+
+You can target rules at one of these subjects:
+
+- `@everyone` (or `*` / `~all`): every connected user.
+- `@auth`: anyone registered on the server.
+- `~in`: anyone currently in this channel.
+- `~sub`: anyone in this channel or a sub-channel.
+- `~out`: anyone not in this channel.
+- A specific **role name**, prefixed with `@`.
+- A specific **group name** defined on the channel.
+- A specific **user**.
+
+## Compatibility
+
+Vanilla Mumble clients ignore Fancy-only permissions. For example, a
+vanilla user denied a Fancy-only flag (such as "delete other people's
+persistent-chat messages") would not see the button at all, because
+their client does not have the feature.
+
+## Pitfalls
+
+- **A user has more permissions than expected**: look upward in the
+  channel tree for an inherited Allow rule.
+- **A user has fewer permissions than expected**: look for a Deny.
+  Deny wins ties.
+- **The permission you want does not exist**: check the exact label
+  in the admin UI before assuming it is missing. Names sometimes
+  change between server versions.

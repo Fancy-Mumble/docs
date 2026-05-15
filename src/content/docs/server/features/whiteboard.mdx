@@ -1,0 +1,48 @@
+---
+title: Whiteboard
+description: Real-time collaborative drawing on top of any screen share.
+sidebar:
+  order: 8
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+The whiteboard lets anyone watching a screen share **draw on top of
+it**. Useful for "point at this", code reviews, or just decorating a
+movie night.
+
+Strokes are sent through the server in real time, so every viewer
+sees them as they are drawn.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: stream with annotations layered on top.
+</div>
+
+## How it works
+
+Each stroke is a small batch of points (position, color, width) sent
+as a plugin-data message. The server forwards the message to every
+participant in the channel. There is no per-stroke persistence; when
+the stream ends, the strokes are cleared.
+
+The whiteboard is a **client-side feature**. There are no documented
+server `MUMBLE_CONFIG_*` or `plugin.*` keys for tuning it.
+
+## Compatibility
+
+| Client | Can draw? | Can see strokes? |
+|--------|:---------:|:----------------:|
+| Fancy Mumble desktop | yes | yes |
+| Fancy Mumble mobile | no (view-only on mobile) | yes |
+| Vanilla Mumble | no | no |
+
+## Pitfalls
+
+- **Cannot draw on mobile**: the mobile build is view-only for the
+  whiteboard. Use the desktop app to draw.
+
+## Next step
+
+You have walked through all of the feature deep-dives. Continue with
+[Customize & disable features](/server/customize/) for the consolidated
+toggle reference.

@@ -1,0 +1,232 @@
+---
+title: Debug logging
+description: Enable verbose logging in the app and server, find the log file, and send it to a developer.
+sidebar:
+  order: 5
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+When you report a bug, the developer will almost always ask for
+**debug logs**. This page tells you how to enable them, where to
+find them, and how to share them safely.
+
+## Why debug logs?
+
+A normal log line says "something happened". A debug log line says
+**why** it happened and **what data was involved**. For an audio
+glitch, the difference is between:
+
+```text
+info: voice frame dropped
+```
+
+and
+
+```text
+debug: voice frame dropped: jitter buffer late by 47ms (threshold 30ms), last 3 frames late
+```
+
+## App: enable debug logging
+
+<Steps>
+
+1. Open **Settings, Advanced**.
+
+2. Find the **Log level** dropdown (Expert mode required).
+
+3. Pick:
+   - `info` for normal operation (default).
+   - `debug` for the issue you are reporting.
+   - `trace` for the most detail. Massive log files, use sparingly.
+
+4. **Reproduce the problem** while debug logging is on. Try to make
+   the minimum reproduction so the log stays short.
+
+5. Switch back to `info` afterwards. Debug logging is expensive on
+   disk and CPU.
+
+</Steps>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: advanced settings with the log level dropdown set to debug.
+</div>
+
+## App: where is the log file?
+
+The location depends on your operating system.
+
+<Tabs>
+  <TabItem label="Windows">
+    <div class="platform-heading">
+      <Icon name="simple-icons:windows11" size={24} />
+      <span>Windows</span>
+    </div>
+
+    ```text
+    %APPDATA%\com.fancy-mumble.app\logs\fancy-mumble.log
+    ```
+
+    In Explorer, paste `%APPDATA%\com.fancy-mumble.app\logs` into the
+    address bar.
+  </TabItem>
+  <TabItem label="Linux">
+    <div class="platform-heading">
+      <Icon name="simple-icons:linux" size={24} />
+      <span>Linux</span>
+    </div>
+
+    ```text
+    ~/.local/share/com.fancy-mumble.app/logs/fancy-mumble.log
+    ```
+
+    Or, with the AppImage build:
+
+    ```text
+    ~/.fancy-mumble/logs/fancy-mumble.log
+    ```
+  </TabItem>
+  <TabItem label="macOS">
+    <div class="platform-heading">
+      <Icon name="simple-icons:apple" size={24} />
+      <span>macOS</span>
+    </div>
+
+    ```text
+    ~/Library/Logs/com.fancy-mumble.app/fancy-mumble.log
+    ```
+  </TabItem>
+  <TabItem label="Android">
+    <div class="platform-heading">
+      <Icon name="simple-icons:android" size={24} />
+      <span>Android</span>
+    </div>
+
+    The app cannot easily expose the log file. Use **Settings,
+    Advanced, Export logs** to get a zip that you can save or share.
+  </TabItem>
+</Tabs>
+
+The folder also contains rotated archives:
+
+- `fancy-mumble.log` is the live file.
+- `fancy-mumble.log.1`, `.2`, ... are previous sessions.
+
+## Server: enable verbose logging
+
+<Tabs>
+  <TabItem label="Environment variable">
+    ```yaml
+    environment:
+      MUMBLE_VERBOSE: true
+    ```
+    Restart the container. Logs now include `info` and `debug` lines.
+  </TabItem>
+  <TabItem label="Per-component">
+    Mumble has separate log channels per plugin. Set in your custom
+    INI:
+
+    ```ini
+    plugin.webrtc-sfu.logLevel=debug
+    plugin.file-server.logLevel=debug
+    plugin.link-previews.logLevel=debug
+    plugin.push-fcm.logLevel=debug
+    plugin.persistent-chat.logLevel=debug
+    ```
+
+    Useful when one feature misbehaves and you do not want the noise
+    of all the others.
+  </TabItem>
+</Tabs>
+
+## Server: where to read the log
+
+```bash
+# Live:
+docker compose logs -f mumble-server
+
+# Last 1000 lines:
+docker compose logs --tail=1000 mumble-server > server.log
+```
+
+For long-running diagnostics, redirect to a file:
+
+```bash
+docker compose logs -f mumble-server > server.log 2>&1 &
+# ... reproduce the issue ...
+kill %1
+```
+
+## Redacting before you share
+
+Before posting a log on GitHub or in chat, **strip personally
+identifying data**:
+
+- Your **public IP** (search and replace with `1.2.3.4`).
+- **Tokens** in the form `Authorization: Bearer ...`.
+- **Push credentials** (rare in logs, but check).
+- **Other users' usernames** if your community values privacy.
+
+A quick one-liner:
+
+```bash
+sed -E -e 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/1.2.3.4/g' \
+       -e 's/Authorization: [^[:space:]]*/Authorization: [REDACTED]/g' \
+  fancy-mumble.log > fancy-mumble.redacted.log
+```
+
+## What to include in a bug report
+
+<Card title="The good report formula" icon="document">
+
+1. **Steps to reproduce**, minimum reproduction.
+2. **Expected** vs **observed** behavior.
+3. The **app version** and **server version**.
+4. **Operating system** and version.
+5. **Network setup** (home, office, mobile, VPN).
+6. **The debug log** for the reproduction window, redacted.
+
+</Card>
+
+## A round trip example
+
+You: "audio cuts mid-sentence".
+
+Developer: "can you enable debug logging and reproduce with a 10-
+second sample?"
+
+You:
+
+1. Settings, Advanced, Log level, debug.
+2. Reconnect to the server.
+3. Talk for 10 seconds with a friend in the call, including the
+   moment the cut happens.
+4. Disconnect.
+5. Grab the log file, redact.
+6. Attach to the issue.
+
+Developer: "the audio packet `seq=4231` was dropped because the
+jitter buffer was full. Increase `jitterBufferSize` in your config
+to 200." Issue closed.
+
+That round trip would take an extra five messages without debug
+logs.
+
+## Real-time tracing (advanced)
+
+Both client and server can stream events to a TCP listener for live
+diagnosis. Set:
+
+```yaml
+environment:
+  MUMBLE_TRACE_TCP: "192.0.2.5:4444"
+```
+
+A `nc -l 4444` on the listener side captures everything. Useful for
+sessions where you cannot reproduce locally.
+
+## Next step
+
+You are ready to file a bug report. Head to
+[Reporting bugs](/troubleshooting/reporting-bugs/) for the checklist.

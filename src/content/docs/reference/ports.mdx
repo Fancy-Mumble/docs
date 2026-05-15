@@ -1,0 +1,62 @@
+---
+title: Ports & protocols
+description: Quick reference for every port the client and server use.
+sidebar:
+  order: 1
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+| Port | Protocol | Direction | Purpose | Configurable with |
+|------|----------|-----------|---------|---|
+| **64738** | TCP | client to server | TLS handshake, control messages, chat, TCP fallback for voice | `MUMBLE_CONFIG_PORT` |
+| **64738** | UDP | client to server | Voice and per-channel position data | same |
+| **64739** | TCP | client to server | File server (emotes, attachments) | `plugin.file-server.port` |
+| **10000** | UDP | client to server (in both directions) | Screen-share relay (WebRTC SFU) | `MUMBLE_CONFIG_WEBRTCSFUPORT` |
+| **6502** | TCP | localhost only by default | Admin RPC (Ice) | `Ice.Endpoint` in config |
+
+## Client to server only
+
+The client always initiates the connection. The server never reaches
+back out, except for FCM push (server to Google) and link previews
+(server to the URL the user posted).
+
+## Outbound from the server
+
+For a complete picture:
+
+| Destination | Protocol | When |
+|-------------|----------|------|
+| Public DNS | UDP 53 | Resolving hostnames |
+| `mumble.info` directory | TCP 443 | Public server listing (`registerHostname` set) |
+| Firebase Cloud Messaging | TCP 443 | Push notifications, if enabled |
+| The URLs users paste | TCP 80/443 | Link preview fetches, if enabled |
+
+<Aside type="caution">
+If you self-host on an isolated network, the public-server-directory
+ping fails silently. That is fine; just turn it off with
+`MUMBLE_CONFIG_REGISTERHOSTNAME=""`.
+</Aside>
+
+## Firewall opening cheat sheet
+
+A self-hosted server typically needs:
+
+```text
+TCP  64738   inbound
+UDP  64738   inbound
+TCP  64739   inbound (if file server)
+UDP  10000   inbound (if screen-share relay)
+TCP    443   outbound (if push or link previews)
+```
+
+## Common pitfalls
+
+- **UDP 64738 is blocked, voice falls back to TCP** with a small
+  latency hit. Force TCP under the client's audio settings to make
+  this consistent.
+- **UDP 10000 is filtered**: viewers will see a black screen for
+  shared streams. Open the port.
+- **Port collision** with another service: change the server's port
+  with `MUMBLE_CONFIG_PORT=12345`. Clients then connect to
+  `your-host:12345`.

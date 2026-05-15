@@ -1,0 +1,136 @@
+---
+title: Server config keys
+description: Reference of the documented server settings.
+sidebar:
+  order: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This page lists the documented server-side settings. There are two
+shapes:
+
+- **Top-level settings**, set as `MUMBLE_CONFIG_<NAME>` environment
+  variables (or as `<name>=<value>` in a custom INI file).
+- **Plugin settings**, set as `<plugin.name.key>=<value>` in a
+  mounted INI file. Only the file-server plugin exposes public keys
+  today.
+
+See [Configuration reference](/server/config/) for where these files
+live on disk.
+
+<Aside type="note">
+This is the public surface that ships with the example
+`mumble-server.ini`. The server has many more upstream Mumble
+settings; for those, see
+[wiki.mumble.info/wiki/Murmur.ini](https://wiki.mumble.info/wiki/Murmur.ini).
+</Aside>
+
+## Server identity and limits
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `database` | `/data/mumble-server.sqlite` | Path to the SQLite database. |
+| `port` | `64738` | TCP/UDP port the server listens on. |
+| `host` | empty | Bind address. Empty means "all interfaces". |
+| `welcometext` | empty | HTML welcome message sent on connect. |
+| `serverpassword` | empty | Optional shared password. |
+| `registerName` | empty | Public display name. Required for the public directory. |
+| `users` | `100` | Maximum simultaneous users. |
+| `usersperchannel` | `0` | Per-channel limit. 0 means unlimited. |
+| `bandwidth` | `558000` | Max bits/s per user for audio. |
+| `textmessagelength` | `500000` | Max characters per text message. |
+| `imagemessagelength` | `1048576` | Max bytes for inline images. |
+| `allowhtml` | `true` | Render HTML in chat and comments. |
+
+## Security and bans
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `certrequired` | `false` | If true, anonymous clients are rejected. |
+| `sslCert` | empty | Path to TLS certificate. Auto-generated if missing. |
+| `sslKey` | empty | Path to TLS private key. |
+| `autobanAttempts` | `0` | Failed connections that trigger an auto-ban. 0 = off. |
+| `autobanTimeframe` | `120` | Window (seconds) for counting attempts. |
+| `autobanTime` | `300` | How long the auto-ban lasts (seconds). |
+| `obfuscate` | `false` | Hash IPs in logs. Good for privacy. |
+
+## Logging
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `logdays` | `31` | Days of log retention in the database. |
+
+## Persistent chat
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `pchatenabled` | `true` | Master toggle. |
+| `pchatrequireregistration` | `false` | Only registered users may post. |
+| `pchatdefaultmaxhistory` | `5000` | Messages kept per channel. |
+| `pchatdefaultretentiondays` | `90` | Days messages live. |
+| `pchatmaxpayloadsize` | `1048576` | Max bytes per stored message. |
+| `pchatpendingkeyrequestmaxdays` | `7` | Days before an unfulfilled key request expires. |
+| `pchatpendingfulfilledmaxhours` | `24` | Hours before a fulfilled key request is cleaned up. |
+| `pchatperuserpending` | `5` | Max pending key requests per user. |
+| `pchatperchannelpendingsoftcap` | `100` | Soft cap on pending key requests per channel. |
+
+## Push notifications
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `pushenabled` | `false` | Master toggle. |
+| `pushmodulepath` | (auto) | Override push library path. |
+| `pushcredentialspath` | `/data/fcm-credentials.json` | Firebase JSON key path. |
+| `pushprojectid` | empty | Firebase project ID. |
+| `pushtopicprefix` | `mumble` | FCM topic prefix. |
+| `pushnotifytextmessage` | `true` | Push on a chat message. |
+| `pushnotifyreaction` | `false` | Push on a reaction. |
+| `pushnotifyuserjoin` | `false` | Push on a user join. |
+
+## Screen-share relay
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `webrtcsfuenabled` | `false` | Master toggle. |
+| `webrtcsfuport` | `10000` | UDP listen port. |
+| `webrtcsfupublicip` | `127.0.0.1` | IP advertised to viewers. |
+| `webrtcsfumodulepath` | (auto) | Override relay library path. |
+
+## File server
+
+Dot and hyphen separators in plugin key names are stripped when matching
+environment variables, so `plugin.file-server.storagePath` maps to
+`MUMBLE_CONFIG_PLUGIN_FILE_SERVER_STORAGEPATH`.
+
+| Key | Env var suffix | Default | Description |
+|-----|----------------|---------|-------------|
+| `plugin.file-server.enabled` | `PLUGIN_FILE_SERVER_ENABLED` | `true` | Master toggle. |
+| `plugin.file-server.storagePath` | `PLUGIN_FILE_SERVER_STORAGEPATH` | unset | Absolute path to storage directory. Required for the plugin to start. |
+| `plugin.file-server.bindAddress` | `PLUGIN_FILE_SERVER_BINDADDRESS` | `127.0.0.1` | Listen address. Use `0.0.0.0` to expose the port directly. |
+| `plugin.file-server.port` | `PLUGIN_FILE_SERVER_PORT` | `64739` | TCP port. |
+| `plugin.file-server.tlsTerminatedByProxy` | `PLUGIN_FILE_SERVER_TLSTERMINATEDBYPROXY` | `false` | Set to `true` when a reverse proxy handles TLS. |
+| `plugin.file-server.baseUrl` | `PLUGIN_FILE_SERVER_BASEURL` | empty | Public URL clients use. Falls back to `http://host:port` if empty. |
+| `plugin.file-server.allowedOrigins` | `PLUGIN_FILE_SERVER_ALLOWEDORIGINS` | empty | Comma-separated CORS origins. Empty blocks browser usage. |
+
+## Container-level (not server settings)
+
+These are read by the Docker entrypoint, not the server itself.
+
+| Variable | What |
+|----------|------|
+| `MUMBLE_SUPERUSER_PASSWORD` | SuperUser password. Random and logged on first start if unset. |
+| `MUMBLE_CUSTOM_CONFIG_FILE` | Path to your own INI. Disables `MUMBLE_CONFIG_*`. |
+| `MUMBLE_CHOWN_DATA` | Set to `false` to skip taking ownership of `/data` on boot. |
+| `MUMBLE_ACCEPT_UNKNOWN_SETTINGS` | Pass through unknown `MUMBLE_CONFIG_*` values without failing. |
+| `MUMBLE_VERBOSE` | Verbose server logging. |
+| `PUID` / `PGID` | UID and GID the server process runs as. |
+| `MUMBLE_FCM_CREDENTIALS_BASE64` | Base64-encoded Firebase JSON, decoded into a tmpfs path at boot. |
+
+## What is **not** here
+
+Reactions, polls, link previews, Watch Together, the whiteboard,
+and onboarding have **no public server config keys** today. They are
+either always-on (riding the plugin-data transport between clients)
+or controlled in the client UI. If you want a server-wide off
+switch for any of them, file a feature request on the server repo.

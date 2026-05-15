@@ -1,0 +1,149 @@
+---
+title: Roles & permissions
+description: Create roles, assign permissions and members, and use roles in ACLs.
+sidebar:
+  order: 4
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+
+A **role** is a named bundle of permissions plus a display style
+(color, badge, icon). Members of a role get its permissions
+everywhere on the server. Roles are the bread-and-butter of
+administration.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: roles list with five roles, each showing a colored badge.
+</div>
+
+## Built-in roles
+
+A fresh server has three:
+
+| Role | Members | Permissions |
+|------|---------|-------------|
+| **Administrator** | The SuperUser plus anyone you add | Everything. |
+| **Moderator** | Empty by default | Kick, mute, move users; manage channels. |
+| **Member** | Everyone registered | Speak in voice channels, write in chat. |
+
+You can create as many additional roles as you want.
+
+## Create a role
+
+<Steps>
+1. Open **Admin, Roles**.
+2. Click **New role**.
+3. Pick a name (for example, `Trusted`).
+4. Pick a color and an optional emoji or icon. Both show as a badge
+   next to the user's name.
+5. Save.
+</Steps>
+
+The new role has no members and no permissions yet.
+
+## Add members
+
+Open the role and switch to the **Members** tab:
+
+- **Add user**: type a username, pick from the autocomplete.
+- **Remove user**: click the trash next to the member.
+- **Bulk add** by pasting a list of usernames.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: role-members tab with five members and an autocomplete on top.
+</div>
+
+## Set permissions
+
+Open the role and switch to the **Permissions** tab. Each row is a
+permission, with two toggles (`Allow`, `Deny`).
+
+<Aside type="caution" title="Allow versus Deny">
+**Allow** means "give this permission to members of this role".
+**Deny** means "explicitly take this permission away, even if another
+role grants it". Deny overrides Allow.
+
+For most roles, only use Allow. Use Deny sparingly, for example to
+strip a punishing role of access without removing the user.
+</Aside>
+
+The exact list of permissions depends on your server version, and
+the labels show up directly in the Permissions tab. Common ones to
+look for:
+
+- Voice and channels: **Speak**, **Whisper**, **Listen**, **Mute and
+  Deafen**, **Move**, **Make channel**, **Enter**, **Traverse**.
+- Text chat: **Write**, **Mention everyone**, **Embed images**.
+- Administration: **Kick**, **Ban**, **Register**, **Write ACL**.
+- Fancy extensions: **Manage emotes** and persistent-chat delete
+  permissions. The exact label may differ between server versions.
+
+See [Permission flags](/reference/permissions/) for the general
+mechanics. For the live list, look in your own server's role
+editor.
+
+## Order matters
+
+Roles are evaluated **top-down**. The order in the role list is the
+evaluation order. When two roles grant or deny the same permission,
+the **higher** role wins.
+
+Drag a role up or down in the list to change priority.
+
+## Use a role in an ACL
+
+Roles are most useful **inside channel ACLs**:
+
+<Steps>
+1. Edit a channel.
+2. ACL tab, **Add rule**.
+3. Pick the role from the dropdown.
+4. Pick the permission and Allow or Deny.
+5. Save.
+</Steps>
+
+Example: lock the "Hosts" channel down to the `Moderator` role:
+
+1. Add a rule: **Deny `Enter`** to `@everyone`.
+2. Add a rule: **Allow `Enter`** to `@Moderator`.
+3. Set the rule order so the allow comes second (it wins).
+
+## Mention with `@role`
+
+A user can mention a role with `@role-name` in chat. Members of the
+role get a notification (depending on their notification settings).
+Useful for "calling all moderators".
+
+## Display tweaks
+
+The Display tab of a role lets you tweak:
+
+- **Badge color**.
+- **Badge icon** (emoji or text up to 3 characters).
+- **Sidebar sort order** (members of higher-sorted roles appear
+  first in the sidebar).
+- **Hoist** (if enabled, members of this role get a separate section
+  in the sidebar).
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: role display panel with the live badge preview.
+</div>
+
+## Audit log
+
+The **Audit log** tab shows when permissions were changed, who did
+it, and what changed. Useful for diagnosing "who removed my role".
+
+## Pitfalls
+
+- **A permission "does not work"**: check both Allow and Deny across
+  every role the user is in. Deny wins.
+- **The role badge does not show**: the user has avatars and badges
+  turned off in their personalization.
+- **`@everyone` mention not blocked**: that mention is its own
+  permission, separate from the chat write permission.
+
+## Next step
+
+Continue with [Channel ACL](/admin/acl/) for the per-channel
+permission overrides.

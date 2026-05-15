@@ -1,0 +1,113 @@
+---
+title: Quick tour of the UI
+description: A whirlwind walkthrough of every part of the Fancy Mumble window.
+sidebar:
+  order: 2
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+This is the **main chat view** once you are connected. Three columns,
+each doing one job.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: full chat view with channels left, chat center, members right.
+</div>
+
+## 1. Channel sidebar (left)
+
+- The server name and a status pip live at the top.
+- **Channels** are folder-like containers. Clicking a channel joins
+  voice and shows that channel's chat.
+- A small badge on a channel name means **persistent chat is enabled**,
+  meaning your messages will still be there next time you connect.
+- Right-click a channel to **edit, link, delete, or set ACLs** (if you
+  have permission).
+- Three sidebar looks are available. Switch in
+  [Personalization](/users/personalization/):
+  - **Classic**, closest to traditional Mumble.
+  - **Flat**, compact look.
+  - **Modern**, large icons and soft glass.
+
+## 2. Chat (center)
+
+The chat column is more than just text:
+
+- **Formatted text** with bold, italic, code, lists, and links.
+- Type **`@`** to mention a user or a role.
+- Type **`:`** to pick an emoji, including custom server emotes.
+- A **GIF browser** is one click away (paperclip, GIF icon).
+- **Polls** with multiple options and a live vote count.
+- **Attachments**: drop a file or paste an image to start the
+  [share dialog](/users/file-sharing/).
+- **Reactions**: hover a message, click the smiley.
+- **Pin** important messages from the context menu. Pinned messages
+  appear in a tray at the top.
+- **Reply** and **quote** by right-clicking a message.
+- **Read receipts** show who has read what.
+- **Mobile call controls** are an overlay bar at the bottom on Android.
+
+<Aside type="tip">
+Selecting multiple messages (long-press on mobile, shift-click on
+desktop) reveals the **message selection bar** for bulk copy or delete.
+</Aside>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: chat composer with the mentions popover open.
+</div>
+
+## 3. Member panel (right)
+
+- The active speaker gets a soft green ring.
+- Click any user to open their **profile card**, with bio, frame, and
+  nameplate.
+- Right-click for the **user context menu**, with private message,
+  mute, deafen, kick, ban, and role-change options.
+- Edit your own profile from **Settings, Profile**.
+
+## 4. Header bar
+
+The top bar gives you global controls:
+
+- **Mute** and **Deafen** toggles.
+- **Push-to-talk indicator**, lights up when you are transmitting.
+- **Voice level meter**.
+- **Settings** icon, opens the full settings page.
+- **Admin** icon, opens the admin panel if you have permission.
+- **Activity log**, server-wide activity. Useful for moderators.
+
+## 5. Stream grid (when screen sharing)
+
+When anyone in the channel is sharing a screen, a **stream grid**
+appears between the chat and the member list. See
+[Screen sharing](/users/screen-sharing/).
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: stream grid with three active streams plus the focus view.
+</div>
+
+## 6. Settings
+
+Opens an overlay with tabs:
+
+- **Profile**, your name, avatar, banner, bio, nameplate, frame, name
+  style.
+- **Voice and Audio**, devices, activation mode, noise suppression,
+  gate, gain, quality.
+- **Personalization**, themes, fonts, channel-viewer style, bubble
+  style, chat background.
+- **Notifications**, per-event sounds, push, focus rules.
+- **Shortcuts**, global hotkeys for push-to-talk, mute, deafen, and
+  more.
+- **Privacy**, what you share with the server.
+- **Identities**, your saved identities for different servers.
+- **Advanced**, expert mode, log level, GIF key, time format,
+  auto-update, reset.
+
+## What is next?
+
+<Steps>
+1. [Connect to a server](/getting-started/connect/) if you have not yet.
+2. Run through [Audio configuration](/users/audio/), five minutes saves you ten future ones.
+3. Personalize your [profile](/users/profile/).
+</Steps>

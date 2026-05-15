@@ -1,0 +1,125 @@
+---
+title: Install Fancy Mumble
+description: Download Fancy Mumble for Windows, Linux, or Android.
+sidebar:
+  order: 1
+---
+
+import { Tabs, TabItem, Steps, Aside, Code } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+Fancy Mumble runs on Windows, Linux, and Android. Pick your platform
+below.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Fancy Mumble running on Windows, Linux, and Android side by side.
+</div>
+
+<Aside type="tip" title="Where to download">
+Pre-built downloads are available in two places:
+
+- The official website at [fancy-mumble.com](https://fancy-mumble.com/),
+  which is the easiest starting point for most users.
+- The [GitHub releases page](https://github.com/Fancy-Mumble/FancyMumbleNext/releases),
+  which always has the most recent build (including pre-releases).
+
+Both serve the same installers. Pick the latest stable version.
+</Aside>
+
+<Tabs>
+  <TabItem label="Windows">
+    <div class="platform-heading">
+      <Icon name="simple-icons:windows11" size={28} />
+      <span>Windows</span>
+    </div>
+
+    <Steps>
+    1. Download the `.exe` or `.msi` installer from
+       [fancy-mumble.com](https://fancy-mumble.com/) or the
+       [GitHub releases page](https://github.com/Fancy-Mumble/FancyMumbleNext/releases).
+    2. Run the installer. Windows SmartScreen may warn you on the
+       first run. Click **More info** then **Run anyway**.
+    3. Launch **Fancy Mumble** from the Start menu.
+    4. Continue to [Connect to a server](/getting-started/connect/).
+    </Steps>
+  </TabItem>
+
+  <TabItem label="Linux">
+    <div class="platform-heading">
+      <Icon name="simple-icons:linux" size={28} />
+      <span>Linux</span>
+    </div>
+
+    Three formats are published:
+
+    - `.deb` for Debian, Ubuntu, and Mint
+    - `.rpm` for Fedora and openSUSE
+    - `.AppImage` for everything else
+
+    <Tabs syncKey="linux-format">
+      <TabItem label="Debian / Ubuntu">
+        <div class="platform-heading platform-heading--small">
+          <Icon name="simple-icons:ubuntu" size={20} />
+          <span>Debian / Ubuntu / Mint</span>
+        </div>
+        <Code lang="bash" code={`sudo apt install ./fancy-mumble_*_amd64.deb`} />
+      </TabItem>
+      <TabItem label="Fedora">
+        <div class="platform-heading platform-heading--small">
+          <Icon name="simple-icons:fedora" size={20} />
+          <span>Fedora / openSUSE</span>
+        </div>
+        <Code lang="bash" code={`sudo dnf install ./fancy-mumble_*.rpm`} />
+      </TabItem>
+      <TabItem label="AppImage">
+        <div class="platform-heading platform-heading--small">
+          <Icon name="simple-icons:appimage" size={20} />
+          <span>AppImage (any distro)</span>
+        </div>
+        <Code lang="bash" code={`chmod +x fancy-mumble_*.AppImage\n./fancy-mumble_*.AppImage`} />
+      </TabItem>
+    </Tabs>
+
+    :::caution[No sound on first run]
+    If you get no input on a fresh install on a modern Linux, try
+    turning on **Legacy Audio Backend** under
+    [Audio, Expert section](/users/audio/#expert-section).
+    :::
+  </TabItem>
+
+  <TabItem label="Android">
+    <div class="platform-heading">
+      <Icon name="simple-icons:android" size={28} />
+      <span>Android</span>
+    </div>
+
+    Builds are published as both `.apk` (sideload) and `.aab` (for the
+    Play Store, when the listing goes live). To sideload the `.apk`:
+
+    <Steps>
+    1. On your phone, allow your browser to install apps. The setting
+       is under **System, Apps, Special access, Install unknown apps**.
+    2. Download `fancy-mumble-x.y.z.apk` from
+       [fancy-mumble.com](https://fancy-mumble.com/) or the
+       [GitHub releases page](https://github.com/Fancy-Mumble/FancyMumbleNext/releases).
+    3. Tap the file to install.
+    4. Open the app and continue to [Mobile (Android)](/getting-started/android/).
+    </Steps>
+  </TabItem>
+</Tabs>
+
+## Verify the install
+
+Launch the app. You should see the **Welcome / Connect** screen with a
+list of saved servers (empty on first run) and a **+** button.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: empty Connect screen with the brand logo.
+</div>
+
+If you do not see this screen, check
+[Common issues](/troubleshooting/common-issues/).
+
+## Next step
+
+Continue with [Connect to a server](/getting-started/connect/).

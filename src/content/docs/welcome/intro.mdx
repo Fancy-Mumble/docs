@@ -1,0 +1,129 @@
+---
+title: What is Fancy Mumble?
+description: An overview of Fancy Mumble, what makes it different, and who it is for.
+sidebar:
+  order: 1
+---
+
+import { Aside, Steps, Badge, Tabs, TabItem } from '@astrojs/starlight/components';
+import PlantUML from '../../../components/PlantUML.astro';
+
+Fancy Mumble is a **voice chat program** for gaming, podcasts, study
+groups, and online communities. You install the app, connect to a
+server, and talk. Chat, screen sharing, file sharing, and much more is
+built in.
+
+It is based on Mumble, an open-source voice chat program that has been
+around for over a decade, so the call quality and reliability are
+already excellent. Fancy Mumble adds a modern look, a smoother first-run
+experience, and a handful of features you would expect from a 2026 app.
+
+<Aside type="tip" title="Compatible with classic Mumble">
+The Fancy Mumble app can connect to any standard Mumble server. You
+just will not see the extra features (saved chat history, smooth screen
+sharing, file uploads, custom server emotes, push notifications) unless
+the server runs Fancy Mumble too.
+</Aside>
+
+## What is new compared to classic Mumble
+
+<Badge text="Highlights" variant="success" />
+
+- **Crystal-clear voice with AI noise removal.** Pick the algorithm
+  that fits your machine and your room.
+- **Chat that survives disconnects.** Open the app the next day and
+  the conversation is still there (encrypted on the server).
+- **Smooth screen sharing.** One person streams, the server fans it
+  out to everyone, no peer-to-peer headaches.
+- **A whiteboard on top of any stream.** Point, draw, annotate.
+- **Watch a video together** in sync.
+- **Reactions and polls** on chat messages.
+- **Custom server emotes.** Admins can upload images and use them as
+  emoji.
+- **File sharing** with control over who can download, for how long.
+- **Server-rendered link previews** so links look like links.
+- **Push notifications** on Android.
+- **Join-time onboarding** so new members are dropped into the right
+  channels with the right roles.
+- **Profile customization** including avatars, banners, name styles,
+  glow effects, and animated frames.
+
+## Who it is for
+
+<Tabs>
+  <TabItem label="Just want to talk" icon="seti:default">
+    Someone gave you a server address. Install the app and connect.
+    Start at [Install Fancy Mumble](/getting-started/install/).
+  </TabItem>
+  <TabItem label="Running a server" icon="seti:docker">
+    You want to host your own server for your community. Start at the
+    [Docker quick start](/server/docker/).
+  </TabItem>
+  <TabItem label="Server admin" icon="seti:lock">
+    A server already exists and you are the admin. Start at
+    [SuperUser & first login](/admin/superuser/) and then
+    [Roles & permissions](/admin/roles/).
+  </TabItem>
+</Tabs>
+
+## How the pieces talk to each other
+
+You do not need to memorize this, but if you ever need to ask your
+network admin to open a port, this is what the traffic looks like:
+
+<PlantUML alt="How the app, server, and push service communicate" code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam arrowColor #5e35b1
+skinparam packageBorderColor #7c3aed
+skinparam packageBackgroundColor #f5f3ff
+skinparam packageFontColor #311b92
+skinparam noteBorderColor #9575cd
+skinparam noteBackgroundColor #f3e5f5
+skinparam noteFontColor #4a148c
+
+top to bottom direction
+
+component "Fancy Mumble App\\ndesktop / mobile" as App
+
+component "Reverse Proxy\\nnginx / Traefik / Caddy\\n//(optional)//" as RP
+
+package "Fancy Mumble Server" as SrvBox {
+  component "Voice + Control\\nTCP/UDP 64738" as Voice
+  component "WebRTC SFU\\nscreen-share relay\\nUDP 10000" as SFU
+  component "File Server\\nHTTP 64739" as FS
+  component "Push Relay\\n→ Firebase" as Push
+}
+
+component "Firebase Cloud Messaging\\n//(optional)//" as FCM
+
+App --> Voice : TCP/UDP 64738  direct
+App --> RP : HTTPS 443  HTTP traffic
+RP --> FS : HTTP 64739
+App ..> SFU : UDP 10000  screen share\\n//(direct, bypasses proxy)//
+Push ..> FCM : push event
+@enduml
+`} />
+
+<Aside type="caution" title="Ports recap">
+Default ports: **64738** for voice and control, **64739** for the
+file server, **10000** for screen sharing. Full reference on the
+[Ports & protocols](/reference/ports/) page.
+</Aside>
+
+## Where to go next
+
+<Steps>
+
+1. Take the [60-second UI tour](/welcome/tour/), see what every panel does.
+2. [Install the app](/getting-started/install/) for your platform.
+3. If you do not yet have a server to connect to, follow the
+   [Docker quick start](/server/docker/) to spin up your own.
+4. Tune your mic with [Audio configuration](/users/audio/), the most
+   common cause of "I cannot hear you" complaints.
+
+</Steps>

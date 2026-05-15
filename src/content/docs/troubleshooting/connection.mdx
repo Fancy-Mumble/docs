@@ -1,0 +1,138 @@
+---
+title: Connection problems
+description: Refused, timed out, drops, password asks. A symptom-driven checklist.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Walk through the section that matches your symptom.
+
+## "Connection refused"
+
+The server is not running, or the port is wrong.
+
+<Steps>
+1. Verify the address is correct. Default port is **64738**.
+2. Ping the host:
+   ```bash
+   ping your-host
+   ```
+3. Test the port:
+   ```bash
+   nc -zv your-host 64738
+   ```
+   If this fails, the firewall is in the way.
+4. (Server side) Confirm the container is running:
+   ```bash
+   docker compose ps
+   ```
+</Steps>
+
+## "Connection timed out"
+
+The packet is being dropped somewhere between you and the server.
+
+<Steps>
+1. Verify with another network (phone tether) to rule out your
+   local ISP.
+2. (Server side) Check the firewall lets in `64738/tcp` and
+   `64738/udp`.
+3. (Server side) Check the cloud provider's security group allows the
+   same ports.
+4. **Force TCP** in audio settings, sometimes only UDP is blocked.
+</Steps>
+
+## "TLS handshake failed"
+
+The server's certificate is rejected by your client.
+
+- The server's certificate may have changed. The app asks you to
+  accept the new identity. **Read the new hash carefully** before
+  accepting.
+- If you used to connect and the server has been reinstalled, the
+  hash is expected to change. Accept it.
+
+## "Wrong username or password"
+
+- Server has a password set. Get it from the admin.
+- The username does not match the case (Mumble is case-insensitive
+  for registered users, but case-sensitive for the initial login).
+- Your certificate is wrong for the registered name. Open
+  Identities and confirm you are using the right one.
+
+## "Server rejected the username regex"
+
+The server requires usernames to match a pattern.
+
+- Use 3 to 15 characters of letters, digits, dashes, underscores by
+  default.
+- The admin can change `MUMBLE_CONFIG_USERNAME` to a different
+  regex.
+
+## "Disconnects randomly after a few minutes"
+
+Often a NAT timeout or a packet-loss spike.
+
+- Turn on **Auto-reconnect** in Advanced settings.
+- **Force TCP** to keep one connection alive.
+- (Server side) Check for `keepalive` settings in the server INI.
+- (Server side) Confirm the cloud provider does not have an idle
+  timeout on the load balancer below 60 seconds.
+
+## "Connects but cannot hear anyone or be heard"
+
+Voice (UDP) is broken even though the control channel (TCP) works.
+
+- Turn on **Force TCP** in audio settings. This is the universal
+  fix; you trade a little latency for reliability.
+- (Server side) Open UDP 64738 in the firewall and forwarder.
+
+## "The app shows me as connecting forever"
+
+Stuck in the bootstrap phase. The first connect after start fetches
+channels, users, and own session info.
+
+- Restart the app.
+- Look at the **Activity log** for an error.
+- If you self-hosted, look at the server logs.
+
+## "Public server list is empty"
+
+- Your internet route to `mumble.info`'s directory is blocked. Try
+  again later.
+- Some corporate networks block the directory.
+
+## "Cannot find my self-hosted server in the public list"
+
+- You did not set `registerName`, `registerHostname`, and
+  `registerPassword` in the server config.
+- The directory has not yet picked up your server. Can take up to
+  an hour.
+
+## "App says certificate cannot be verified"
+
+This is the trust-on-first-use warning. The first time you connect
+the app pins the server's certificate hash. If it ever changes, you
+get this warning.
+
+- If you trust the change, accept.
+- If you did not expect a change, **stop**. The connection might be
+  intercepted.
+
+## Server-side: connection refused with no logs
+
+- Check `docker compose logs mumble-server` for a panic at startup.
+- The most common cause is a typo in `MUMBLE_CONFIG_*`. The server
+  refuses to start with an unknown key by default.
+- Set `MUMBLE_ACCEPT_UNKNOWN_SETTINGS=true` to pass through unknown
+  values (use sparingly, you might hide a real typo).
+
+## Still broken?
+
+[Open a bug report](/troubleshooting/reporting-bugs/) with:
+
+- Whether you can `nc -zv` the port.
+- Whether the issue happens from a different network.
+- Debug logs from both the client and the server.

@@ -1,0 +1,290 @@
+---
+title: Docker quick start
+description: Spin up a fully featured Fancy Mumble server with Docker in under 5 minutes.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+import { Icon } from 'astro-icon/components';
+
+The fastest path to a working server is the official Docker image. It
+bundles the Fancy Mumble server plus all of the extras (persistent
+chat, file server, screen-share relay, push notifications) into one
+ready-to-run package.
+
+You will need:
+
+- Docker (or Podman) installed.
+- A machine with a public IP, or port forwarding on your home router.
+- About five minutes.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: terminal showing docker compose up bringing a server online.
+</div>
+
+## Option A: the interactive setup wizard (recommended)
+
+The setup wizard walks you through every option and writes a ready-to-use
+`.env` and `mumble-server.ini` for you. See [Setup wizard](/server/wizard/)
+to get started - it produces the same result as the manual steps below but
+explains each choice along the way.
+
+## Option B: docker compose with environment variables
+
+The quickest manual option. The server derives its configuration from
+`MUMBLE_CONFIG_*` environment variables at startup, including all
+Fancy Mumble features. Use Option C instead if you prefer a
+version-tracked config file.
+
+<Steps>
+
+1. Create a new folder and put a `docker-compose.yml` inside it:
+
+   ```yaml
+   # docker-compose.yml
+   services:
+     mumble-server:
+       image: ghcr.io/fancy-mumble/mumble-server:latest
+       container_name: mumble-server
+       hostname: mumble-server
+       restart: on-failure
+       ports:
+         - "64738:64738/tcp"   # voice and control
+         - "64738:64738/udp"
+         - "64739:64739/tcp"   # file server (emotes, attachments)
+         - "10000:10000/udp"   # screen-share relay
+       volumes:
+         - mumble-data:/data
+       environment:
+         MUMBLE_SUPERUSER_PASSWORD: "changeme"
+         MUMBLE_CONFIG_WELCOMETEXT: "Welcome to our server."
+         MUMBLE_CONFIG_USERS: 100
+         MUMBLE_CONFIG_REGISTERNAME: "My Fancy Server"
+
+   volumes:
+     mumble-data:
+   ```
+
+2. Start the server:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. Check the logs to confirm it booted:
+
+   ```bash
+   docker compose logs -f mumble-server
+   ```
+
+   You should see lines like `Server listening on :::64738`. Press
+   `Ctrl+C` to exit the log tail (the container keeps running).
+
+4. Note the SuperUser password you set. If you left it as `changeme`, change it now:
+
+   ```bash
+   docker exec mumble-server mumble-server \
+     --ini /data/mumble_server_config.ini \
+     --set-su-pw "your-strong-password"
+   ```
+
+5. Open Fancy Mumble on your client machine and connect to
+   `your-host:64738`. See [Connect to a server](/getting-started/connect/).
+
+</Steps>
+
+## Option C: docker compose with a custom config file
+
+Use this when you want to enable Fancy Mumble features like persistent
+chat, the file server, or the screen-share relay. A `mumble-server.ini`
+is mounted directly into the container; all `MUMBLE_CONFIG_*` environment
+variables are ignored once `MUMBLE_CUSTOM_CONFIG_FILE` is set.
+
+<Steps>
+
+1. Create a new folder and put these two files inside it:
+
+   ```yaml
+   # docker-compose.yml
+   services:
+     mumble-server:
+       image: ghcr.io/fancy-mumble/mumble-server:latest
+       container_name: mumble-server
+       hostname: mumble-server
+       restart: on-failure
+       ports:
+         - "64738:64738/tcp"   # voice and control
+         - "64738:64738/udp"
+         - "64739:64739/tcp"   # file server (emotes, attachments)
+         - "10000:10000/udp"   # screen-share relay
+       volumes:
+         - ./mumble-server.ini:/data/mumble-server.ini:ro
+         - mumble-data:/data
+       environment:
+         MUMBLE_SUPERUSER_PASSWORD: "changeme"
+         MUMBLE_CUSTOM_CONFIG_FILE: /data/mumble-server.ini
+
+   volumes:
+     mumble-data:
+   ```
+
+   ```ini
+   # mumble-server.ini
+   database=/data/mumble-server.sqlite
+   port=64738
+   users=100
+   bandwidth=558000
+   textmessagelength=500000
+   imagemessagelength=1048576
+   allowhtml=true
+
+   ; Persistent chat
+   pchatenabled=true
+
+   ; File server (emotes, avatars, attachments)
+   plugin.file-server.enabled=true
+   plugin.file-server.storagePath=/data/file-server-storage
+   plugin.file-server.bindAddress=0.0.0.0
+   plugin.file-server.port=64739
+   plugin.file-server.tlsTerminatedByProxy=true
+
+   ; WebRTC SFU (screen-share relay)
+   ; Change webrtcsfupublicip to your server's public IP before enabling.
+   webrtcsfuenabled=false
+   webrtcsfuport=10000
+   webrtcsfupublicip=127.0.0.1
+
+   ; Push notifications
+   ; Requires a Firebase project and credentials file. Leave disabled unless
+   ; you have completed the FCM setup (see Push notifications).
+   pushenabled=false
+   pushcredentialspath=/data/fcm-credentials.json
+   pushtopicprefix=mumble
+
+   [Ice]
+   Ice.Warn.UnknownProperties=1
+   Ice.MessageSizeMax=65536
+   ```
+
+   Edit `mumble-server.ini` to match your deployment. The file is
+   mounted read-only; restart the container after any change.
+
+2. Start the server:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. Check the logs to confirm it booted:
+
+   ```bash
+   docker compose logs -f mumble-server
+   ```
+
+   You should see lines like `Server listening on :::64738`. Press
+   `Ctrl+C` to exit the log tail (the container keeps running).
+
+4. Note the SuperUser password you set. If you left it as `changeme`, change it now:
+
+   ```bash
+   docker exec mumble-server mumble-server \
+     --ini /data/mumble_server_config.ini \
+     --set-su-pw "your-strong-password"
+   ```
+
+5. Open Fancy Mumble on your client machine and connect to
+   `your-host:64738`. See [Connect to a server](/getting-started/connect/).
+
+</Steps>
+
+## Option D: plain docker
+
+If you do not use compose:
+
+```bash
+docker run --detach \
+  --name mumble-server \
+  --publish 64738:64738/tcp \
+  --publish 64738:64738/udp \
+  --publish 64739:64739/tcp \
+  --publish 10000:10000/udp \
+  --volume mumble-data:/data \
+  --restart on-failure \
+  --env MUMBLE_SUPERUSER_PASSWORD=changeme \
+  ghcr.io/fancy-mumble/mumble-server:latest
+```
+
+## Verify everything is working
+
+<CardGrid>
+  <Card title="Voice" icon="seti:audio">
+    Connect with the app and join a channel. Speak. Your speaking
+    indicator should light up.
+  </Card>
+  <Card title="Persistent chat" icon="seti:lock">
+    Send a message, disconnect, reconnect. The message should still
+    be there.
+  </Card>
+  <Card title="File server" icon="seti:default">
+    Try uploading your avatar from **Settings, Profile**. It should
+    persist across reconnects.
+  </Card>
+  <Card title="Screen-share relay" icon="laptop">
+    Start a screen share. A second person should see it without any
+    extra setup. (Off by default, see
+    [Screen sharing relay](/server/features/webrtc-sfu/) to enable.)
+  </Card>
+</CardGrid>
+
+## What just happened?
+
+The image you ran bundles a few pieces:
+
+- The **Fancy Mumble server** binary.
+- A **file server** for emotes, avatars, and file uploads (port 64739).
+- A **screen-share relay** (port 10000, off by default).
+- A **push notification module** (off by default).
+- An entrypoint script that:
+  - Translates your `MUMBLE_CONFIG_*` environment variables into a
+    config file at boot (Options B and D), or reads a mounted
+    `mumble-server.ini` directly (Option C).
+  - Reads passwords from Docker secrets if mounted.
+  - Sets file ownership for the data volume.
+  - Runs the server in the foreground.
+
+## Common first-run problems
+
+- **Cannot connect from outside the network**: forward port `64738/tcp`
+  and `64738/udp` on your router. The screen-share relay also needs
+  `10000/udp` to be reachable.
+- **Server starts then exits**: check the logs. The most common cause
+  is a typo in a `MUMBLE_CONFIG_*` value. The strict mode rejects
+  unknown keys.
+- **SuperUser cannot log in**: the password is set per-database. If
+  you started the container before setting one, set it with the
+  `--set-su-pw` command shown above, then restart.
+- **Voice connects but is one-way**: UDP `64738` is blocked. Voice
+  falls back to TCP, but viewers may need to force TCP too. Better:
+  open UDP.
+
+## Next steps
+
+<CardGrid>
+  <Card title="Set up the SuperUser" icon="seti:lock">
+    See [SuperUser & first login](/admin/superuser/) to take control
+    of your fresh server.
+  </Card>
+  <Card title="Tweak the configuration" icon="setting">
+    See [Configuration reference](/server/config/) for every available
+    option.
+  </Card>
+  <Card title="Enable the feature deep-dives" icon="seti:default">
+    Persistent chat, push, screen-share relay, file server, emotes,
+    onboarding. All under **Feature deep-dives** in the sidebar.
+  </Card>
+  <Card title="Tear it back down" icon="trash">
+    `docker compose down -v` removes the container and its data
+    volume.  Without `-v` the data survives.
+  </Card>
+</CardGrid>

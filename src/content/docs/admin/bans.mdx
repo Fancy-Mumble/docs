@@ -1,0 +1,116 @@
+---
+title: Ban list
+description: Block specific users or IP addresses from your server.
+sidebar:
+  order: 7
+---
+
+import { Steps, Aside, Card } from '@astrojs/starlight/components';
+
+The **Ban list** is a server-wide block list of:
+
+- **Specific certificate hashes** (users).
+- **IP addresses** or **IP ranges**.
+
+Banned identities cannot connect. The list survives restarts.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: ban list with five entries and the "Add ban" button.
+</div>
+
+## Ban from the user list
+
+The fastest path:
+
+<Steps>
+1. Right-click a user in the user list.
+2. Pick **Ban**.
+3. A dialog asks for:
+   - **Duration** (forever, 24 hours, 7 days, 30 days, custom).
+   - **Reason** (visible to the user when they try to reconnect).
+4. Confirm.
+</Steps>
+
+This adds:
+
+- The user's certificate hash.
+- The user's IP (or `/32` for IPv4, `/128` for IPv6).
+
+## Ban from the admin panel
+
+Open **Admin, Ban list**, click **Add ban**:
+
+- **Subject**: a user (by username, if registered) or a free-form
+  IP/range.
+- **Duration**.
+- **Reason**.
+
+Useful when you know who you want to block before they connect.
+
+## Auto-ban
+
+The server can auto-ban brute-force connection attempts. Add these
+to the `environment:` block of your `docker-compose.yml`:
+
+```yaml
+environment:
+  MUMBLE_CONFIG_AUTOBANATTEMPTS: 5
+  MUMBLE_CONFIG_AUTOBANTIMEFRAME: 60
+  MUMBLE_CONFIG_AUTOBANTIME: 3600
+```
+
+| Key | What |
+|-----|------|
+| `autobanattempts` | Failed connections per source IP that triggers a ban. |
+| `autobantimeframe` | Window (seconds) in which the attempts are counted. |
+| `autobantime` | How long the auto-ban lasts (seconds). |
+
+Auto-bans show in the ban list with a "auto" tag and can be removed
+manually.
+
+## IP-range bans
+
+Use CIDR notation:
+
+- `192.0.2.5` bans one address.
+- `192.0.2.0/24` bans 256 addresses.
+- `2001:db8::/32` bans the whole IPv6 block.
+
+Be careful with broad ranges, you may catch innocent users on shared
+ISPs.
+
+## Time-limited bans
+
+A time-limited ban becomes inactive at its expiry, but stays in the
+list as a record. Edit and re-activate to extend.
+
+## Edit a ban
+
+Click any ban row, **Edit**, change duration or reason.
+
+To remove, click the trash. The user will be able to connect again
+once the change is saved.
+
+## Sharing bans across servers
+
+There is no built-in federation for bans. If you run multiple
+servers, export the ban list (CSV) from one and import on the other.
+
+```text
+hash,ip,name,reason,start,end
+SHA1:abc...,192.0.2.5,Alice,Trolling,2026-05-01,never
+```
+
+## Pitfalls
+
+- **Banned user keeps coming back**: they are on a dynamic IP and
+  using a new certificate each time. Ban by registered username if
+  possible, or use a CAPTCHA gate at registration.
+- **Cannot ban SuperUser**: SuperUser is not a real user. Disable it
+  by setting an empty password and starting fresh.
+- **Self-ban**: yes, you can ban yourself by accident. Use SuperUser
+  to remove the ban.
+
+## Next step
+
+Continue with [Custom emotes](/admin/emotes/).

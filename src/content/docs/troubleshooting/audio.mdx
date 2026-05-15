@@ -1,0 +1,162 @@
+---
+title: Audio problems
+description: No sound, no mic, choppy audio, echo, robot voice. A symptom-driven checklist.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Most audio problems come from one of:
+
+- The wrong **device** is selected.
+- The **activation mode** is wrong.
+- Your **firewall** is dropping UDP voice packets.
+- The **codec settings** do not match your network capacity.
+
+Walk through the section that matches your symptom.
+
+## "Nobody can hear me"
+
+<Steps>
+
+1. Look at the **mute** and **deafen** icons at the bottom left of the
+   window. Make sure neither is on.
+
+2. **Settings, Voice, Input device**. Confirm the correct microphone
+   is selected. *System default* is fine on most setups.
+
+3. **Microphone Volume** slider: 100% is the safe default. Above
+   that the app digitally amplifies; very high values can clip.
+
+4. Click **Calibrate** below the threshold slider. Speak. The fill
+   bar should move. If it does not, the **operating system** is not
+   delivering audio. Check OS-level mic settings.
+
+5. If the fill bar moves but does not cross the threshold line,
+   either:
+   - Lower the threshold.
+   - Turn on **Auto sensitivity**.
+   - Increase the microphone volume.
+
+6. If you are in **Push to Talk** mode, confirm the PTT key is set.
+   Click the recorder and press your key.
+
+7. Try **Continuous** mode (no gate). If you can be heard in
+   Continuous, the gate is too aggressive.
+
+</Steps>
+
+## "I cannot hear anyone"
+
+<Steps>
+1. **Deafen** icon at the bottom left of the window: make sure it is off.
+2. **Settings, Voice, Output device**. Confirm the right speakers
+   or headphones are selected.
+3. **Speaker Volume**: above 0. At 100% you hear at normal level.
+4. Are other apps audible? If no, the OS volume mixer is muting the
+   app.
+5. On Windows: check the per-app volume in the OS mixer.
+</Steps>
+
+## "Audio is choppy or stuttering"
+
+The voice path is dropping packets.
+
+<Steps>
+1. Settings, Voice, Network. Turn on **Force TCP**. This sends voice
+   over the already-established connection and avoids UDP drops.
+2. Lower the **bitrate** to 32 kbps under Compression.
+3. Increase **Audio per packet** to 40 or 60 ms. Bigger packets per
+   second, fewer of them.
+4. Switch to a wired Ethernet connection if you are on Wi-Fi.
+5. If you are on a busy Wi-Fi (apartment building, coffee shop),
+   try a different channel from your router admin page.
+</Steps>
+
+If the problem persists, look at **Audio statistics** in the panel
+(Expert mode). Sustained >2% packet loss means the underlying
+connection is the issue, not the app.
+
+## "My voice sounds robotic or distorted"
+
+- The bitrate is too low for the activity (you are using extra-low
+  bitrate for music). Bump bitrate.
+- Auto-gain is over-amplifying because the mic is too quiet. Lower
+  the **Max Amplification** in Audio Processing.
+- The mic is clipping at the hardware level. Lower the OS-level mic
+  level (not the app's).
+
+## "I hear an echo"
+
+You are picking up your own speakers in your mic.
+
+- Use **headphones**. Most echo problems go away.
+- Lower the speaker volume.
+- Some headsets have an "echo cancellation" toggle in their utility.
+  Turn it on.
+- Make sure the mic is not pointed at the speakers.
+
+## "Voice cuts at the start of sentences"
+
+The gate is closing too quickly between syllables.
+
+- Settings, Voice, Expert, **Hold Frames**. Raise it. 10 to 20 is a
+  good range.
+- **Gate Close Ratio**: try a higher value (closer to 1).
+
+## "Voice cuts in the middle of speech"
+
+The denoiser is being too aggressive.
+
+- Try a different denoiser algorithm. RNNoise is the friendliest
+  default. DeepFilterNet is cleaner but may chop fricatives in
+  rare cases.
+- Lower the **attenuation limit** in the algorithm's advanced
+  controls.
+
+## "Background noise leaks through"
+
+- Switch to **DeepFilterNet** denoiser. Heavier but cleaner.
+- Raise the VAD threshold slightly.
+- Make sure **Voice Activation** mode is on. **Continuous** mode does
+  not denoise.
+
+## "Mic test works but nobody hears me"
+
+The mic works on the OS side but the app is not transmitting.
+
+- **Activation mode**: confirm it is not stuck in PTT without a key.
+- **Whisper key** is held by accident, so audio is going to a
+  whisper target. Check whisper keys in Shortcuts.
+- The server has **denied Speak** to your role in this channel. Try
+  another channel.
+
+## "My friend hears themselves through me"
+
+You are unmuted in a noisy room and the speakers are picking up the
+remote audio. Mute when you are not talking, or use headphones.
+
+## "Cannot pick a specific audio device"
+
+- The device is offline or being exclusive-used by another app.
+- The OS does not expose it to apps without permission. On Windows,
+  grant microphone permission to the app under Privacy settings.
+- On Linux PipeWire, the device may need to be made the default in
+  `pavucontrol`.
+
+## Legacy backend
+
+If audio is wonky on Linux specifically, try **Settings, Voice,
+Expert, Legacy Audio Backend**. Takes effect on the next voice
+toggle.
+
+## Still broken?
+
+[Open a bug report](/troubleshooting/reporting-bugs/) with:
+
+- Your platform.
+- Output of the Audio statistics panel (Expert mode).
+- Whether the issue happens with another headset or another
+  microphone.
+- Debug logs (see [Debug logging](/troubleshooting/debug-logging/)).

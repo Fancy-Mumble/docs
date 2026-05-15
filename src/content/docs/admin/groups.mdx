@@ -1,0 +1,106 @@
+---
+title: Groups
+description: Named bundles of users used inside ACLs, with optional inheritance through the channel tree.
+sidebar:
+  order: 6
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+A **group** is the classic Mumble way to bundle users for use inside
+channel ACLs. Fancy Mumble adds **roles** on top, which most servers
+should use instead. Groups are still useful for **per-channel
+membership lists** that should not be promoted to server-wide roles.
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: channel groups tab listing three groups and inheritance toggle.
+</div>
+
+## Groups vs roles
+
+| Feature | Group | Role |
+|---------|-------|------|
+| Scope | Per channel (with optional inheritance) | Server-wide |
+| Visible to users? | No | Yes (badge in sidebar) |
+| Used in ACLs | Yes | Yes |
+| Auto-membership rules | No | Coming soon |
+| Best for | Ad-hoc per-channel membership | Anything you want users to see |
+
+When in doubt, use a role.
+
+## Create a group
+
+<Steps>
+1. Edit the channel where the group lives.
+2. Switch to the **Groups** tab.
+3. Click **New group**.
+4. Pick a name (lowercase, no spaces, like `dnd-players`).
+5. Set:
+   - **Inheritable**: members propagate to sub-channels.
+   - **Inherited**: this is itself a copy of a parent's group with
+     the same name.
+6. Add members.
+7. Save.
+</Steps>
+
+## Use a group in an ACL
+
+Anywhere the ACL editor asks for a subject, you can pick
+`@<group-name>` from the dropdown.
+
+Example, lock a channel to a group:
+
+1. Edit the channel.
+2. ACL tab.
+3. Add rule: Deny `Enter` to `@everyone`.
+4. Add rule: Allow `Enter` to `@dnd-players`.
+
+## Inheritance
+
+A group with **Inheritable** ticked is visible (and applies) in all
+sub-channels of where it was defined. Members are computed at the
+parent and propagate down.
+
+A group with **Inherited** ticked is a *copy* of the parent's group
+at this channel, with overrides:
+
+- Add members here that are not in the parent group, but should
+  count here.
+- Remove members here that are in the parent group, but should not
+  count here.
+
+This is useful for "everyone in `pro-users` from above, except
+`alice` who is on leave".
+
+## Special groups
+
+You can use these without defining them anywhere:
+
+- `~user`: the user owning this channel (if any).
+- `~in`: anyone currently in this channel.
+- `~sub`: anyone in this channel or a sub-channel.
+- `~out`: everyone not in this channel.
+
+These dynamic groups are evaluated at permission-check time.
+
+## When to pick a group instead of a role
+
+- **Single-channel access list**: a "ad-hoc D&D campaign" channel
+  needs four members. Make a group, not a role.
+- **Members should stay invisible**: groups are not shown to users.
+  Roles are.
+- **Different membership at different levels**: groups with
+  `Inherited` give you per-level overrides.
+
+## Pitfalls
+
+- **Group "does not work" anymore**: someone deleted the channel that
+  defined the group. Recreate it on the right channel.
+- **Member is not in the group**: check inherited / inheritable
+  flags. A non-inheritable group's members do not propagate.
+- **Cannot mention a group in chat**: groups are not roles. You
+  cannot `@<group>` in chat. Promote to a role if you need that.
+
+## Next step
+
+Continue with [Ban list](/admin/bans/).

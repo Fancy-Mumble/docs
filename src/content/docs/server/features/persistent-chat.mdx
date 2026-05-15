@@ -1,0 +1,286 @@
+---
+title: Persistent chat
+description: Server-stored encrypted chat history with per-channel retention and ACLs. Choose Full Archive for searchable history or Signal V1 for zero server-side storage.
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
+
+Persistent chat means **messages survive a disconnect**. Without it, a
+Mumble server forgets everything as soon as a user leaves, just like
+a phone call.
+
+Fancy Mumble does not implement this as a single scheme. The server
+provides the storage, key-distribution, and rate-limiting machinery,
+and **each channel picks one of three modes** that decide *how*
+encryption and history work. The modes range from "channel forgets
+everything" to "server stores the ciphertext" to "end-to-end
+encrypted via Signal Sender Keys".
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: chat showing yesterday's conversation after a reconnect.
+</div>
+
+<Aside type="caution" title="Two layers of configuration">
+- The **server-wide `pchat*` keys** (set via `MUMBLE_CONFIG_*` env
+  vars, or in `mumble-server.ini`) only enable the feature and set
+  defaults / safety limits.
+- The actual behaviour you experience in a channel is decided by the
+  **per-channel `pchat_protocol`**, which is set from the admin UI.
+  A brand-new channel has no protocol (`NONE`) and stores nothing
+  until an admin picks one.
+</Aside>
+
+## Server-wide settings
+
+These belong in the `environment:` block of your `docker-compose.yml`
+(or in `[server]` of `mumble-server.ini`). They turn the feature on
+and set defaults; they do **not** pick a per-channel protocol.
+
+```yaml
+environment:
+  MUMBLE_CONFIG_PCHATENABLED: true
+  MUMBLE_CONFIG_PCHATREQUIREREGISTRATION: false
+  MUMBLE_CONFIG_PCHATDEFAULTMAXHISTORY: 5000
+  MUMBLE_CONFIG_PCHATDEFAULTRETENTIONDAYS: 90
+  MUMBLE_CONFIG_PCHATMAXPAYLOADSIZE: 1048576
+```
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `pchatenabled` | `true` | Master toggle for the persistent-chat subsystem. If `false`, the server rejects every `Pchat*` message regardless of channel protocol. |
+| `pchatrequireregistration` | `false` | If `true`, only registered users can post into a persistent channel. |
+| `pchatdefaultmaxhistory` | `5000` | Default cap on stored messages per channel. Used when a channel is created; admins can override per channel. |
+| `pchatdefaultretentiondays` | `90` | Default age cap in days. `0` means "keep forever". Override per channel. |
+| `pchatmaxpayloadsize` | `1048576` | Max bytes per encrypted envelope (1 MB). Image attachments are base64-encoded inside the envelope, so size this for the largest inline attachment you want to allow. |
+| `pchatpendingkeyrequestmaxdays` | `7` | How long an unfulfilled key-distribution request lingers before cleanup. |
+| `pchatpendingfulfilledmaxhours` | `24` | How long a fulfilled key-distribution request stays around (so late joiners can pick it up). |
+| `pchatperuserpending` | `5` | Hard limit on simultaneous outstanding key requests per user. |
+| `pchatperchannelpendingsoftcap` | `100` | Soft cap on outstanding key requests per channel; prevents request floods. |
+
+A small set of token-bucket rate limits is also applied on the
+server (`msg`: 30 / 60s, `fetch`: 10 / 60s, `key_announce`: 5 / 60s,
+`key_exchange`: 20 / 60s). These are not currently configurable.
+
+## Channel modes
+
+Each channel has one persistence mode, chosen from the channel
+editor in the admin UI. New channels default to **None** and store
+nothing until an admin picks a mode.
+
+<Tabs>
+<TabItem label="Choosing a mode">
+
+| | **None** | **Full Archive** | **Signal V1** |
+|---|---|---|---|
+| **History for newcomers** | - | Yes - full log up to the retention limit. | No - brand-new joiners get no backlog. |
+| **Missed messages on reconnect** | - | Everything since your last session, up to the cap. | Automatically pushed on reconnect for existing members. |
+| **Server holds messages** | - | Yes, as encrypted ciphertext the operator cannot read. | Only a short-lived offline queue; no permanent archive. |
+| **If the server is seized** | - | Encrypted ciphertext is exposed (unreadable without the channel key). | Only the transient queue exists - no full history to hand over. |
+| **Works without Fancy Mumble** | Yes (live chat only) | Read-only if senders enable dual-path (see below) - no history, cannot send encrypted. | Read-only if senders enable dual-path (see below) - voice only otherwise, cannot send encrypted. |
+| **Setup** | Nothing to do. | Set the mode, optionally add key custodians. | Requires the `signal-bridge` library on every client. |
+| **Best for** | Ephemeral voice rooms. | Community and support channels where history is useful. | Small private groups where "no trace on the server" matters most. |
+
+<Aside type="tip" title="When in doubt, pick Full Archive">
+Most servers should start with **Full Archive**. It gives users the
+familiar "scroll up to catch up" experience while keeping all
+messages encrypted at rest. Switch a channel to **Signal V1** only
+when the members of that channel explicitly want zero server-side
+history - for example, a staff channel handling sensitive topics.
+</Aside>
+
+</TabItem>
+<TabItem label="Technical reference">
+
+| Mode (UI label) | Wire value | Server stores ciphertext? | Backfill on join | Key distribution |
+|---|---|:-:|---|---|
+| **None (standard volatile chat)** | `none` | - | - | - |
+| **Full Archive (all messages)** | `fancy_v1_full_archive` | yes | full history (subject to retention / message-count cap) | HMAC challenge against an online key custodian; relay cap scales with online member count |
+| **Signal V1 (E2EE via Signal Protocol)** | `signal_v1` | no - offline queue only | none for new joiners; existing members receive queued messages on reconnect | [Signal Sender Keys](https://signal.org/docs/specifications/sesame/) via `libsignal-protocol`; auto-verifies on `PchatKeyHolderReport`; relay cap 3 |
+
+<Aside type="note" title="Deprecated wire values">
+The protobuf enum also defines `fancy_v1_post_join` and
+`server_managed` for backwards compatibility. The client UI does
+**not** expose them; treat them as deprecated.
+</Aside>
+
+Things that often surprise people:
+
+- **"None" is the channel default.** The server-wide `pchatenabled` flag has no effect on a channel until an admin sets its mode.
+- **Neither persistent mode is readable by the server.** Full Archive stores opaque encrypted envelopes; Signal V1 never writes a permanent archive at all.
+- **Signal V1 has an offline queue, not a searchable archive.** When a message is sent the server queues it for every known offline key holder in `PChatOfflineQueueTable`. On reconnect, the server drains the queue and bundles the Sender Key Distributions (SKDMs) needed to decrypt each message - no online member required. A first-time joiner receives nothing; there is no backlog to send.
+
+</TabItem>
+</Tabs>
+
+## Encryption schemes
+
+The two persistent modes differ in *who* holds keys and *where*
+messages live.
+
+### Full Archive
+
+- The server keeps an opaque encrypted **envelope** per message,
+  plus a small amount of metadata (`message_id`, `channel_id`,
+  `sender_hash`, timestamps, optional `replaces_id`).
+- Symmetric channel keys are held by **key custodians** - a list of
+  TLS certificate hashes attached to the channel
+  (`pchat_key_custodians`). When a new member joins, they emit a
+  `PchatKeyRequest`; the server relays it to online custodians up
+  to a relay cap that scales with the number of online members. A
+  custodian answers with a `PchatKeyExchange`, preceded by a
+  `PchatKeyChallenge` (HMAC challenge so the custodian knows it is
+  talking to a legitimate session).
+- If no custodian is online, the request is queued
+  (`pchatpendingkeyrequestmaxdays`) and replayed when one connects.
+- Trust model: the server is honest-but-curious. It cannot read
+  messages, but a malicious operator could replace the binary and
+  intercept future key-exchange traffic. This is the same trust
+  model as virtually every "encrypted at rest" group chat.
+
+### Signal V1
+
+- Uses the **Signal protocol's Sender Keys** for group messaging,
+  via [signalapp/libsignal](https://github.com/signalapp/libsignal).
+- Because libsignal is **AGPL-3.0**, Fancy Mumble ships it as a
+  separate shared library - `signal-bridge` - built from
+  [`crates/signal-bridge`](https://github.com/Fancy-Mumble/FancyMumbleNext/tree/master/crates/signal-bridge)
+  as a `cdylib` and loaded at runtime via `libloading`. The MIT-
+  licensed Fancy Mumble client links to it dynamically; the AGPL
+  obligations stay scoped to that one `.dll` / `.so` / `.dylib`.
+- The server **does not permanently store** Signal V1 messages as a searchable archive. However, it **does** queue encrypted envelopes for known offline members (existing key holders) in a transient offline queue. When a known member reconnects, the server drains that queue and bundles the Sender Key Distributions (SKDMs) for each sender whose messages appear in it, so the client can decrypt them without needing any other member online. Fetch requests (history) against a Signal V1 channel still return empty - the offline queue is a push, not a pull.
+- A client without `signal-bridge` available cannot participate in a
+  Signal V1 channel at all (it can still join the channel for
+  voice).
+
+<Aside type="note">
+"Encryption uses the Signal protocol" is only true for channels in
+**Signal V1** mode. **Full Archive** uses a different, custom
+scheme that is *not* libsignal.
+</Aside>
+
+## Per-channel settings
+
+In addition to picking a mode, an admin can set:
+
+| UI field | Wire field | Default source | Meaning |
+|---|---|---|---|
+| **Protocol** | `pchat_protocol` | `none` | Which mode applies to this channel. |
+| **Max history** | `pchat_max_history` | `pchatdefaultmaxhistory` | Max messages kept (Full Archive only). |
+| **Retention days** | `pchat_retention_days` | `pchatdefaultretentiondays` | Max age in days; `0` = forever (Full Archive only). |
+| **Key custodians** | `pchat_key_custodians` | empty | TLS cert hashes of users that hold and distribute the channel key. |
+
+To set them:
+
+<Steps>
+1. Open the channel editor (right-click a channel → **Edit**).
+2. Open the **Protocol** dropdown and choose:
+   - **None (standard volatile chat)** to disable persistence on this channel.
+   - **Full Archive (all messages)** for an open searchable log; the server stores encrypted ciphertext.
+   - **Signal V1 (E2EE via Signal Protocol)** for group E2EE. Missed messages are queued and pushed on reconnect; new joiners see no history.
+3. Set **Max history** and **Retention days** (ignored for Signal V1).
+4. Add the cert hashes of the **Key custodians** that should answer
+   join-time key requests (Full Archive only; for Signal V1 the
+   existing online members serve the same role automatically).
+5. Save.
+</Steps>
+
+<div class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: per-channel persistent-chat tab.
+</div>
+
+## Storage
+
+For **Full Archive** channels, encrypted envelopes live in the same
+SQLite database as the rest of the server state, at
+`/data/mumble-server.sqlite` inside the container. The schema
+includes separate tables for
+messages, user keys, member-join records, key-holder lists,
+pending-key-requests, the offline delivery queue, reactions, and
+pins.
+
+For high-traffic servers point the server at PostgreSQL by setting
+`MUMBLE_CONFIG_DBDRIVER=QPSQL` and friends.
+
+A rough sizing guide:
+
+- Each encrypted text envelope is roughly 200–400 bytes on disk
+  including indexes and metadata.
+- 10 000 messages per day on a busy server is about 3 MB per day, so
+  about 1 GB per year before reactions / images.
+- Inline images are base64-encoded inside the envelope. They will
+  dominate disk usage if allowed; size `pchatmaxpayloadsize`
+  accordingly.
+
+Plan disk space, and back the volume up regularly. See
+[Upgrade & backup](/server/upgrade/).
+
+Signal V1 channels store **nothing at rest**, so they contribute
+zero to ongoing disk usage.
+
+## Disabling persistence on a single channel
+
+To turn persistence off for a sensitive channel without touching the
+server-wide config, set the channel's **Protocol** back to **None
+(standard volatile chat)**. Existing stored ciphertext is not
+deleted by toggling - the server simply stops accepting new
+messages and stops serving fetches for that channel. To clear
+stored history, use the admin "Purge channel" action.
+
+## Disabling persistence server-wide
+
+```yaml
+environment:
+  MUMBLE_CONFIG_PCHATENABLED: false
+```
+
+This makes the server reject every `Pchat*` message. Existing rows
+are not deleted, so you can re-enable later without data loss.
+
+## What clients see
+
+| Client | History on a Full Archive channel | Live chat in a Signal V1 channel |
+|---|:-:|:-:|
+| Fancy Mumble (desktop / Android, with `signal-bridge`) | yes | yes |
+| Fancy Mumble built without `signal-bridge` | yes | no - channel is voice-only for them |
+| Vanilla Mumble | no | no |
+| Other forks | depends on whether they implement the `Pchat*` proto messages | almost certainly no |
+
+Vanilla Mumble users still see live `TextMessage`s in real time on
+*any* channel - `Pchat*` is an additive layer on top of the existing
+text-message wire protocol.
+
+### Dual-path sending
+
+Users can enable **dual-path sending** in **Settings → Privacy →
+Enable dual-path sending**. When on, every message sent in an
+encrypted channel is also sent as a plain `TextMessage` whose body is
+replaced with `[Encrypted message]`. Legacy clients (vanilla Mumble,
+older forks) then show that placeholder instead of seeing nothing at
+all.
+
+Dual-path is **off by default**. Users who want strict ciphertext
+isolation - so that no unencrypted traffic for the channel ever
+traverses the normal message path - should leave it disabled.
+
+## Common pitfalls
+
+- **"My channel doesn't keep history."** Check the channel's
+  **Protocol**, not just `pchatenabled` on the server. A new
+  channel defaults to **None**.
+- **"Signal V1 shows no history when I reconnect."** For **existing members** the server queues missed messages and delivers them on reconnect automatically - if you see nothing, check that your `signal-bridge` library loaded correctly. If you are a **brand-new joiner**, that is expected: there is no backlog for first-time joins.
+- **"Key request just hangs."** For **Full Archive**: no key custodian is online; the request stays queued until one connects (up to `pchatpendingkeyrequestmaxdays`). For **Signal V1 - new joiner**: no online channel member is available to distribute the Sender Key; the request is similarly queued. Existing reconnecting Signal V1 members do **not** need a key request - the server bundles the necessary sender keys with the offline message queue automatically.
+- **"History grows forever."** `pchatdefaultretentiondays` (or the
+  channel's `pchat_retention_days`) is `0`. Set a value, then
+  cleanup runs daily.
+- **"Cannot delete a message."** The channel's delete ACL does not
+  include your role. See [Roles & permissions](/admin/roles/).
+- **"Plugin keys aren't picked up via env vars."** They are - the
+  Fancy Mumble Docker entrypoint accepts every key in the upstream
+  `mumble-server.ini`, including `pchat*`. See
+  [Configuration reference](/server/config/).
+
+## Next step
+
+Continue with [Push notifications](/server/features/push/).

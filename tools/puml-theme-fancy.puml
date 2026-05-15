@@ -1,0 +1,32 @@
+' Fancy Mumble - shared diagram theme
+' Purple/indigo palette, transparent background, system sans-serif.
+'
+' Usage (local JAR):  !theme fancy from <path-to-tools-dir>
+' Usage (inline):     content of this file prepended to diagram source
+skinparam backgroundColor transparent
+skinparam defaultFontName "sans-serif"
+skinparam defaultTextColor #311b92
+skinparam roundcorner 8
+skinparam ArrowColor #5e35b1
+skinparam ArrowThickness 2
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam packageBorderColor #7c3aed
+skinparam packageBackgroundColor #f5f3ff
+skinparam packageFontColor #311b92
+skinparam noteBorderColor #9575cd
+skinparam noteBackgroundColor #f3e5f5
+skinparam noteFontColor #4a148c
+skinparam actorBorderColor #7c3aed
+skinparam actorBackgroundColor #ede7f6
+skinparam actorFontColor #311b92
+skinparam nodeBorderColor #7c3aed
+skinparam nodeBackgroundColor #ede7f6
+skinparam nodeFontColor #311b92
+skinparam stateBorderColor #7c3aed
+skinparam stateBackgroundColor #ede7f6
+skinparam stateFontColor #311b92
+skinparam cloudBorderColor #7c3aed
+skinparam cloudBackgroundColor #ede7f6
+skinparam cloudFontColor #311b92

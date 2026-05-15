@@ -1,0 +1,70 @@
+---
+interface Props {
+  code: string;
+  alt?: string;
+}
+
+const { code, alt = 'Diagram' } = Astro.props;
+
+import { spawnSync } from 'node:child_process';
+import { writeFileSync, readFileSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { randomBytes } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+const jarPath = fileURLToPath(new URL('../../tools/plantuml.jar', import.meta.url));
+const toolsDir = fileURLToPath(new URL('../../tools', import.meta.url));
+
+// Load the SVG CSS from the theme companion file so it is defined in one place.
+const svgCss = readFileSync(new URL('../../tools/puml-theme-fancy-svg.css', import.meta.url), 'utf8');
+const SVG_STYLE = `<style>\n${svgCss}</style>`;
+
+// Apply the shared theme by injecting !theme right after @startuml.
+// Per-diagram skinparam declarations that follow in the source override it.
+const processedCode = code.trim().replace(/(@startuml[^\n]*)/, `$1\n!theme fancy from ${toolsDir}`);
+
+const id = randomBytes(8).toString('hex');
+const pumlFile = join(tmpdir(), `plantuml-${id}.puml`);
+const svgFile  = join(tmpdir(), `plantuml-${id}.svg`);
+
+writeFileSync(pumlFile, processedCode, 'utf8');
+
+const result = spawnSync('java', ['-jar', jarPath, '-tsvg', '-o', tmpdir(), pumlFile], {
+  maxBuffer: 8 * 1024 * 1024,
+});
+
+let svgHtml = '';
+try {
+  if (result.error) throw result.error;
+  if (result.status !== 0) throw new Error(result.stderr?.toString() ?? 'PlantUML failed');
+  const raw = readFileSync(svgFile, 'utf8');
+  const start = raw.indexOf('<svg');
+  svgHtml = start >= 0 ? raw.slice(start) : raw;
+  // Strip fixed dimensions so the SVG scales proportionally in both axes.
+  // width="100%" + height:auto (CSS) let the viewBox drive the aspect ratio.
+  svgHtml = svgHtml.replace(/<svg\b([^>]*)>/, (_, attrs) => {
+    const cleaned = attrs
+      .replace(/\s+width="[^"]*"/g, '')
+      .replace(/\s+height="[^"]*"/g, '')
+      .replace(/\s+style="[^"]*"/g, '')
+      .replace(/\s+preserveAspectRatio="[^"]*"/g, '');
+    return `<svg${cleaned} width="100%" style="height:auto;">`;
+  });
+  // Replace every baked-in font-family attribute with the system font stack.
+  // PlantUML writes font-family="'sans-serif'" on every <text> element;
+  // attribute values beat CSS inheritance, so we must fix them at the source.
+  svgHtml = svgHtml.replace(/\bfont-family="[^"]*"/g,
+    `font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"`);
+  // PlantUML hardcodes rx="4" for component diagrams regardless of roundcorner;
+  // rewrite to match the hand-written SVG style.
+  svgHtml = svgHtml.replace(/\brx="4" ry="4"/g, 'rx="8" ry="8"');
+  // Inject font + dark-mode CSS immediately after the opening <svg> tag.
+  svgHtml = svgHtml.replace(/(<svg\b[^>]*>)/, `$1\n${SVG_STYLE}`);
+} finally {
+  try { unlinkSync(pumlFile); } catch {}
+  try { unlinkSync(svgFile); } catch {}
+}
+---
+
+<figure class="plantuml not-content" set:html={svgHtml} />
