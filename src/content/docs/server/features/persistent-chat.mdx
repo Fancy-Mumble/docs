@@ -74,19 +74,15 @@ nothing until an admin picks a mode.
 | | **None** | **Full Archive** <Badge text="Experimental" variant="danger" /> | **Signal V1** |
 |---|---|---|---|
 | **History for newcomers** | - | Yes - full log up to the retention limit. | No - brand-new joiners get no backlog. |
-| **Missed messages on reconnect** | - | Everything since your last session, up to the cap. | Automatically pushed on reconnect for existing members. |
+| **Missed messages on reconnect** | - | All missed messages are delivered by the server on reconnect - nothing is lost. | Automatically pushed on reconnect for existing members. |
 | **Server holds messages** | - | Yes, as encrypted ciphertext the operator cannot read. | Only a short-lived offline queue; no permanent archive. |
 | **If the server is seized** | - | Encrypted ciphertext is exposed (unreadable without the channel key). | Only the transient queue exists - no full history to hand over. |
 | **Works without Fancy Mumble** | Yes (live chat only) | Read-only if senders enable dual-path (see below) - no history, cannot send encrypted. | Read-only if senders enable dual-path (see below) - voice only otherwise, cannot send encrypted. |
 | **Setup** | Nothing to do. | Set the mode, optionally add key custodians. | Requires the `signal-bridge` library on every client. |
 | **Best for** | Ephemeral voice rooms. | Community and support channels where history is useful. | Small private groups where "no trace on the server" matters most. |
 
-<Aside type="tip" title="When in doubt, pick Full Archive">
-Most servers should start with **Full Archive**. It gives users the
-familiar "scroll up to catch up" experience while keeping all
-messages encrypted at rest. Switch a channel to **Signal V1** only
-when the members of that channel explicitly want zero server-side
-history - for example, a staff channel handling sensitive topics.
+<Aside type="caution" title="When in doubt, pick Full Archive - but note it is experimental">
+**Full Archive** gives users the familiar "scroll up to catch up" experience with messages encrypted at rest. However, it is currently **experimental and unaudited** - treat it as transport encryption rather than true E2EE. Switch a channel to **Signal V1** for any channel where verified end-to-end encryption matters.
 </Aside>
 
 </TabItem>
