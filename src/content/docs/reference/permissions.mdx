@@ -5,49 +5,58 @@ sidebar:
   order: 2
 ---
 
-import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid, Badge } from '@astrojs/starlight/components';
 
 Permissions are the building blocks of ACLs and roles. Each one is a
-single yes/no that controls one specific action.
+single yes/no flag that controls one specific action. They are set
+per-channel via ACL rules or bundled into roles.
 
-This page intentionally does **not** list every permission flag by
-name. The exact set depends on your server version, the Fancy fork
-adds a few extras compared to upstream Mumble, and the names show
-up exactly as labels in the admin UI.
+## Channel permissions
 
-## Where to see the live list
+These permissions apply to any channel and are inherited down the
+channel tree unless overridden.
 
-The authoritative list is in your own admin panel:
+| Permission | Bit | Description |
+|---|:-:|---|
+| **Write ACL** | `0x1` | Edit the channel's ACL rules and groups. Grants full control — only assign to trusted admins. |
+| **Traverse** | `0x2` | See the channel and walk into its sub-channels. Denying this hides the channel completely. |
+| **Enter** | `0x4` | Join the channel. A user can see a channel they cannot enter if Traverse is allowed. |
+| **Speak** | `0x8` | Transmit voice in the channel. |
+| **Mute / Deafen** | `0x10` | Server-mute or server-deafen other users in this channel. |
+| **Move users** | `0x20` | Move other users into or out of this channel. |
+| **Make sub-channel** | `0x40` | Create permanent sub-channels under this channel. |
+| **Link channels** | `0x80` | Link this channel to another so voice is shared between them. |
+| **Whisper** | `0x100` | Send targeted whispers into this channel. |
+| **Send text messages** | `0x200` | Post text messages in the channel chat. |
+| **Make temporary sub-channel** | `0x400` | Create temporary sub-channels that are removed automatically when empty. |
+| **Listen** | `0x800` | Receive audio from this channel without joining it. |
+| <Badge text="Fancy" variant="note" /> **Delete messages** | `0x1000` | Delete other users' messages in the channel. |
+| <Badge text="Fancy" variant="note" /> **Subscribe to push** | `0x2000` | Receive push notifications for activity in this channel. Users with this permission also passively listen to the channel without needing to join it. |
+| <Badge text="Fancy" variant="note" /> **Share files** | `0x4000` | Upload and share files in the channel. |
+| <Badge text="Fancy" variant="note" /> **Share files (public)** | `0x8000` | Share files publicly, making them accessible without authentication. |
 
-<Card title="In the app" icon="seti:lock">
+## Root channel permissions
 
-1. Connect to your server as an admin.
-2. Open **Admin, Roles**.
-3. Click **New role** (or open an existing one).
-4. Switch to the **Permissions** tab.
+These permissions are only meaningful on the root channel and apply
+server-wide.
 
-You will see every flag with its label and a short description.
+| Permission | Bit | Description |
+|---|:-:|---|
+| **Kick** | `0x10000` | Disconnect a user from the server. |
+| **Ban** | `0x20000` | Permanently ban a user from the server. |
+| **Register users** | `0x40000` | Register guest users into the server's user database. |
+| **Self-register** | `0x80000` | Allow users to register themselves on the server. |
+| **Reset user content** | `0x100000` | Wipe avatars, comments, and other profile content from a user. |
+| <Badge text="Fancy" variant="note" /> **Key owner** | `0x200000` | Marks the holder as a key custodian for the persistent-chat key-share workflow. |
+| <Badge text="Fancy" variant="note" /> **Manage emotes** | `0x400000` | Add, edit, and remove custom server emotes. |
 
-</Card>
+<Aside type="note" title="Fancy extensions">
+Permissions marked **Fancy extension** are not present in upstream Mumble. Vanilla Mumble clients simply ignore these flags — a vanilla user denied a Fancy-only permission will not see the relevant UI element at all.
+</Aside>
 
-Or, if you want the source of truth, the C++ class `ChanACL` in the
-server repo (`src/ACL.h`) enumerates the bit flags, and the Fancy
-fork adds entries listed in its `README.md` (DeleteMessage,
-KeyOwner, plus a handful of others).
-
-## The categories you will see
+## How rules combine
 
 In broad strokes the permissions split into:
-
-- **Channel entry and voice**: `Traverse`, `Enter`, `Speak`,
-  `Whisper`, `MuteDeafen`, `Move`, `Make channel`, `Make temporary
-  channel`, `Link channel`, `Listen`.
-- **Text chat**: send messages, embed images, mention everyone.
-- **Administration**: `Write ACL`, `Kick`, `Ban`, `Register`,
-  `Reset user content`.
-- **Fancy extensions**: delete persistent chat messages, key
-  ownership for encrypted channels, file-server access modes, and so
-  on. The exact list grows with the fork.
 
 ## How rules combine
 

@@ -50,8 +50,8 @@ share it.
 2. Connect to your server.
 3. When the wizard asks for a username, type `SuperUser`.
 4. When the password dialog appears, paste your password.
-5. The admin button <Card icon="seti:lock" /> in the header is now
-   enabled.
+5. The admin button <img src="/admin-entry.png" alt="Admin button" /> next to the
+   disconnect button should now be visible. Click it to open the admin panel.
 </Steps>
 
 The first time you do this on a fresh server, the SuperUser is the
@@ -131,7 +131,7 @@ If you accidentally removed your own admin role:
 
 - **Cannot log in as SuperUser**: the password is wrong. Reset it
   with the `--set-su-pw` command.
-- **SuperUser is registered as a regular user**: not possible by
+- **Register as SuperUser**: not possible by
   design. SuperUser is hard-coded outside the user table.
 - **Lost the password**: same fix, `--set-su-pw` to set a new one.
 - **Changed a password in the app and SuperUser login broke**: the
@@ -139,6 +139,9 @@ If you accidentally removed your own admin role:
   user account*, not to SuperUser. SuperUser has no profile in the
   app - its password is set only via `--set-su-pw` or the
   `MUMBLE_SUPERUSER_PASSWORD` environment variable.
+- **Can't talk as SuperUser**: you are logged in as SuperUser, but
+  you cannot talk or see channels. This is normal. SuperUser bypasses
+  ACLs, but it can also not talk by default.
 
 ## Next step
 
