@@ -1,0 +1,427 @@
+---
+title: Developing a plugin
+description: Build, package, and ship your own Fancy Mumble server plugin as a Rust cdylib.
+sidebar:
+  order: 3
+---
+
+import { Steps, Aside, Tabs, TabItem, Code } from '@astrojs/starlight/components';
+
+This guide walks through writing a Fancy Mumble server plugin from
+scratch. Plugins are Rust `cdylib` crates that depend on the
+[`mumble-plugin-api`] crate and are loaded at runtime by the plugin
+host. By the end of this page you will have a plugin that:
+
+- Loads on server boot and logs a banner.
+- Reads its own configuration block from `mumble-server.ini`.
+- Advertises capabilities and live stats to clients through the
+  registry.
+- Receives a `PluginMessage` from the client and replies with one.
+
+<Aside type="tip" title="Starter template">
+A ready-to-clone scaffold matching this guide lives at
+[Fancy-Mumble/fancy-plugin-example]. It already wires up the
+`cdylib` crate, the `mumble-plugin-api` dependency, and a minimal
+`MumblePlugin` impl, so you can skip straight to writing your own
+hooks.
+</Aside>
+
+[`mumble-plugin-api`]: https://github.com/Fancy-Mumble/mumble-server/tree/main/3rdparty/mumble-plugin-host/api
+[Fancy-Mumble/fancy-plugin-example]: https://github.com/Fancy-Mumble/fancy-plugin-example
+
+## Prerequisites
+
+- **Rust 1.78+** (stable). The plugin host pins `abi_stable 0.11`,
+  which compiles cleanly on any recent stable toolchain.
+- A copy of the [Mumble server repository] so you can pull in the
+  `mumble-plugin-api` crate by path (until a release is published to
+  crates.io).
+- A working server build to test against -
+  [Docker quick start](/server/docker/) is the fastest path.
+
+[Mumble server repository]: https://github.com/Fancy-Mumble/mumble-server
+
+## Create the crate
+
+```bash
+cargo new --lib fancy-hello
+cd fancy-hello
+```
+
+Replace `Cargo.toml` with:
+
+```toml
+[package]
+name = "fancy-hello"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[lib]
+# cdylib  - so the host can dlopen it.
+# rlib    - so you can write integration tests in Rust.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+mumble-plugin-api = { path = "../mumble-server/3rdparty/mumble-plugin-host/api" }
+abi_stable = "0.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+```
+
+<Aside type="tip">
+Use a `path` dependency while iterating. Once you publish your plugin
+you can switch to a `git` or `version` reference on a tagged release
+of `mumble-plugin-api`.
+</Aside>
+
+## Implement the plugin trait
+
+The whole plugin lives in `src/lib.rs`. Every method on
+`MumblePlugin` has a no-op default, so you only override the ones you
+care about.
+
+```rust
+use abi_stable::std_types::{RArc, ROk, RStr, RString};
+use mumble_plugin_api::{
+    ClientInfo, DebugRow, MumblePlugin, PluginContext_TO, PluginError,
+    PluginInfo, PluginMessageIn, PluginMessageOut, PluginResult, ServerId,
+    SessionId, fancy_export_plugin,
+};
+use serde::{Deserialize, Serialize};
+use std::sync::{Arc, Mutex};
+
+const PLUGIN_NAME: &str = "fancy-hello";
+const PLUGIN_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+#[derive(Default)]
+pub struct HelloPlugin {
+    ctx: Mutex<Option<PluginContext_TO<RArc<()>>>>,
+    greeting: Mutex<String>,
+}
+
+impl HelloPlugin {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl MumblePlugin for HelloPlugin {
+    fn name(&self) -> RStr<'_> {
+        RStr::from(PLUGIN_NAME)
+    }
+
+    fn version(&self) -> RStr<'_> {
+        RStr::from(PLUGIN_VERSION)
+    }
+
+    fn info_json(&self) -> RString {
+        let greeting = self
+            .greeting
+            .lock()
+            .map(|g| g.clone())
+            .unwrap_or_default();
+        let info = PluginInfo {
+            description: "Toy plugin that echoes a configurable greeting.".into(),
+            author: Some("Me".into()),
+            homepage: None,
+            capabilities: vec!["demo".into()],
+            debug_rows: vec![DebugRow {
+                label: "greeting".into(),
+                value: greeting,
+            }],
+        };
+        match info.to_validated_json() {
+            Ok(bytes) => RString::from(String::from_utf8_lossy(&bytes).into_owned()),
+            Err(_) => RString::from("{}"),
+        }
+    }
+
+    fn on_load(&self, ctx: PluginContext_TO<RArc<()>>) -> PluginResult<()> {
+        let greeting = ctx
+            .get_config(RStr::from("greeting"))
+            .into_option()
+            .map(|s| s.into_string())
+            .unwrap_or_else(|| "Hello, world!".to_owned());
+        tracing::info!(%greeting, "fancy-hello: loaded");
+        if let Ok(mut g) = self.greeting.lock() {
+            *g = greeting;
+        }
+        if let Ok(mut slot) = self.ctx.lock() {
+            *slot = Some(ctx);
+        }
+        ROk(())
+    }
+
+    fn on_plugin_message(&self, msg: PluginMessageIn) -> PluginResult<()> {
+        if msg.payload_type.as_str() != "Ping" {
+            return ROk(());
+        }
+        let Ok(ctx_guard) = self.ctx.lock() else { return ROk(()); };
+        let Some(ctx) = ctx_guard.as_ref() else { return ROk(()); };
+        let greeting = self
+            .greeting
+            .lock()
+            .map(|g| g.clone())
+            .unwrap_or_else(|_| "Hello!".into());
+
+        let payload = serde_json::to_vec(&PongPayload {
+            greeting,
+            echoed_from: msg.sender_name.as_str().to_owned(),
+        })
+        .unwrap_or_default();
+
+        let reply = PluginMessageOut {
+            server_id: msg.server_id,
+            plugin_name: RString::from(PLUGIN_NAME),
+            payload_type: RString::from("Pong"),
+            payload: payload.into(),
+            target_sessions: vec![msg.sender_session].into(),
+            channel_id: abi_stable::std_types::RNone,
+        };
+        if let abi_stable::std_types::RResult::RErr(e) =
+            ctx.send_plugin_message(reply)
+        {
+            tracing::warn!(error = ?e, "fancy-hello: send_plugin_message failed");
+        }
+        ROk(())
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct PongPayload {
+    greeting: String,
+    echoed_from: String,
+}
+
+// Exports the cdylib entry point.  Without this, the host cannot
+// instantiate the plugin.
+fancy_export_plugin!(HelloPlugin::new);
+```
+
+A few things to call out:
+
+- **`PLUGIN_NAME` is your wire identity.** Clients address you by this
+  string. Keep it stable across versions; bumping it is a breaking
+  change for every client that knows about your plugin.
+- **The host gates `on_load` on `plugin.<name>.enabled`.** If the
+  operator has not set it to a truthy value
+  (`true`/`1`/`yes`/`on`), your plugin's `on_load` is never called
+  and the plugin is excluded from the registry. You never need to
+  read `enabled` yourself.
+- **The host strips the `plugin.<name>.` prefix** before calling
+  `get_config`, so you query for the *short* key (`"greeting"`,
+  `"max_pings_per_minute"`, ...).
+- **`payload` is opaque bytes.** Use whatever serialisation you like.
+  JSON keeps client/server symmetry easy; protobuf gives you typed
+  schemas if you want them.
+- **Stash the `PluginContext`** somewhere you can read from
+  `on_plugin_message`. The trait object is `Clone + Send + Sync`, so a
+  `Mutex<Option<...>>` (or `OnceLock`) is fine.
+
+## Build it
+
+```bash
+cargo build --release
+```
+
+The output lands at `target/release/libfancy_hello.so` on Linux,
+`libfancy_hello.dylib` on macOS, or `fancy_hello.dll` on Windows.
+
+<Aside type="caution" title="Target ABI matters">
+The plugin host is built into the same binary as `murmurd`. To ship a
+plugin for the official `fancy-mumble/mumble-server` image, build it
+inside the same Linux/glibc toolchain - typically Ubuntu 24.04. The
+easiest way to guarantee compatibility is to compile inside a
+`fancy-mumble/mumble-server` builder stage of your own Dockerfile.
+</Aside>
+
+## Deploy it
+
+<Steps>
+1. Drop the cdylib into a host folder, e.g. `./my-plugins/`.
+2. Mount it into the container at `/etc/mumble/plugins`:
+
+   ```yaml
+   volumes:
+     - ./my-plugins:/etc/mumble/plugins:ro
+   ```
+
+3. Add the plugin's config block to `mumble-server.ini`:
+
+   ```ini
+   plugin.fancy-hello.enabled=true
+   plugin.fancy-hello.greeting=Welcome to my server!
+   ```
+
+4. Restart the container. You should see:
+
+   ```text
+   INFO mumble_plugin_host::host: plugin loaded plugin=fancy-hello version=0.1.0 path=/etc/mumble/plugins/libfancy_hello.so
+   INFO fancy_hello: fancy-hello: loaded greeting="Welcome to my server!"
+   ```
+</Steps>
+
+## Talk to the plugin from the client
+
+Once the server is running, any Fancy Mumble client at version
+`>= 0.4.0` learns about your plugin via the registry. To send it a
+ping from the client-side code (or from a console plugin), call the
+generic Tauri command:
+
+```ts
+import { invoke } from "@tauri-apps/api/core";
+
+const payload = new TextEncoder().encode(JSON.stringify({ when: Date.now() }));
+await invoke("send_plugin_message", {
+  pluginName: "fancy-hello",
+  payloadType: "Ping",
+  payload: Array.from(payload),
+  // Empty target list + null channel = "send to self/server only";
+  // your plugin can echo back via PluginContext::send_plugin_message.
+  targetSessions: [],
+  channelId: null,
+});
+```
+
+Pong replies arrive as Tauri events with the channel
+`plugin-message`. Subscribe via:
+
+```ts
+import { listen } from "@tauri-apps/api/event";
+
+await listen<{
+  plugin_name: string;
+  payload_type: string;
+  payload: number[];
+  sender_session: number | null;
+}>("plugin-message", (e) => {
+  if (e.payload.plugin_name !== "fancy-hello") return;
+  if (e.payload.payload_type !== "Pong") return;
+  const json = JSON.parse(new TextDecoder().decode(new Uint8Array(e.payload.payload)));
+  console.log("hello plugin says:", json.greeting);
+});
+```
+
+## Lifecycle hooks
+
+All hooks on [`MumblePlugin`] are optional. The most useful ones:
+
+| Hook | When it fires | Typical use |
+|------|---------------|-------------|
+| `on_load(ctx)` | Once at boot, after the cdylib is opened. | Parse config, bind sockets, start tasks. |
+| `on_unload()` | Once at server shutdown. | Flush state, close sockets, await tasks. |
+| `on_client_connected(info)` | Right after a client authenticates. | Per-session bookkeeping. |
+| `on_client_disconnected(server, session)` | When a client disconnects. | Clean up per-session state. |
+| `on_plugin_message(msg)` | Inbound wire-200 envelope targeted at your `name()`. | Main RPC entry point. |
+| `on_plugin_data(server, sender, id, bytes)` | Inbound legacy `PluginDataTransmission`. | Backwards compat with pre-0.4.0 clients. |
+
+Hooks are **synchronous**. If you need async I/O, spin up a private
+`tokio::runtime::Runtime` in `on_load` and `block_on` inside the
+hook. The host catches panics at the FFI boundary, so a panicking
+runtime only affects your plugin.
+
+## Configuration parsing
+
+A typical pattern is to gather all your config keys into a struct
+during `on_load`:
+
+```rust
+struct HelloConfig {
+    greeting: String,
+    max_pings_per_minute: u32,
+}
+
+impl HelloConfig {
+    fn from_context(ctx: &PluginContext_TO<RArc<()>>) -> Result<Self, PluginError> {
+        let greeting = read_string(ctx, "greeting").unwrap_or_else(|| "Hello!".into());
+        let max_pings_per_minute = read_u32(ctx, "max_pings_per_minute").unwrap_or(60);
+        Ok(Self { greeting, max_pings_per_minute })
+    }
+}
+```
+
+The helper functions wrap `ctx.get_config(RStr::from(key)).into_option()`
+and parse the result. The `LiveDocConfig` in
+`3rdparty/mumble-plugin-host/live-doc/src/config.rs` is a good
+reference implementation.
+
+## Advertising capabilities
+
+Whatever you return from `info_json()` ends up in the
+`PluginRegistry` envelope and is rendered verbatim in the developer
+Server Info panel. The recommended shape is the typed `PluginInfo`
+struct:
+
+```rust
+PluginInfo {
+    description: "One-line summary".into(),
+    author: Some("Your name".into()),
+    homepage: Some("https://example.com/my-plugin".into()),
+    capabilities: vec!["websocket".into(), "persistence".into()],
+    debug_rows: vec![
+        DebugRow { label: "port".into(), value: "9000".into() },
+        DebugRow { label: "active_sessions".into(), value: count.to_string() },
+    ],
+}
+.to_validated_json()
+```
+
+`to_validated_json` enforces a 64 KiB cap so a runaway plugin cannot
+flood the control channel. If you need to ship larger payloads, send
+them as a normal `PluginMessage` to interested sessions rather than
+piggy-backing on the registry.
+
+## Permissions
+
+If your plugin gates anything on Mumble ACLs, use
+`PluginContext::has_permission`:
+
+```rust
+use mumble_plugin_api::permissions::{WRITE, ENTER};
+
+if !ctx.has_permission(server_id, session, channel, WRITE | ENTER) {
+    return ROk(()); // silently drop unauthorised requests
+}
+```
+
+The full flag table is in `mumble_plugin_api::permissions`. Combine
+flags with bitwise OR. The check uses the same ACL evaluator the
+server itself uses for client requests.
+
+## Testing
+
+Because the plugin is also an `rlib`, you can write normal integration
+tests against the trait without going through the FFI:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ping_pong_round_trip() {
+        let plugin = HelloPlugin::new();
+        // Stub the context with a fake that records send_plugin_message
+        // calls into a Vec, then drive on_plugin_message and assert.
+    }
+}
+```
+
+For end-to-end coverage, point a real server at your built cdylib and
+exercise the wire path from a Fancy Mumble client.
+
+## Where to read source
+
+The plugins shipped with the official image are the best reference:
+
+- [Fancy-Mumble/fancy-plugin-example] - minimal standalone template
+  you can fork as the starting point for a new plugin.
+- `3rdparty/mumble-plugin-host/file-server` - HTTP storage plugin.
+- `3rdparty/mumble-plugin-host/live-doc` - WebSocket + Yjs CRDT, the
+  most feature-complete example. Walk through `on_load`,
+  `on_plugin_message`, and `host_facade.rs` to see the patterns in
+  context.
+- `3rdparty/mumble-plugin-host/api` - the trait definitions; every
+  doc comment is the canonical contract.

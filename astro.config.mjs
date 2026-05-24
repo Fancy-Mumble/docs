@@ -185,6 +185,15 @@ export default defineConfig({
                 { label: "Live documents", link: "/server/features/live-doc/" },
               ],
             },
+            {
+              label: "Plugins",
+              collapsed: false,
+              items: [
+                { label: "Plugin system overview", link: "/server/plugins/overview/" },
+                { label: "Using plugins", link: "/server/plugins/using/" },
+                { label: "Developing a plugin", link: "/server/plugins/developing/" },
+              ],
+            },
             { label: "Customize & disable features", link: "/server/customize/" },
             { label: "Building from source", link: "/server/build/" },
             { label: "Upgrade & backup", link: "/server/upgrade/" },

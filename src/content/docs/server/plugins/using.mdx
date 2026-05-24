@@ -1,0 +1,190 @@
+---
+title: Using plugins
+description: How to install, configure, and disable plugins on a Fancy Mumble server.
+sidebar:
+  order: 2
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This page covers operating plugins on a running server: where the host
+looks for them, how configuration keys are namespaced, how to verify
+that a plugin loaded correctly, and a tour of the plugins that ship
+with the official Docker image.
+
+## Plugin directories
+
+The host scans two directories at startup:
+
+| Path | Purpose |
+|------|---------|
+| `/usr/lib/mumble-server/plugins` | Plugins baked into the image. |
+| `/etc/mumble/plugins` | Operator-supplied plugins (mount your own). |
+
+Both are scanned on boot. Any file matching the platform's shared
+library extension (`*.so` on Linux, `*.dylib` on macOS, `*.dll` on
+Windows) is considered a candidate. Files that fail to load (wrong
+ABI version, missing symbols, panic in `on_load`, ...) are logged and
+skipped; the server continues to boot.
+
+To override the search path, set the `plugins_dir` server config key
+(comma-separated for multiple directories).
+
+## Configuration namespacing
+
+Every plugin gets its own configuration namespace under `plugin.<name>.*`
+in `mumble-server.ini`, where `<name>` is the value returned by the
+plugin's `MumblePlugin::name()` method.
+
+```ini
+# Enable the live-doc plugin and bind its WebSocket on port 64740
+plugin.fancy-live-doc.enabled=true
+plugin.fancy-live-doc.port=64740
+plugin.fancy-live-doc.state_path=/data/fancy-live-doc
+
+# Enable the file server and pin its storage directory
+plugin.fancy-file-server.enabled=true
+plugin.fancy-file-server.storagePath=/data/file-server-storage
+plugin.fancy-file-server.port=64739
+```
+
+Inside the plugin, these are read via
+`PluginContext::get_config("port")` - the host strips the
+`plugin.<name>.` prefix automatically, so plugins never have to know
+their own name to read their own config.
+
+<Aside type="note">
+The Fancy Mumble Docker image also auto-derives `MUMBLE_CONFIG_*`
+environment variables into INI keys. Anything under
+`MUMBLE_CONFIG_PLUGIN_FANCY_LIVE_DOC_PORT=64740` becomes
+`plugin.fancy-live-doc.port=64740`.
+</Aside>
+
+## Enabling and disabling
+
+Every Fancy plugin defaults to **disabled**. The plugin host scans the
+plugin directories and discovers every cdylib it finds, but it only
+calls a plugin's `on_load` hook after reading
+`plugin.<name>.enabled` from `mumble-server.ini` and confirming the
+value is `true`, `1`, `yes`, or `on` (case-insensitive, leading/trailing
+whitespace ignored). Disabled plugins:
+
+- never run `on_load`, so they bind no ports and start no background
+  tasks;
+- do not appear in the `PluginRegistry` broadcast (wire ID 201), so
+  clients do not advertise capabilities for them;
+- do not receive any lifecycle events (`on_client_connected`,
+  `on_client_disconnected`, `on_plugin_data`, `on_plugin_message`).
+
+The check lives entirely in the host -- individual plugins do not (and
+should not) inspect `enabled` themselves. To turn a plugin off without
+removing the cdylib:
+
+<Steps>
+1. Set `plugin.<name>.enabled=false` in `mumble-server.ini` (or simply
+   remove the line; absent counts as disabled).
+2. Send `SIGHUP` to `murmurd` (or restart the container) to reload
+   the configuration.
+3. Confirm the plugin's "plugin loaded" log line is replaced by a
+   "plugin discovered but not enabled" line.
+</Steps>
+
+When a disabled plugin is discovered the host logs:
+
+```text
+INFO mumble_plugin_host::host: plugin discovered but not enabled; set plugin.fancy-live-doc.enabled=true to load plugin=fancy-live-doc
+```
+
+## Verifying that a plugin loaded
+
+On startup the host logs each plugin it tries to load:
+
+```text
+INFO mumble_plugin_host::host: plugin host initialising dir_count=2 dirs=["/usr/lib/mumble-server/plugins", "/etc/mumble/plugins"]
+INFO mumble_plugin_host::host: plugin loaded plugin=fancy-live-doc version=0.1.0 path=/usr/lib/mumble-server/plugins/libmumble_live_doc.so
+INFO mumble_plugin_host::host: plugin loaded plugin=fancy-file-server version=0.1.0 path=/usr/lib/mumble-server/plugins/libmumble_file_server.so
+INFO mumble_plugin_host::host: plugin host ready loaded=2
+```
+
+After a successful boot you can also inspect the registry from any
+connected client. Open the **Server Info** dialog (toolbar -> "i"
+icon) and switch to the **Developer** tab. The "Plugins" panel lists
+every entry from the `PluginRegistry` envelope along with the
+`debug_rows` each plugin advertises (listening ports, snapshot
+intervals, queue depths, ...).
+
+## Built-in plugins
+
+The official `fancy-mumble/mumble-server` Docker image ships with two
+plugins out of the box.
+
+<Tabs>
+<TabItem label="fancy-file-server">
+
+A self-contained HTTP file server that backs avatars, message
+attachments, and live-doc snapshots. Listens on port `64739` by
+default. Storage lives at `plugin.fancy-file-server.storagePath`,
+which **must** be a writable mount if you want files to survive
+container restarts.
+
+See [File server](/server/features/file-server/) for the full
+configuration reference and storage layout.
+
+</TabItem>
+<TabItem label="fancy-live-doc">
+
+Real-time collaborative documents (Yjs CRDT over WebSocket). Listens
+on port `64740` by default. Requires the `fancy-file-server` plugin
+for revision persistence; without it, documents live only in memory
+and disappear when the room tears down.
+
+See [Live documents](/server/features/live-doc/) for the user-facing
+feature description.
+
+</TabItem>
+</Tabs>
+
+## Adding a third-party plugin
+
+To run a plugin you built yourself (or grabbed from a third party):
+
+<Steps>
+1. Copy the `*.so` file to a host directory you control, e.g.
+   `./my-plugins/libmy_plugin.so`.
+2. Mount that directory into the container at `/etc/mumble/plugins`:
+
+   ```yaml
+   services:
+     mumble:
+       image: fancy-mumble/mumble-server:latest
+       volumes:
+         - ./mumble-server.ini:/data/mumble-server.ini:ro
+         - ./my-plugins:/etc/mumble/plugins:ro
+   ```
+
+3. Add a `plugin.<name>.enabled=true` line to `mumble-server.ini`
+   along with whatever else your plugin's `from_context` parser
+   expects.
+4. Restart the container and watch the boot log for
+   `plugin loaded plugin=<name>`.
+</Steps>
+
+<Aside type="caution" title="ABI version must match">
+Third-party plugins are tied to a specific `PLUGIN_ABI_VERSION`. If
+the host bumps the ABI (currently `2`) you will see
+`abi_version mismatch` in the load log and the plugin will be skipped
+until you rebuild it against the matching `mumble-plugin-api` release.
+</Aside>
+
+## Permissions and rate limiting
+
+Inbound `PluginMessage` envelopes from clients are subject to the
+same per-user rate limit as any other Mumble control message. The
+server stamps `sender_session` and `sender_name` before handing the
+message to the target plugin; the plugin cannot spoof either.
+
+Each plugin can additionally check whether the sender has a specific
+permission on a channel via `PluginContext::has_permission` - useful
+for gating administrative operations on standard Mumble ACL flags
+(`Write`, `Move`, `Kick`, ...). The flag values are defined in the
+`mumble_plugin_api::permissions` module.

@@ -1,0 +1,154 @@
+---
+title: Plugin system overview
+description: How the Fancy Mumble server's Rust plugin host loads cdylibs, advertises capabilities, and brokers messages with the client.
+sidebar:
+  order: 1
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import PlantUML from '../../../../components/PlantUML.astro';
+
+Fancy Mumble extends the classic Mumble server with a **Rust plugin
+host**. Features like the persistence-backed file store, the
+collaborative live-doc editor, screen-share signalling glue, and the
+push-notification bridge are all built as `cdylib` plugins loaded at
+startup from a directory on disk.
+
+The host is intentionally *loosely coupled*: the server does not know
+about specific plugins. A plugin registers itself by being present in
+the plugin directory, advertises its capabilities to clients at
+connect time, and receives addressed messages through a single
+generic envelope.
+
+## Architecture
+
+<PlantUML alt="The Mumble C++ server loads the mumble-plugin-host cdylib, which in turn dlopens each plugin cdylib. Clients exchange wire-200 PluginMessage envelopes that are routed by plugin_name." code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam arrowColor #5e35b1
+
+top to bottom direction
+
+component "Fancy Mumble client" as App
+component "Mumble C++ server\\n(murmur)" as Server
+component "mumble-plugin-host\\n(Rust cdylib)" as Host
+component "Plugin A\\n(cdylib)" as PluginA
+component "Plugin B\\n(cdylib)" as PluginB
+component "Plugin C\\n(cdylib)" as PluginC
+
+App <-> Server : Wire 200\\nPluginMessage
+Server -> Host : C ABI
+Host --> PluginA : abi_stable trait
+Host --> PluginB : abi_stable trait
+Host --> PluginC : abi_stable trait
+Server -> App : Wire 201\\nPluginRegistry\\n(after ServerSync)
+@enduml
+`} />
+
+The server loads `libmumble_plugin_host.so` once at boot. That cdylib
+scans every configured plugin directory, `dlopen`s each entry, and
+exposes a single C ABI back to the C++ server. Every Mumble plugin is
+itself a cdylib that depends on the `mumble-plugin-api` crate.
+
+## Generic message envelope
+
+Plugins do not get their own protobuf message types. Instead, the
+client and server speak two generic envelopes:
+
+| Wire ID | Name | Direction | Purpose |
+|--------:|------|-----------|---------|
+| `200` | `PluginMessage` | Bidirectional | Addressed plugin payload. |
+| `201` | `PluginRegistry` | Server -> Client | Announces loaded plugins after `ServerSync`. |
+
+A `PluginMessage` carries:
+
+- `plugin_name` (string) - the stable identifier of the target plugin.
+- `payload_type` (string) - a plugin-defined inner discriminator
+  (`"OpenRequest"`, `"Invite"`, `"Vote"`, ...).
+- `payload` (bytes) - opaque bytes; each plugin picks its own encoding
+  (JSON, protobuf, MessagePack, ...).
+- `target_sessions` (repeated u32) - explicit recipient sessions.
+- `channel_id` (optional u32) - channel-scoped fan-out hint.
+- `sender_session` / `sender_name` - stamped by the server on inbound.
+
+The server routes inbound envelopes to exactly **one** plugin (the one
+whose `name()` matches `plugin_name`). On outbound, the server delivers
+to every session in `target_sessions`, or - if that list is empty - to
+every member of `channel_id`. Clients that report a Fancy version
+older than 0.4.0 are skipped.
+
+## Plugin registry
+
+Right after the server delivers `ServerSync` to a connecting client,
+it sends a `PluginRegistry` listing every loaded plugin:
+
+```json
+{
+  "plugins": [
+    {
+      "plugin_name": "fancy-live-doc",
+      "version": "0.1.0",
+      "plugin_slot": 0,
+      "info_json": "{...}"
+    },
+    {
+      "plugin_name": "fancy-file-server",
+      "version": "0.1.0",
+      "plugin_slot": 1,
+      "info_json": "{...}"
+    }
+  ]
+}
+```
+
+The `info_json` blob is whatever the plugin returned from
+`MumblePlugin::info_json()`. For Fancy-built plugins this is a typed
+`PluginInfo` struct serialised as JSON, hard-capped at 64 KiB. Clients
+use it to populate the developer Server Info panel and to decide
+whether a feature is available on this server.
+
+<Aside type="note">
+The registry only goes to clients with `fancy_version >= 0.4.0`. The
+plugin host itself runs unchanged on older client connections - they
+simply never learn about plugins and never send wire-200 messages.
+</Aside>
+
+## ABI stability
+
+Plugins are loaded across an `abi_stable`-based FFI boundary
+([abi_stable on crates.io](https://crates.io/crates/abi_stable)).
+That means:
+
+- Plugins can be built with a **different `rustc` version** than the
+  host and still load cleanly.
+- The host **refuses to load** any cdylib whose `abi_version` does not
+  match `PLUGIN_ABI_VERSION` (currently `2`). When the trait surface
+  changes, that constant is bumped and every plugin must be rebuilt.
+- Every trait method receives FFI-safe types (`RString`, `RSlice`,
+  `RVec`, `ROption`, `RArc`) instead of their `std` counterparts.
+
+## Fault isolation
+
+Each plugin owns its **own private `tokio` runtime**. A plugin
+panicking inside an async task only takes down its own runtime; the
+host catches the panic at the FFI boundary, logs an error, and the
+rest of the server continues running. Other plugins are unaffected.
+
+## What's next
+
+<CardGrid>
+  <Card title="Using plugins" icon="setting">
+    Where the plugin directory lives, how to enable plugins,
+    configuration key naming, and the built-in plugins shipped with
+    every Fancy Mumble image. See [Using plugins](/server/plugins/using/).
+  </Card>
+  <Card title="Develop your own plugin" icon="rocket">
+    A complete walk-through of building a `cdylib` plugin from scratch
+    in Rust, registering it with the host, and round-tripping a
+    message with the client. See [Developing a plugin](/server/plugins/developing/).
+  </Card>
+</CardGrid>
