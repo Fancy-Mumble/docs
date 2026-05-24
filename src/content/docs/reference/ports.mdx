@@ -12,6 +12,7 @@ import { Aside } from '@astrojs/starlight/components';
 | **64738** | TCP | client to server | TLS handshake, control messages, chat, TCP fallback for voice | `MUMBLE_CONFIG_PORT` |
 | **64738** | UDP | client to server | Voice and per-channel position data | same |
 | **64739** | TCP | client to server | File server (emotes, attachments) | `plugin.file-server.port` |
+| **64740** | TCP | client to server | Live document WebSocket (Yjs CRDT sync) | `plugin.live-doc.port` |
 | **10000** | UDP | client to server (in both directions) | Screen-share relay (WebRTC SFU) | `MUMBLE_CONFIG_WEBRTCSFUPORT` |
 | **6502** | TCP | localhost only by default | Admin RPC (Ice) | `Ice.Endpoint` in config |
 
@@ -46,6 +47,7 @@ A self-hosted server typically needs:
 TCP  64738   inbound
 UDP  64738   inbound
 TCP  64739   inbound (if file server)
+TCP  64740   inbound (if live documents)
 UDP  10000   inbound (if screen-share relay)
 TCP    443   outbound (if push or link previews)
 ```

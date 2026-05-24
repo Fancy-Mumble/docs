@@ -143,6 +143,24 @@ environment variables, so `plugin.file-server.storagePath` maps to
 | `plugin.file-server.baseUrl` | `PLUGIN_FILE_SERVER_BASEURL` | empty | Public URL clients use. Falls back to `http://host:port` if empty. |
 | `plugin.file-server.allowedOrigins` | `PLUGIN_FILE_SERVER_ALLOWEDORIGINS` | empty | Comma-separated CORS origins. Empty blocks browser usage. |
 
+## Live document editor
+
+The live-doc plugin is configured only via a mounted INI file. These keys
+are **not** mapped to `MUMBLE_CONFIG_*` environment variables.
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `plugin.live-doc.enabled` | `false` | Master toggle. |
+| `plugin.live-doc.state_path` | - | **Required.** Absolute path to a writable directory. Used to store the JWT signing secret and Yjs room state. |
+| `plugin.live-doc.host` | `0.0.0.0` | WebSocket bind address. |
+| `plugin.live-doc.port` | `64740` | WebSocket TCP port. |
+| `plugin.live-doc.public_url` | empty | Public URL clients use to connect (e.g. `wss://chat.example.com/live-doc`). Falls back to `ws://<host>:<port>` when empty. |
+| `plugin.live-doc.max_update_bytes` | `4194304` | Maximum bytes for a single CRDT update. |
+| `plugin.live-doc.snapshot_idle_secs` | `60` | Idle seconds before flushing a snapshot to the file server. |
+| `plugin.live-doc.teardown_grace_secs` | `30` | Grace seconds after the last viewer disconnects before tearing down the in-memory room. |
+| `plugin.live-doc.file_server_url` | empty | Base URL of the file-server admin endpoint. When unset, documents are never persisted. |
+| `plugin.live-doc.file_server_admin_token` | empty | Shared secret for the file-server admin API. |
+
 ## Container-level (not server settings)
 
 These are read by the Docker entrypoint, not the server itself.
@@ -164,3 +182,6 @@ and onboarding have **no public server config keys** today. They are
 either always-on (riding the plugin-data transport between clients)
 or controlled in the client UI. If you want a server-wide off
 switch for any of them, file a feature request on the server repo.
+
+The live-doc plugin does have config keys; they are listed in the
+[Live document editor](#live-document-editor) section above.

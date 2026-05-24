@@ -1,0 +1,272 @@
+---
+title: Live Documents
+description: Real-time collaborative document editing inside a channel, backed by a WebSocket-based Yjs CRDT server plugin.
+sidebar:
+  order: 9
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Code } from '@astrojs/starlight/components';
+import PlantUML from '../../../../components/PlantUML.astro';
+
+The **live-doc plugin** lets every member of a channel co-edit a single
+shared document in real time. Documents support rich formatting,
+images with float modes, tables, math (LaTeX), code blocks, and
+collaborative cursors showing where each participant is typing.
+
+Content is synchronized using **Yjs** - a conflict-free replicated data
+type (CRDT) - transported over a dedicated WebSocket port. Changes made
+while offline merge automatically when the client reconnects.
+
+## How it fits together
+
+<PlantUML alt="Mumble client opens a PluginDataTransmission to trigger a WebSocket invite from the live-doc plugin, then connects to the Yjs WebSocket endpoint. On idle the plugin saves a snapshot to the file-server plugin." code={`
+@startuml
+skinparam backgroundColor transparent
+skinparam componentStyle rectangle
+skinparam componentBorderColor #7c3aed
+skinparam componentBackgroundColor #ede7f6
+skinparam componentFontColor #311b92
+skinparam arrowColor #5e35b1
+skinparam noteBorderColor #9575cd
+skinparam noteBackgroundColor #f3e5f5
+skinparam noteFontColor #4a148c
+
+top to bottom direction
+
+component "Fancy Mumble client" as App
+component "Mumble C++ server" as Server
+component "live-doc plugin\\n(Rust, FFI)" as Plugin
+component "File server plugin\\nport 64739  HTTP" as FS
+component "Live-doc WebSocket\\nport 64740  WS" as WS
+
+App --> Server : FancyLiveDocOpen (wire 141)
+Server --> Plugin : FFI callback
+Plugin --> Server : FancyLiveDocInvite (token + ws_url)
+Server --> App : FancyLiveDocInvite
+Server --> App : FancyLiveDocAnnounce (broadcast to channel)
+App --> WS : WebSocket (Yjs sync)
+WS --> Plugin : CRDT updates
+Plugin --> FS : PUT /admin/documents/{name} (snapshot)
+
+note bottom of WS
+  Standard y-protocols frames:
+  sync step 1 / 2 / update /
+  awareness query & update.
+end note
+@enduml
+`} />
+
+1. The client sends a `FancyLiveDocOpen` plugin-data message (wire ID 141).
+2. The server passes it to the live-doc plugin via FFI.
+3. The plugin mints a short-lived JWT and replies with `FancyLiveDocInvite`
+   containing the token and the WebSocket URL.
+4. The server broadcasts `FancyLiveDocAnnounce` to the channel so every
+   member can join.
+5. All participants connect to the WebSocket endpoint and exchange Yjs
+   CRDT frames directly.
+6. After a configurable idle window the plugin flushes a binary snapshot
+   to the file server for persistence across restarts.
+
+## Prerequisites
+
+The live-doc plugin depends on the **file server plugin** for persistence.
+Without it, documents are kept in memory only and lost whenever the
+container restarts or the teardown grace window expires.
+
+See [File server](/server/features/file-server/) for setup instructions.
+
+## Turn it on
+
+<Aside type="note">
+The live-doc plugin is **not enabled** by default. It requires an explicit
+`state_path` directory to store its JWT signing secret and room state.
+Without it the plugin will refuse to start.
+</Aside>
+
+The plugin is configured only via a mounted INI file - the `plugin.live-doc.*`
+keys are not mapped to `MUMBLE_CONFIG_*` environment variables because they
+require absolute paths that vary per deployment.
+
+<Steps>
+
+1. If you do not already have a custom config file, copy the template
+   from the image:
+
+   ```bash
+   docker cp mumble-server:/data/mumble_server_config.ini ./mumble-server.ini
+   ```
+
+2. Add the following block to your `mumble-server.ini`, adjusting paths
+   and URLs for your deployment:
+
+   ```ini
+   ; Master toggle. Default: false.
+   plugin.live-doc.enabled=true
+
+   ; Required: writable directory for JWT secret and room state.
+   plugin.live-doc.state_path=/data/live-doc-state
+
+   ; WebSocket bind address and port. Default: 0.0.0.0:64740.
+   ;plugin.live-doc.host=0.0.0.0
+   ;plugin.live-doc.port=64740
+
+   ; Public base URL for clients (use wss:// when behind a TLS proxy).
+   ;plugin.live-doc.public_url=wss://chat.example.com/live-doc
+
+   ; Persistence bridge. Must match file-server admin token.
+   plugin.live-doc.file_server_url=http://127.0.0.1:64739
+   plugin.live-doc.file_server_admin_token=your-shared-secret
+   ```
+
+3. Mount the file and create the state directory:
+
+   ```yaml
+   environment:
+     MUMBLE_CUSTOM_CONFIG_FILE: /data/mumble-server.ini
+   volumes:
+     - ./mumble-server.ini:/data/mumble-server.ini:ro
+     - mumble-data:/data       # live-doc-state lives inside here
+   ```
+
+4. Expose the WebSocket port (default 64740) in `docker-compose.yml`:
+
+   ```yaml
+   ports:
+     - "64738:64738/tcp"
+     - "64738:64738/udp"
+     - "64739:64739/tcp"
+     - "64740:64740/tcp"    # live-doc WebSocket
+   ```
+
+5. Restart:
+
+   ```bash
+   docker compose up -d --force-recreate mumble-server
+   ```
+
+</Steps>
+
+<Aside type="caution">
+Once `MUMBLE_CUSTOM_CONFIG_FILE` is set, **all `MUMBLE_CONFIG_*` environment
+variables are ignored**. Move every setting - voice, chat, file server, and
+live-doc - into the one mounted INI file.
+</Aside>
+
+## Configuration reference
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `plugin.live-doc.enabled` | `false` | Master toggle. |
+| `plugin.live-doc.state_path` | - | **Required.** Absolute path to a writable directory. The plugin stores its JWT signing secret here. |
+| `plugin.live-doc.host` | `0.0.0.0` | WebSocket bind address. |
+| `plugin.live-doc.port` | `64740` | WebSocket TCP port. |
+| `plugin.live-doc.public_url` | unset | URL clients use to connect (e.g. `wss://chat.example.com/live-doc`). Falls back to `ws://<bind address>:<port>` when empty. |
+| `plugin.live-doc.max_update_bytes` | `4194304` (4 MiB) | Maximum size of a single CRDT update. |
+| `plugin.live-doc.snapshot_idle_secs` | `60` | Seconds of inactivity before the in-memory document is flushed to the file server. |
+| `plugin.live-doc.teardown_grace_secs` | `30` | Seconds after the last viewer disconnects before the in-memory room is torn down. |
+| `plugin.live-doc.file_server_url` | unset | Base URL of the file server admin endpoint (e.g. `http://127.0.0.1:64739`). When unset, documents are never persisted. |
+| `plugin.live-doc.file_server_admin_token` | unset | Shared secret for the file server admin API. Required when `file_server_url` is set. |
+
+## Behind a reverse proxy
+
+Like the file server, the live-doc WebSocket should be TLS-terminated by a
+reverse proxy on public deployments.
+
+<Aside type="caution" title="Prefix strip required">
+The live-doc axum server serves its routes at `/ws/…` (no `/live-doc` prefix).
+Because `public_url` tells the client to connect to
+`wss://chat.example.com/live-doc/ws/…`, the proxy **must strip the
+`/live-doc` prefix** before forwarding to port 64740, otherwise the backend
+returns 404.
+</Aside>
+
+<Tabs>
+  <TabItem label="Caddy">
+    `handle_path` strips the matched prefix automatically:
+    ```text
+    chat.example.com {
+      handle_path /live-doc/* {
+        reverse_proxy localhost:64740
+      }
+    }
+    ```
+    Then set `plugin.live-doc.public_url=wss://chat.example.com/live-doc`.
+  </TabItem>
+  <TabItem label="nginx">
+    The trailing slash on both `location` and `proxy_pass` strips the prefix:
+    ```nginx
+    location /live-doc/ {
+      proxy_pass         http://127.0.0.1:64740/;
+      proxy_http_version 1.1;
+      proxy_set_header   Upgrade $http_upgrade;
+      proxy_set_header   Connection "Upgrade";
+      proxy_set_header   Host $host;
+    }
+    ```
+    Then set `plugin.live-doc.public_url=wss://chat.example.com/live-doc`.
+  </TabItem>
+  <TabItem label="Traefik">
+    Add a `StripPrefix` middleware so Traefik removes `/live-doc` before
+    forwarding:
+    ```yaml
+    http:
+      middlewares:
+        live-doc-strip:
+          stripPrefix:
+            prefixes:
+              - /live-doc
+      routers:
+        live-doc:
+          rule: "Host(`chat.example.com`) && PathPrefix(`/live-doc`)"
+          service: live-doc
+          entryPoints: [websecure]
+          middlewares:
+            - live-doc-strip
+      services:
+        live-doc:
+          loadBalancer:
+            servers:
+              - url: "http://127.0.0.1:64740"
+    ```
+    Then set `plugin.live-doc.public_url=wss://chat.example.com/live-doc`.
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+WebSocket proxying requires `Upgrade` and `Connection` headers to be
+forwarded. Missing them produces an HTTP 400 on connect. Caddy and Traefik
+forward them automatically; nginx requires the explicit `proxy_set_header`
+lines shown above.
+</Aside>
+
+## Persistence
+
+When both `file_server_url` and `file_server_admin_token` are set, the
+plugin automatically:
+
+- Flushes a binary CRDT snapshot to `PUT /admin/documents/{name}` every
+  `snapshot_idle_secs` seconds after the last update.
+- Flushes once more when the last viewer disconnects and the teardown
+  grace window expires.
+- Loads the latest saved snapshot when the first viewer opens the document.
+
+Documents that have never been persisted start empty for every viewer.
+
+## Pitfalls
+
+- **Port 64740 not exposed**: the client will time out waiting for the
+  WebSocket invite reply. Check `docker compose ps` and confirm the port
+  mapping.
+- **`state_path` missing or not writable**: the plugin logs an error and
+  refuses to start. The client will never receive a `FancyLiveDocInvite`.
+- **File server admin token mismatch**: snapshots fail silently (logged
+  server-side). Documents open and sync normally but are lost on restart.
+- **`MUMBLE_CUSTOM_CONFIG_FILE` not set**: the plugin keys are read from a
+  mounted INI but the entrypoint-generated config does not include them.
+  Confirm `MUMBLE_CUSTOM_CONFIG_FILE` points at your file.
+
+## Next step
+
+You have walked through all of the feature deep-dives. Continue with
+[Customize & disable features](/server/customize/) for the consolidated
+toggle reference.

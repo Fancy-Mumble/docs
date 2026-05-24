@@ -42,6 +42,8 @@ the server runs Fancy Mumble too.
 - **Reactions and polls** on chat messages.
 - **Custom server emotes.** Admins can upload images and use them as
   emoji.
+- **Live collaborative documents.** Any channel can have a shared rich-text
+  document that multiple people edit at the same time, with real-time cursors.
 - **File sharing** with control over who can download, for how long.
 - **Server-rendered link previews** so links look like links.
 - **Push notifications** on Android.
@@ -98,6 +100,7 @@ package "Fancy Mumble Server" as SrvBox {
   component "Voice + Control\\nTCP/UDP 64738" as Voice
   component "WebRTC SFU\\nscreen-share relay\\nUDP 10000" as SFU
   component "File Server\\nHTTP 64739" as FS
+  component "Live-doc WebSocket\\nTCP 64740" as LiveDoc
   component "Push Relay\\n→ Firebase" as Push
 }
 
@@ -106,15 +109,17 @@ component "Firebase Cloud Messaging\\n//(optional)//" as FCM
 App --> Voice : TCP/UDP 64738  direct
 App --> RP : HTTPS 443  HTTP traffic
 RP --> FS : HTTP 64739
+RP --> LiveDoc : WS 64740
 App ..> SFU : UDP 10000  screen share\\n//(direct, bypasses proxy)//
+App ..> LiveDoc : WS 64740  live doc\\n//(direct, LAN only)//
 Push ..> FCM : push event
 @enduml
 `} />
 
 <Aside type="caution" title="Ports recap">
 Default ports: **64738** for voice and control, **64739** for the
-file server, **10000** for screen sharing. Full reference on the
-[Ports & protocols](/reference/ports/) page.
+file server, **64740** for live documents, **10000** for screen
+sharing. Full reference on the [Ports & protocols](/reference/ports/) page.
 </Aside>
 
 ## Where to go next

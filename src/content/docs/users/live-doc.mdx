@@ -1,0 +1,182 @@
+---
+title: Live document editor
+description: Co-edit rich documents with channel members in real time - text, tables, images, math, and more.
+sidebar:
+  order: 10
+---
+
+import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
+
+The **live document editor** is a full word-processor built into Fancy
+Mumble. Every member of a channel can open the same document and
+see each other's edits as they happen, with colored cursors showing
+who is where.
+
+<Aside type="note">
+Your server must be running the **live-doc plugin** (port 64740) and
+a **file-server plugin** (port 64739) for documents to open and
+persist. Ask your admin to check [Live Documents](/server/features/live-doc/)
+if the "Open Document" button does nothing after a few seconds.
+</Aside>
+
+
+<div id="screenshot-users-livedoc-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: the live document editor with the toolbar visible and a collaborator cursor.
+</div>
+
+## Open a document
+
+1. Select a channel in the sidebar.
+2. Click the **attach** button (paperclip) in the message composer.
+3. Choose **Open Live Doc** from the menu.
+
+The document opens in a split view alongside the chat. Every member
+of the channel who opens the same document sees your edits in real time.
+
+<Aside type="tip">
+The document is **channel-scoped** - one document per channel. Opening
+the document from any client in the channel opens the same shared copy.
+</Aside>
+
+## The toolbar
+
+The toolbar at the top of the editor contains all formatting controls.
+
+### Text formatting
+
+| Button | Effect | Keyboard shortcut |
+|--------|--------|-------------------|
+| **B** | Bold | `Ctrl+B` |
+| *I* | Italic | `Ctrl+I` |
+| <u>U</u> | Underline | `Ctrl+U` |
+| ~~S~~ | Strikethrough | - |
+| `</>` | Inline code | - |
+
+### Headings and paragraphs
+
+Use **H1 / H2 / H3** to create headings. Use **¶** (paragraph) to
+remove a heading and return to body text.
+
+### Block elements
+
+| Button | Inserts |
+|--------|---------|
+| `•` | Bulleted list |
+| `1.` | Numbered list |
+| `❝` | Block quote |
+| `{ }` | Code block |
+
+### Text alignment
+
+Left, center, right, and justify buttons with icons. The alignment
+applies to the current paragraph.
+
+### Indentation
+
+`⇤` outdents a list item or paragraph; `⇥` indents it.
+
+### Font family and size
+
+A font-family dropdown with eight options (Inter, Roboto, Space Mono,
+and common system stacks), and a size widget with `–` / `+` step
+buttons, a numeric input, and a preset dropdown with Google Docs
+standard sizes (8 – 96 pt).
+
+### Colors
+
+The **palette icon** opens a native color picker for text color. The
+**paint bucket icon** opens one for highlight (background) color. A
+small `×` appears when a color is set; click it to clear.
+
+### Insert
+
+| Button | What it inserts |
+|--------|-----------------|
+| Image icon | Opens a file picker; inserts a resized image (≤ 800 × 800 px, ≤ 250 KB). |
+| 🔗 | Prompts for a URL and creates a hyperlink on the selected text. |
+| **∑** | Inserts a LaTeX math block. A popover lets you type or edit the formula inline. |
+| Grid icon | Opens the **table picker** (see below). |
+
+### Table picker
+
+Click the grid icon to open an 8 × 8 cell grid. Hover over a cell to
+highlight the selection and see the dimension label (e.g. `3 × 4`). Click
+to insert a table with that many columns and rows plus a header row.
+
+After insertion, click any cell to position the cursor there. Use
+`Tab` to move to the next cell.
+
+### History
+
+`↩` (undo) and `↪` (redo) step through collaborative history managed
+by the Yjs undo stack.
+
+## Working with images
+
+### Insert an image
+
+Click the image icon in the toolbar and pick a file. The image is
+automatically scaled down to at most 800 × 800 px and 250 KB before
+it is embedded.
+
+### Resize and rotate
+
+Select an image (click on it) to show the chrome:
+
+- **Resize handles** appear at the corners and edges. Drag a corner
+  handle to scale proportionally; drag an edge handle for asymmetric
+  scaling.
+- The **rotate handle** appears above the top edge. Drag it to rotate
+  freely. Hold `Shift` to snap to 15-degree increments.
+
+### Wrap mode
+
+A **wrap toolbar** appears below the selected image with six modes:
+
+| Icon | Name | Effect |
+|------|------|--------|
+| Inline icon | Inline | Image sits on the text baseline (default). |
+| Wrap-left icon | Wrap left | Text wraps around the right side of the image (`float: left`). |
+| Wrap-right icon | Wrap right | Text wraps around the left side of the image (`float: right`). |
+| Break icon | Break | Image occupies its own block; text continues below. |
+| Behind icon | Behind text | Image is positioned freely behind the text layer. |
+| Front icon | In front | Image is positioned freely on top of the text layer. |
+
+### Drag to float
+
+In edit mode you can **drag an image** to move it within the document:
+
+- **Drag to the left edge** of the page (left 28% of content width):
+  releases as **Wrap left**.
+- **Drag to the right edge** of the page (right 28%): releases as
+  **Wrap right**.
+- **Drag to the center**: a thin horizontal line shows which paragraph
+  the image will be anchored to on release.
+
+The paragraph indicator line is always visible even when a left/right
+side zone is highlighted, so you can see exactly where the image will
+land.
+
+## Collaborative cursors
+
+While others are editing, colored carets and name labels appear at
+their cursor positions. Each collaborator gets a unique color.
+
+## Exporting
+
+Click the **export** button (in the panel header) to download the
+document as a Markdown file or share it as a chat message in the
+current channel.
+
+## Pitfalls
+
+- **"Open Document" does nothing after a few seconds**: the
+  `FancyLiveDocInvite` reply never arrived. The live-doc plugin is
+  probably not running or port 64740 is not reachable. Ask your admin.
+- **Document resets on every open**: the file server or its persistence
+  bridge is not configured. Documents are kept in memory only; they
+  survive as long as at least one viewer is connected.
+- **Wrap toolbar not visible**: it may be hidden behind the channel
+  sidebar on very narrow windows. The toolbar is rendered in a fixed
+  overlay above the sidebar - if it is still not visible, try
+  widening the window.

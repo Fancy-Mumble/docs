@@ -18,7 +18,7 @@ channel tree unless overridden.
 
 | Permission | Bit | Description |
 |---|:-:|---|
-| **Write ACL** | `0x1` | Edit the channel's ACL rules and groups. Grants full control — only assign to trusted admins. |
+| **Write ACL** | `0x1` | Edit the channel's ACL rules and groups. Grants full control - only assign to trusted admins. |
 | **Traverse** | `0x2` | See the channel and walk into its sub-channels. Denying this hides the channel completely. |
 | **Enter** | `0x4` | Join the channel. A user can see a channel they cannot enter if Traverse is allowed. |
 | **Speak** | `0x8` | Transmit voice in the channel. |
@@ -51,7 +51,7 @@ server-wide.
 | <Badge text="Fancy" variant="note" /> **Manage emotes** | `0x400000` | Add, edit, and remove custom server emotes. |
 
 <Aside type="note" title="Fancy extensions">
-Permissions marked **Fancy extension** are not present in upstream Mumble. Vanilla Mumble clients simply ignore these flags — a vanilla user denied a Fancy-only permission will not see the relevant UI element at all.
+Permissions marked **Fancy extension** are not present in upstream Mumble. Vanilla Mumble clients simply ignore these flags - a vanilla user denied a Fancy-only permission will not see the relevant UI element at all.
 </Aside>
 
 ## How rules combine

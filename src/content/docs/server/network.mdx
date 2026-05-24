@@ -16,6 +16,7 @@ strictly required.
 |------|----------|---------|-----------|
 | **64738** | TCP and UDP | Voice and control | yes |
 | **64739** | TCP | File server - plain HTTP (emotes, avatars, attachments) | for file features |
+| **64740** | TCP | Live document WebSocket (Yjs CRDT sync) | for live documents |
 | **10000** | UDP | Screen-share relay | for smooth screen sharing |
 | **6502** | TCP | Admin RPC (Ice) | rarely, internal |
 
@@ -43,6 +44,7 @@ package "Server Host" #transparent;line.dashed {
     component "TCP/UDP 64738\\nVoice & Control" as P1
     component "UDP 10000\\nScreen-share Relay" as P3
     component "TCP 64739\\nFile Server (HTTP)" as P2
+    component "TCP 64740\\nLive-doc WebSocket" as P5
     component "TCP 6502  Admin RPC\\n//(loopback only by default)//" as P4
     component "Push Relay\\n→ Firebase" as Push
   }
@@ -56,9 +58,19 @@ Client --> P4 : admin tools only
 Client --> RP : HTTPS 443
 Browser --> RP : HTTPS 443
 RP --> P2 : HTTP 64739
+RP --> P5 : WSS \u2192 WS 64740
 Client ..> P2 : HTTP 64739 (direct, LAN only)
+Client ..> P5 : WS 64740 (direct, LAN only)
 Browser ..> P2 : HTTP 64739 (direct, LAN only)
+Browser ..> P5 : WS 64740 (direct, LAN only)
 Push ..> FCM : HTTPS 443
+
+note right of RP
+  Live-doc proxy requires:
+  Upgrade + Connection headers
+  Query string preserved
+  (JWT in ?token=...)
+end note
 @enduml
 `} />
 
@@ -98,6 +110,21 @@ avatars fall back to the older inline-only mode.
 You can put a **reverse proxy in front** (recommended for production)
 to terminate TLS, add caching, and so on. See [File server](/server/features/file-server/).
 
+### 64740, live document WebSocket
+
+Used for:
+
+- **Real-time CRDT synchronization** of shared channel documents via the Yjs protocol.
+- Transporting collaborative cursor positions and awareness updates.
+
+Like the file server, this port speaks **plain WebSocket (ws://)** with no
+built-in TLS. Put it behind a TLS-terminating reverse proxy in production
+so clients reach it as **wss://**. The live-doc plugin is **disabled by
+default** - see [Live Documents](/server/features/live-doc/) to enable it.
+
+If this port is unreachable, the "Open Live Doc" button will time out waiting
+for an invite reply from the server.
+
 ### 10000, screen-share relay
 
 Used for:
@@ -129,6 +156,7 @@ a specific tool that needs it.
       - "64738:64738/tcp"
       - "64738:64738/udp"
       - "64739:64739/tcp"
+      - "64740:64740/tcp"     # live documents (optional)
       - "10000:10000/udp"
       # Only if you need admin RPC from outside the host:
       # - "127.0.0.1:6502:6502/tcp"
@@ -140,6 +168,7 @@ a specific tool that needs it.
       -p 64738:64738/tcp \
       -p 64738:64738/udp \
       -p 64739:64739/tcp \
+      -p 64740:64740/tcp \
       -p 10000:10000/udp \
       ...
     ```
@@ -167,14 +196,101 @@ environment:
 
 ## Behind a reverse proxy
 
-You can put the **file server** (64739) behind nginx, Caddy, or
-Traefik. The server expects you to set:
+You can put the **file server** (64739) and the **live-doc WebSocket** (64740)
+behind nginx, Caddy, or Traefik.
+
+For the file server:
 
 ```ini
 plugin.file-server.tlsTerminatedByProxy=true
 plugin.file-server.baseUrl=https://files.example.com
 plugin.file-server.allowedOrigins=https://files.example.com
 ```
+
+### Live-doc WebSocket behind a proxy
+
+The live-doc plugin is a standard **axum HTTP server** - the WebSocket
+connection is a normal HTTP Upgrade. Three things are required for the proxy
+to work correctly:
+
+| Requirement | Why |
+|-------------|-----|
+| Strip the `/live-doc` path prefix | The axum backend serves routes at `/ws/…` — without stripping, the backend returns 404 |
+| Forward `Upgrade` + `Connection` headers | Without them the proxy returns HTTP 400 on connect |
+| Preserve the query string | The handshake JWT is passed as `?token=...` and must reach the backend |
+| Set `plugin.live-doc.public_url` | Tells clients the `wss://` URL to connect to instead of `ws://bind-address:64740` |
+
+<Aside type="caution" title="Prefix strip is mandatory">
+With `public_url=wss://chat.example.com/live-doc` the client connects to
+`wss://chat.example.com/live-doc/ws/{server}/{channel}/{slug}`. The proxy
+must strip `/live-doc` before forwarding so the backend receives `/ws/…`.
+</Aside>
+
+<Tabs>
+  <TabItem label="Caddy">
+    `handle_path` strips the prefix automatically:
+    ```text
+    chat.example.com {
+      handle_path /live-doc/* {
+        reverse_proxy localhost:64740
+      }
+    }
+    ```
+    Then in your `mumble-server.ini`:
+    ```ini
+    plugin.live-doc.public_url=wss://chat.example.com/live-doc
+    ```
+  </TabItem>
+  <TabItem label="nginx">
+    The trailing slash on both `location` and `proxy_pass` strips the prefix:
+    ```nginx
+    location /live-doc/ {
+      proxy_pass         http://127.0.0.1:64740/;
+      proxy_http_version 1.1;
+      proxy_set_header   Upgrade $http_upgrade;
+      proxy_set_header   Connection "Upgrade";
+      proxy_set_header   Host $host;
+    }
+    ```
+    Then in your `mumble-server.ini`:
+    ```ini
+    plugin.live-doc.public_url=wss://chat.example.com/live-doc
+    ```
+  </TabItem>
+  <TabItem label="Traefik">
+    Traefik needs an explicit `StripPrefix` middleware:
+    ```yaml
+    http:
+      middlewares:
+        live-doc-strip:
+          stripPrefix:
+            prefixes:
+              - /live-doc
+      routers:
+        live-doc:
+          rule: "Host(`chat.example.com`) && PathPrefix(`/live-doc`)"
+          service: live-doc
+          entryPoints: [websecure]
+          middlewares:
+            - live-doc-strip
+      services:
+        live-doc:
+          loadBalancer:
+            servers:
+              - url: "http://127.0.0.1:64740"
+    ```
+    Then in your `mumble-server.ini`:
+    ```ini
+    plugin.live-doc.public_url=wss://chat.example.com/live-doc
+    ```
+  </TabItem>
+</Tabs>
+
+<Aside type="note">
+Caddy and Traefik forward `Upgrade` headers automatically. nginx requires the
+explicit `proxy_set_header Upgrade` and `proxy_set_header Connection` lines -
+omitting them causes a **400 Bad Request** on the WebSocket handshake.
+</Aside>
 
 The voice port (64738) cannot easily go behind a generic HTTP proxy
 since it is a custom binary protocol. Use TCP-level passthrough or a
@@ -193,8 +309,9 @@ router:
 
 - TCP 64738 to the server.
 - UDP 64738 to the server.
-- TCP 64739 to the server (optional).
-- UDP 10000 to the server (optional).
+- TCP 64739 to the server (optional, file server).
+- TCP 64740 to the server (optional, live documents).
+- UDP 10000 to the server (optional, screen-share relay).
 
 For IPv6, open the same ports in the AAAA firewall rules.
 
@@ -204,6 +321,7 @@ For UFW (Ubuntu firewall):
 sudo ufw allow 64738/tcp
 sudo ufw allow 64738/udp
 sudo ufw allow 64739/tcp
+sudo ufw allow 64740/tcp
 sudo ufw allow 10000/udp
 ```
 
@@ -213,6 +331,7 @@ For firewalld (Fedora and friends):
 sudo firewall-cmd --add-port=64738/tcp --permanent
 sudo firewall-cmd --add-port=64738/udp --permanent
 sudo firewall-cmd --add-port=64739/tcp --permanent
+sudo firewall-cmd --add-port=64740/tcp --permanent
 sudo firewall-cmd --add-port=10000/udp --permanent
 sudo firewall-cmd --reload
 ```
