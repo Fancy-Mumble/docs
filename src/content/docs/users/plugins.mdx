@@ -1,0 +1,133 @@
+---
+title: Plugins
+description: What server plugins are, how the trust system works, and how to manage the plugins installed on your server.
+sidebar:
+  order: 11
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Plugins let server owners extend Fancy Mumble with extra behaviour:
+slash commands, interactive buttons, modals, custom settings panels,
+and more.  Every plugin runs **server-side**; the client shows plugin
+UI only after you have explicitly granted trust.
+
+## How plugins reach your client
+
+1. You connect to a server.
+2. The server advertises its installed plugins together with a
+   **manifest** that lists what each plugin can do.
+3. Fancy Mumble checks whether you have already reviewed that plugin.
+   - If you have not — or if the plugin was updated since you last
+     reviewed it — a **trust prompt** appears.
+   - If you previously granted trust (and the plugin has not changed),
+     its UI surfaces immediately.
+   - If you previously blocked a plugin, it stays silenced.
+
+## The trust prompt
+
+<div id="screenshot-plugin-trust-prompt-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: trust prompt dialog for an example plugin.
+</div>
+
+When a new or updated plugin needs your consent, a dialog appears in
+the middle of the screen with:
+
+- **Plugin name and version** being reviewed.
+- **Description** (if the plugin author provided one).
+- A plain-language list of **what the plugin will be able to do**
+  (its declared capabilities).
+- An expandable **Advanced** section with the author, homepage, full
+  capability tags, and a SHA-256 fingerprint of the plugin manifest so
+  you can verify it independently.
+
+You have three choices:
+
+| Option | What it means |
+|--------|--------------|
+| **Block** | Plugin is silenced permanently until you re-enable it from Settings. |
+| **Not now** | Dismissed for this session; the prompt returns next time you connect. |
+| **Allow** (split button) | Grant trust — see scopes below. |
+
+### Trust scopes
+
+When you click **Allow**, the split-button dropdown lets you pick how
+long the decision lasts:
+
+| Scope | Persisted? | Applies to |
+|-------|-----------|------------|
+| **Allow once** | No — session only | The currently connected server only, forgotten when you disconnect. |
+| **Allow for this server** | Yes | This server only.  Decision survives restarts. |
+| **Always allow** | Yes | Every server you connect to.  Useful for plugins you trust unconditionally. |
+
+### Re-prompts
+
+If a plugin you already reviewed is **updated** (new version) or
+**expands its capabilities**, the prompt reappears so you can review
+the changes before re-enabling it.  A narrowed capability set never
+triggers a re-prompt.
+
+## Slash commands
+
+Trusted plugins can register **slash commands**.  Type `/` in the chat
+composer to open the command picker, which lists all commands from all
+trusted plugins on the current server.
+
+<div id="screenshot-plugin-slash-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: slash command picker open with one plugin command visible.
+</div>
+
+Slash commands can accept typed arguments.  Arguments are passed
+positionally (space-separated) or by name using `argname=value`.
+String arguments with spaces must be quoted: `"two words"`.
+
+## Plugin capabilities
+
+A plugin declares which surfaces it needs.  You see these listed in
+plain language during the trust prompt:
+
+| Capability | What you will see |
+|------------|------------------|
+| `slash-commands` | `/commandname` entries in the composer picker. |
+| `modals` | Pop-up form dialogs. |
+| `components` | Interactive cards with buttons or drop-downs in chat. |
+| `notifications` | Toast notifications in the bottom of the screen. |
+| `settings-panel` | A live read-out panel under **Settings > Plugins**. |
+
+## Managing trust after connecting
+
+Open **Settings > Plugins** to see every plugin the server currently
+advertises.
+
+<div id="screenshot-plugin-settings-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Settings Plugins tab with two plugins, one allowed and one blocked.
+</div>
+
+Each card shows:
+
+- Plugin name, version, and whether it is an **Official** Fancy Mumble
+  plugin.
+- The trust decision and its scope.
+- Any live **settings panels** the plugin exposes (rows updated in
+  real time by the plugin).
+- A **Revoke** button to withdraw trust without permanently blocking:
+  the prompt returns on the next connect.
+
+<Aside type="note">
+Revoking trust hides the plugin's UI immediately for the current
+session.  The plugin remains installed on the server; only your local
+trust record is cleared.
+</Aside>
+
+## Plugin settings panels
+
+Some plugins push a **settings panel** — a table of key-value rows
+that updates live as you use the plugin.  These panels appear inline
+inside the plugin's card in **Settings > Plugins**.  They are
+read-only from your side; the plugin controls what rows are shown.
+
+## See also
+
+- [Server Plugins](/admin/server-plugins/) — admin panel for managing which plugins are installed and enabled on your server.
+- [Marketplace](/admin/marketplace/) — browse and install plugins from the community catalogue.
+- [Plugin system overview](/server/plugins/overview/) — technical deep-dive into how the plugin host works, the wire protocol, and ABI stability.

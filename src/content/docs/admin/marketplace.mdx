@@ -1,0 +1,115 @@
+---
+title: Plugin Marketplace
+description: Browse and install community plugins for your Fancy Mumble server from the built-in marketplace.
+sidebar:
+  order: 11
+---
+
+import { Steps, Aside, Card } from '@astrojs/starlight/components';
+
+The **Marketplace** tab in the admin panel connects directly to the
+[Fancy Mumble Plugin Marketplace](https://plugins.fancy-mumble.com/)
+— a curated directory of community plugins you can install on your
+server in a single click.
+
+<Aside type="caution" title="Server version requirement">
+Installing marketplace plugins requires **Fancy Mumble Server 0.4.0
+or newer**.  On older servers the install button is hidden and a
+warning banner is shown.  You can still browse the catalogue.
+</Aside>
+
+<div id="screenshot-admin-marketplace-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Marketplace tab showing a search bar and a grid of plugin cards.
+</div>
+
+## Browsing plugins
+
+Open **Admin > Marketplace**.  The page loads the most popular plugins
+automatically.  Each card shows:
+
+- Plugin name and author.
+- Short description.
+- Star rating and download count.
+- **Official** badge for first-party plugins maintained by the Fancy
+  Mumble project.
+- Capability tags (e.g. `slash-commands`, `modals`).
+
+Type in the search box to filter by name, author, or keyword.  Results
+update 300 ms after you stop typing.
+
+## Plugin detail page
+
+Click a card to open the full detail page.  It shows:
+
+- Full description, author, and homepage link.
+- **README** rendered from Markdown — documentation written by the
+  plugin author.
+- **Version history** table:
+  - Version number.
+  - Release date.
+  - Minimum server version and minimum Fancy Mumble server version
+    required.
+  - Changelog snippet.
+  - **Yanked** badge if a version was pulled by the author (prefer a
+    different version).
+- Tags and capability list.
+
+<div id="screenshot-admin-marketplace-plugin-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Plugin detail page for "fancy-greeter" showing README and version table.
+</div>
+
+## Installing a plugin
+
+<Steps>
+
+1. Find the plugin you want in the search results or on the detail page.
+
+2. Click **Install**.
+
+3. The client sends an install request to your server referencing the
+   plugin's manifest URL from the marketplace.  The server downloads
+   and verifies the plugin.
+
+4. A confirmation (or error) banner appears once the server responds.
+
+5. Navigate to **Server Plugins** to confirm the plugin appears in the
+   list and toggle it on if it is not already enabled.
+
+</Steps>
+
+<Aside type="note">
+The install operation happens server-side.  Your client just forwards
+the marketplace metadata; it never downloads the plugin binary itself.
+</Aside>
+
+## After installing
+
+Once the server loads the plugin, it advertises the plugin's
+**manifest** to connected clients.  Each user who connects will be
+prompted to review and grant trust before the plugin's UI surfaces
+appear (slash commands, buttons, modals, etc.).  See
+[Plugins](../users/plugins) for what users see.
+
+## Refreshing the list
+
+Click **Refresh** to re-fetch the marketplace index.  Useful after
+a new plugin is published or if the page loaded with stale results.
+
+## Developer mode
+
+If your Fancy Mumble preferences are set to **Developer** mode, an
+extra URL selector appears in the toolbar.  This lets you point the
+marketplace tab at a local development instance (`http://localhost`)
+instead of the production registry.  The selection is persisted in
+your preferences and survives restarts.
+
+<Aside type="caution" title="Developer mode only">
+The local URL override is only visible in Developer mode.  It is
+intended for plugin authors testing a local marketplace server.
+</Aside>
+
+## See also
+
+- [Server Plugins](/admin/server-plugins/) — enable, disable, and uninstall plugins already on your server.
+- [Using plugins (server config)](/server/plugins/using/) — install plugins manually via Docker volume mount without the marketplace.
+- [Developing a plugin](/server/plugins/developing/) — build and publish your own plugin to the marketplace.

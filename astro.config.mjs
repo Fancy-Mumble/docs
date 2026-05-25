@@ -160,6 +160,7 @@ export default defineConfig({
             { label: "Personalization & themes", link: "/users/personalization/" },
             { label: "Keyboard shortcuts", link: "/users/shortcuts/" },
             { label: "Privacy & identities", link: "/users/privacy/" },
+            { label: "Plugins", link: "/users/plugins/" },
           ],
         },
         {
@@ -212,6 +213,8 @@ export default defineConfig({
             { label: "Ban list", link: "/admin/bans/" },
             { label: "Custom emotes", link: "/admin/emotes/" },
             { label: "Onboarding workflow", link: "/admin/onboarding/" },
+            { label: "Server Plugins", link: "/admin/server-plugins/" },
+            { label: "Marketplace", link: "/admin/marketplace/" },
           ],
         },
         {

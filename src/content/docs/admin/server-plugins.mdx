@@ -1,0 +1,84 @@
+---
+title: Server Plugins
+description: Install, enable, disable, and remove server-side plugins from the admin panel.
+sidebar:
+  order: 10
+---
+
+import { Steps, Aside, Card } from '@astrojs/starlight/components';
+
+The **Server Plugins** tab in the admin panel lets you manage all
+plugins running on your Fancy Mumble server.  Plugins extend the
+server with new behaviour — slash commands, interactive message cards,
+modals, live settings panels, and more.
+
+<Aside type="caution" title="Server version requirement">
+Plugin administration requires **Fancy Mumble Server 0.4.0 or newer**.
+On older servers the tab shows an "unsupported" notice and all controls
+are disabled.
+</Aside>
+
+<div id="screenshot-admin-server-plugins-1" class="screenshot-placeholder">
+  &nbsp;Screenshot placeholder: Server Plugins tab with three installed plugins.
+</div>
+
+## What the list shows
+
+Each row in the plugin list displays:
+
+| Field | Meaning |
+|-------|---------|
+| **Name** | Internal plugin identifier (e.g. `fancy-greeter`). |
+| **Version** | Installed version string. |
+| **Status** | Enabled (green) or disabled (grey). |
+| **Loaded** | Whether the plugin process is currently running. |
+| **Marketplace** | Badge if the plugin was installed from the marketplace. |
+| **Installed at** | UTC timestamp of when the plugin was installed. |
+
+## Enable and disable plugins
+
+Toggle the power-button icon next to a plugin to enable or disable it
+without uninstalling.  A disabled plugin stays on disk but its process
+is stopped and its manifest is no longer advertised to clients.
+
+The change is confirmed by a `plugin-admin-ack` event from the server.
+If the server returns an error it is shown in a banner above the list.
+
+## Uninstall a plugin
+
+Click the **trash icon** next to a marketplace-installed plugin and
+confirm the dialog.
+
+<Aside type="note">
+Built-in plugins (shipped with the server binary) and plugins
+installed manually (not from the marketplace) do not show a delete
+button.  Remove them by editing the server's `plugins/` directory
+directly.
+</Aside>
+
+## Install from the Marketplace
+
+The **Marketplace** tab (see [Marketplace](./marketplace)) lets you
+browse and install community plugins.  Once installed they appear in
+this list automatically.
+
+## Refresh
+
+Click **Refresh** (or the icon in the toolbar) to re-fetch the current
+plugin list from the server.  The list refreshes automatically after
+every install, enable, or disable action.
+
+## Troubleshooting
+
+**"Load timed out"** — The server did not respond within 10 seconds.
+Check that the server process is running and that you have admin
+(Write permission on the root channel) rights.
+
+**"Unknown error"** — The server returned an error without a message.
+Check the server logs for more detail.
+
+## See also
+
+- [Marketplace](/admin/marketplace/) — install new plugins from the community catalogue.
+- [Using plugins (server config)](/server/plugins/using/) — enable and disable plugins via `mumble-server.ini`, add plugins via Docker volume mount, and view startup logs.
+- [Plugins (user view)](/users/plugins/) — what your users see when a new plugin appears on the server (trust prompt, slash commands, capability management).
