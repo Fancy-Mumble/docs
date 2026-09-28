@@ -59,12 +59,12 @@ export default defineConfig({
         {
           icon: "github",
           label: "GitHub (App)",
-          href: "https://github.com/Fancy-Mumble/FancyMumbleNext",
+          href: "https://github.com/Fancy-Mumble/FancyMumble",
         },
         {
           icon: "github",
-          label: "GitHub (Server)",
-          href: "https://github.com/Fancy-Mumble/mumble-server",
+          label: "GitHub (Starling server)",
+          href: "https://github.com/Fancy-Mumble/starling",
         },
       ],
       editLink: {
@@ -168,33 +168,10 @@ export default defineConfig({
           badge: { text: "Ops", variant: "note" },
           items: [
             { label: "Docker quick start", link: "/server/docker/" },
-            { label: "Setup wizard", link: "/server/wizard/" },
+            { label: "First-run setup", link: "/server/wizard/" },
             { label: "Configuration reference", link: "/server/config/" },
             { label: "Ports & networking", link: "/server/network/" },
-            {
-              label: "Feature deep-dives",
-              collapsed: false,
-              items: [
-                { label: "Persistent chat", link: "/server/features/persistent-chat/" },
-                { label: "Push notifications", link: "/server/features/push/" },
-                { label: "Screen sharing relay", link: "/server/features/webrtc-sfu/" },
-                { label: "File server", link: "/server/features/file-server/" },
-                { label: "Link previews", link: "/server/features/link-previews/" },
-                { label: "Reactions & polls", link: "/server/features/reactions/" },
-                { label: "Watch Together", link: "/server/features/watch-together/" },
-                { label: "Whiteboard", link: "/server/features/whiteboard/" },
-                { label: "Live documents", link: "/server/features/live-doc/" },
-              ],
-            },
-            {
-              label: "Plugins",
-              collapsed: false,
-              items: [
-                { label: "Plugin system overview", link: "/server/plugins/overview/" },
-                { label: "Using plugins", link: "/server/plugins/using/" },
-                { label: "Developing a plugin", link: "/server/plugins/developing/" },
-              ],
-            },
+            { label: "Feature availability", link: "/server/features/" },
             { label: "Customize & disable features", link: "/server/customize/" },
             { label: "Building from source", link: "/server/build/" },
             { label: "Upgrade & backup", link: "/server/upgrade/" },

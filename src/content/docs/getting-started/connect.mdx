@@ -1,156 +1,31 @@
 ---
 title: Connect to a server
-description: How to join a server with Fancy Mumble, including password prompts and the public server list.
-sidebar:
-  order: 2
+description: Add a saved server, choose an identity, and connect in Nebula or Standard.
 ---
 
-import { Steps, Tabs, TabItem, Aside, Card, CardGrid } from '@astrojs/starlight/components';
-import PlantUML from '../../../components/PlantUML.astro';
-import { Icon } from 'astro-icon/components';
+Fancy Mumble can connect to Starling and to standard Mumble servers. Ask the server owner for its host name, port if different from **64738**, and any password.
 
-You have installed the app. Now you need somewhere to talk. This page
-covers three ways to connect:
+## Add a server in Nebula
 
-1. A server address from a friend or admin (most common).
-2. Browsing the **Public server list**.
-3. Your own self-hosted server (see [Docker quick start](/server/docker/)).
+Nebula is the design for a new profile.
 
-## The Connect screen
+1. Open **Add server** from the server rail or choose **Add server by address…** from **Quick connect**.
+2. Enter the host, port, and the username others should see. The dialog can also save a friendly label, certificate identity, and password.
+3. Save the server. Select it in the server rail, then choose **Connect** on its server screen.
+4. If prompted, enter the server password or account credentials. The app can remember a password in the operating system's credential store.
 
-When you open Fancy Mumble it shows the **Connect** screen. Three views
-are available from the bottom strip:
+To find a server instead, choose **Browse public servers** from Quick connect. A server must opt into the public directory to appear there.
 
-- <Icon name="lucide:server" size={18} /> **Servers**, your saved servers (default).
-- <Icon name="lucide:globe" size={18} /> **Public**, browse the global directory.
-- <Icon name="lucide:plus" size={18} /> **Wizard**, add a new server step by step.
+## Add a server in Standard
 
+Open the **Connect** screen and use the **Wizard** or **+ Add Server** action. Enter the address and username, save, then select the server card to connect. Standard also has a **Public** view for browsing listed servers. Existing profiles that use Standard keep that design.
 
-<img src="/screenshot-getting-started-connect-1.png" alt="Fancy Mumble Connect screen showing the Saved Servers view with a search bar, three localhost server cards, a + Add Server button, and a Browse public servers link at the bottom" />
+## Certificate and identity
 
-## Quick-add a server
+The app remembers a server's TLS certificate after the first connection. If its fingerprint changes later, confirm the change with the server owner before accepting it. The owner may have restored a new data directory or replaced the certificate.
 
-<Steps>
-
-1. Tap the **+** button (or **Wizard** at the bottom).
-
-2. **Server address**: type the address you were given, for example
-   `mumble.example.org` or `mumble.example.org:64738`. If no port is
-   given, the default `64738` is used.
-
-   <Aside type="note">
-   In **Normal mode** the port and label fields are hidden, so you only
-   need to enter the address and your name. Turn on **Expert mode**
-   under [Privacy & advanced settings](/users/privacy/) if you need
-   the extra fields.
-   </Aside>
-
-3. **Your identity**: pick a username. This is the name others will
-   see. 3 to 15 characters, letters, numbers, dashes, or underscores
-   by default. Some servers allow other patterns.
-
-4. **Give it a name** (Expert only): a friendly label like *Saturday
-   D&D*. Leave it blank to use the server address.
-
-5. Click **Save**. The server now appears in your **Servers** list.
-
-</Steps>
-
-## Connect
-
-Click any saved server card to connect. The status indicator goes
-through these stages:
-
-<PlantUML alt="Connection state flow: idle, connecting, bootstrapping, connected" code={`
-@startuml
-skinparam backgroundColor transparent
-skinparam stateBackgroundColor #ede7f6
-skinparam stateBorderColor #7c3aed
-skinparam stateFontColor #311b92
-skinparam arrowColor #5e35b1
-
-left to right direction
-
-[*] --> Idle
-Idle --> Connecting : connect
-Connecting --> Bootstrapping : handshake complete
-Bootstrapping --> Connected : channels & users loaded
-Connected --> [*] : disconnect
-@enduml
-`} />
-
-The progress bar stays up not just during the connection handshake
-but also while channels, users, and your own session are fetched, so
-you do not land on an empty room.
-
-
-<img src="/screenshot-getting-started-connect-2.png" alt="Connect screen with a server card mid-connection: the icon shows a pause symbol, the status reads 'Negotiating with server…', and a progress bar is visible below the card" />
-
-## Password-protected servers
-
-If the server is locked with a password, Fancy Mumble pops up a small
-dialog after the handshake.
-
-
-<img src="/screenshot-getting-started-connect-3.png" alt="Password Required dialog. The message reads 'The server requires a password for SuperUser on localhost. Enter the password to continue connecting.' Below are a PASSWORD field, a Use a different username link, a Save password checkbox, and Cancel / Connect buttons" />
-
-Type the password and click **Retry**. The app offers to **remember**
-the password in your operating system's secure storage so you do not
-get asked again.
-
-## Untrusted certificate?
-
-The first time you connect to a server, the app pins the server's
-identity. If that identity later changes (for example, the server was
-reinstalled), the app refuses to connect and shows you the new details.
-
-- If the change is legitimate (the admin told you), click **Accept**.
-- If you did not expect a change, **close the dialog** and ask the
-  admin to confirm.
-
-<Aside type="caution">
-Fancy Mumble does not silently accept changed certificates. That is a
-feature, not a bug. It protects you from someone impersonating the
-server.
-</Aside>
-
-## Browse public servers
-
-The **Public** tab lists servers from the global directory. You can
-filter by **country**, **users online**, and **name**. Click a row to
-connect (no save required).
-
-
-<img src="/screenshot-getting-started-connect-4.png" alt="Public Servers view listing servers sorted by name with columns for Country, Server, Users, Ping (colour-coded green to red), and Version. A search bar sits above the table and a Saved servers link is in the top-right corner" />
-
-<Aside type="note">
-Public servers are not vetted. Treat them like a random group chat,
-do not share private information.
-</Aside>
-
-## Common connection issues
-
-<CardGrid>
-  <Card title="Wrong address or port" icon="error">
-    The most common cause. Double-check the address. The default port
-    is **64738**.
-  </Card>
-  <Card title="Server is rejecting you" icon="warning">
-    Older servers may not understand the newer handshake. Ask the
-    admin to update the server.
-  </Card>
-  <Card title="Voice does not connect" icon="warning">
-    Corporate firewall blocking 64738? Try **Force TCP** under
-    [Audio settings](/users/audio/#network).
-  </Card>
-  <Card title="Identity changed" icon="error">
-    See "Untrusted certificate" above. Do not accept unless the admin
-    told you the server was reinstalled.
-  </Card>
-</CardGrid>
-
-If none of these help, see [Connection problems](/troubleshooting/connection/).
+A saved certificate identity matters for registration and some Fancy features. Nebula selects an existing default certificate when you add a server, while an existing saved server keeps the identity you chose. For account or server password problems, see [Connection troubleshooting](/troubleshooting/connection/).
 
 ## Next step
 
-Continue with [Your first voice call](/getting-started/first-call/).
+[Join a channel and make your first call](/getting-started/first-call/).

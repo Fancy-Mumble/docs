@@ -33,7 +33,7 @@ These docs are still being written. Some pages may be incomplete, missing, or no
 
 <CardGrid>
   <LinkCard title="Join a server" href="/getting-started/install/" description="Install the app, connect to a server your admin gave you, and start talking." />
-  <LinkCard title="Run a server" href="/server/docker/" description="Get a fully featured Fancy Mumble server running with Docker in under 5 minutes." />
+  <LinkCard title="Run a server" href="/server/docker/" description="Start Starling, the current Fancy Mumble server, with Docker Compose." />
   <LinkCard title="Administer a server" href="/admin/superuser/" description="Manage channels, roles, ACLs, onboarding, emotes, and bans." />
   <LinkCard title="Troubleshoot" href="/troubleshooting/common-issues/" description="Audio glitches, connection drops, screen-share failures, and how to get the right info to a developer." />
 </CardGrid>
@@ -48,15 +48,15 @@ These docs are still being written. Some pages may be incomplete, missing, or no
 
     [View on GitHub →](https://github.com/Fancy-Mumble/FancyMumble)
   </Card>
-  <Card title="The server" icon="puzzle">
-    The self-hosted backend responsible for channel management, authentication, and message routing.
+  <Card title="Starling server" icon="puzzle">
+    The current Rust server: a Mumble gateway with separate voice, chat, files, and other services.
 
-    [View on GitHub →](https://github.com/Fancy-Mumble/mumble-server)
+    [View on GitHub →](https://github.com/Fancy-Mumble/starling)
   </Card>
-  <Card title="The Docker image" icon="seti:docker">
-    A production-ready container image bundled with an interactive setup wizard for zero-configuration deployment.
+  <Card title="Run it yourself" icon="seti:docker">
+    Use the maintained Starling Compose deployment or a release package. The older C++ Docker image remains for existing servers.
 
-    [View on GitHub →](https://github.com/Fancy-Mumble/mumble-docker)
+    [Docker quick start →](/server/docker/)
   </Card>
   <Card title="Documentation" icon="open-book">
     The source for this site - guides, reference pages, and configuration examples. Contributions welcome.

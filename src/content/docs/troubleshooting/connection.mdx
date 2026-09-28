@@ -1,138 +1,39 @@
 ---
 title: Connection problems
-description: Refused, timed out, drops, password asks. A symptom-driven checklist.
-sidebar:
-  order: 3
+description: Check the client address, Starling listener, credentials, and certificate.
 ---
 
-import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+## Connection refused or timed out
 
-Walk through the section that matches your symptom.
+Check the server address and port. Starling's default Mumble port is **64738**. On the server, check the gateway and both TCP and UDP firewall rules:
 
-## "Connection refused"
+~~~sh
+docker compose ps
+docker compose logs gateway
+~~~
 
-The server is not running, or the port is wrong.
+A TCP port probe can show whether the control listener is reachable:
 
-<Steps>
-1. Verify the address is correct. Default port is **64738**.
-2. Ping the host:
-   ```bash
-   ping your-host
-   ```
-3. Test the port:
-   ```bash
-   nc -zv your-host 64738
-   ```
-   If this fails, the firewall is in the way.
-4. (Server side) Confirm the container is running:
-   ```bash
-   docker compose ps
-   ```
-</Steps>
+~~~sh
+nc -zv your-server.example.org 64738
+~~~
 
-## "Connection timed out"
+If TCP works but voice does not, check **64738/UDP**. Force TCP in the client's voice network settings as a diagnostic fallback.
 
-The packet is being dropped somewhere between you and the server.
+## Password or identity rejected
 
-<Steps>
-1. Verify with another network (phone tether) to rule out your
-   local ISP.
-2. (Server side) Check the firewall lets in `64738/tcp` and
-   `64738/udp`.
-3. (Server side) Check the cloud provider's security group allows the
-   same ports.
-4. **Force TCP** in audio settings, sometimes only UDP is blocked.
-</Steps>
+Check the username and password with the server owner. A registered account may also be tied to a certificate, so verify the selected client identity. For a fresh Starling server, the SuperUser password was printed once at first boot; see [SuperUser and first login](/admin/superuser/).
 
-## "TLS handshake failed"
+## Certificate changed
 
-The server's certificate is rejected by your client.
+Starling keeps its self-signed TLS certificate in the data directory. If that directory or Docker volume was replaced, clients see a changed certificate fingerprint. Confirm the new fingerprint with the server owner before accepting it. Preserve the data directory during upgrades.
 
-- The server's certificate may have changed. The app asks you to
-  accept the new identity. **Read the new hash carefully** before
-  accepting.
-- If you used to connect and the server has been reinstalled, the
-  hash is expected to change. Accept it.
+## Public listing is missing
 
-## "Wrong username or password"
+Public directory registration is off until the registry fields are configured in Starling's instances.settings. A password-protected server is not listed. See the [Starling example TOML](https://github.com/Fancy-Mumble/starling/blob/main/starling.example.toml).
 
-- Server has a password set. Get it from the admin.
-- The username does not match the case (Mumble is case-insensitive
-  for registered users, but case-sensitive for the initial login).
-- Your certificate is wrong for the registered name. Open
-  Identities and confirm you are using the right one.
+## The server exits at startup
 
-## "Server rejected the username regex"
+Read the gateway or affected service logs. Starling rejects unknown TOML keys. Compare your file with its [configuration reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml). The C++ server's MUMBLE_CONFIG_* variables are not Starling settings.
 
-The server requires usernames to match a pattern.
-
-- Use 3 to 15 characters of letters, digits, dashes, underscores by
-  default.
-- The admin can change `MUMBLE_CONFIG_USERNAME` to a different
-  regex.
-
-## "Disconnects randomly after a few minutes"
-
-Often a NAT timeout or a packet-loss spike.
-
-- Turn on **Auto-reconnect** in Advanced settings.
-- **Force TCP** to keep one connection alive.
-- (Server side) Check for `keepalive` settings in the server INI.
-- (Server side) Confirm the cloud provider does not have an idle
-  timeout on the load balancer below 60 seconds.
-
-## "Connects but cannot hear anyone or be heard"
-
-Voice (UDP) is broken even though the control channel (TCP) works.
-
-- Turn on **Force TCP** in audio settings. This is the universal
-  fix; you trade a little latency for reliability.
-- (Server side) Open UDP 64738 in the firewall and forwarder.
-
-## "The app shows me as connecting forever"
-
-Stuck in the bootstrap phase. The first connect after start fetches
-channels, users, and own session info.
-
-- Restart the app.
-- Look at the **Activity log** for an error.
-- If you self-hosted, look at the server logs.
-
-## "Public server list is empty"
-
-- Your internet route to `mumble.info`'s directory is blocked. Try
-  again later.
-- Some corporate networks block the directory.
-
-## "Cannot find my self-hosted server in the public list"
-
-- You did not set `registerName`, `registerHostname`, and
-  `registerPassword` in the server config.
-- The directory has not yet picked up your server. Can take up to
-  an hour.
-
-## "App says certificate cannot be verified"
-
-This is the trust-on-first-use warning. The first time you connect
-the app pins the server's certificate hash. If it ever changes, you
-get this warning.
-
-- If you trust the change, accept.
-- If you did not expect a change, **stop**. The connection might be
-  intercepted.
-
-## Server-side: connection refused with no logs
-
-- Check `docker compose logs mumble-server` for a panic at startup.
-- The most common cause is a typo in `MUMBLE_CONFIG_*`. The server
-  refuses to start with an unknown key by default.
-- Set `MUMBLE_ACCEPT_UNKNOWN_SETTINGS=true` to pass through unknown
-  values (use sparingly, you might hide a real typo).
-
-## Still broken?
-
-[Open a bug report](/troubleshooting/reporting-bugs/) with:
-
-- Whether you can `nc -zv` the port.
-- Whether the issue happens from a different network.
-- Debug logs from both the client and the server.
+If the problem persists, include the client and server versions and relevant logs in a [bug report](/troubleshooting/reporting-bugs/).

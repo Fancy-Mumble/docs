@@ -1,0 +1,22 @@
+---
+title: Feature availability on Starling
+description: What runs as a Starling service, what needs configuration, and what depends on plugins.
+---
+
+Starling is the current server. Its gateway routes client control traffic to separate services; voice, files, and screen-share media use their own network paths. The [Starling services guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/SERVICES.md) is the maintained service inventory.
+
+| Feature | Starling component | Additional setup |
+| --- | --- | --- |
+| Voice and channel administration | Gateway, voice, metadata, permissions, userdata | Open TCP and UDP on the Mumble port. |
+| Persistent chat | pchat | Configure channel policy and retention as needed. |
+| File sharing | files | Set a client-reachable HTTP public URL and grant channel share permissions. |
+| Screen sharing | screenshare | Set a reachable UDP relay address when using server relay. |
+| Push notifications | push | Configure provider credentials for the target platform. |
+| Link previews | link-preview | Check outbound network policy. |
+| Plugins and plugin-delivered features | plugins plus installed plugins | Check the plugin host and the particular plugin; availability is not implied by the service alone. |
+| Live documents and calendar | Plugin-dependent | The checked-out Starling porting plan still lists these plugins as pending migration. Do not assume they work in a fresh deployment. |
+| External administration | operator-api | Explicitly configure authentication and the admin profile. |
+
+Some client features also depend on a plugin, server capability, or a newer client build. If a control is absent after connecting, check the server's advertised capabilities and its logs. The older feature and plugin guides remain available for existing C++ deployments; their INI keys and ports are not Starling configuration recipes.
+
+For the current plugin-host implementation and remaining migration work, see the [Starling plugin-host plan](https://github.com/Fancy-Mumble/starling/blob/main/docs/PLUGIN-HOST-PLAN.md). For each feature's exact settings, use the [Starling TOML reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml).

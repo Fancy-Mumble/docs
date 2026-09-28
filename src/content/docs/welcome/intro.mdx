@@ -1,136 +1,20 @@
 ---
 title: What is Fancy Mumble?
-description: An overview of Fancy Mumble, what makes it different, and who it is for.
-sidebar:
-  order: 1
+description: The client, Starling server, compatibility, and feature availability.
 ---
 
-import { Aside, Steps, Badge, Tabs, TabItem } from '@astrojs/starlight/components';
-import PlantUML from '../../../components/PlantUML.astro';
+Fancy Mumble is a voice chat app for Windows, Linux, and Android. It uses the Mumble protocol for voice and control, with chat, profiles, screen sharing, and other features in the client.
 
-Fancy Mumble is a **voice chat program** for gaming, podcasts, study
-groups, and online communities. You install the app, connect to a
-server, and talk. Chat, screen sharing, file sharing, and much more is
-built in.
+The current server is [Starling](https://github.com/Fancy-Mumble/starling), a Rust implementation with a gateway and separate services for voice, chat, files, and more. The earlier [C++ server fork](https://github.com/Fancy-Mumble/mumble-server) and its Docker image remain relevant to existing deployments.
 
-It is based on Mumble, an open-source voice chat program that has been
-around for over a decade, so the call quality and reliability are
-already excellent. Fancy Mumble adds a modern look, a smoother first-run
-experience, and a handful of features you would expect from a 2026 app.
+The client can connect to a standard Mumble server for voice and basic text chat. Fancy features depend on what the server advertises and on its configuration. Some also need a plugin or a reachable media service. See [Feature availability](/server/features/) before planning a deployment around a particular feature.
 
-<Aside type="note" title="Not affiliated with the Mumble project">
-Fancy Mumble is an independent project and is not affiliated with, endorsed by, or in any way connected to the official [Mumble project](https://www.mumble.info/) or its developers. "Mumble" is used solely to describe protocol and server compatibility.
-</Aside>
+A new client profile opens in **Nebula**. Standard remains available, and existing profiles that used Standard keep it. Aurora is deprecated. Screens and menu names in this site may differ slightly between designs.
 
-<Aside type="tip" title="Compatible with classic Mumble">
-The Fancy Mumble app can connect to any standard Mumble server. You
-just will not see the extra features (saved chat history, smooth screen
-sharing, file uploads, custom server emotes, push notifications) unless
-the server runs Fancy Mumble too.
-</Aside>
+## Start here
 
-## What is new compared to classic Mumble
+- [Install the app](/getting-started/install/) and [connect to a server](/getting-started/connect/).
+- [Run Starling with Docker](/server/docker/) or use a [release package](https://github.com/Fancy-Mumble/starling/releases/latest).
+- [Configure Starling](/server/config/) and check [ports](/server/network/).
 
-<Badge text="Highlights" variant="success" />
-
-- **Chat that survives disconnects.** Open the app the next day and
-  the conversation is still there (encrypted on the server).
-- **Smooth screen sharing.** One person streams, the server fans it
-  out to everyone, no peer-to-peer headaches.
-- **A whiteboard on top of any stream.** Point, draw, annotate.
-- **Watch a video together** in sync.
-- **Reactions and polls** on chat messages.
-- **Custom server emotes.** Admins can upload images and use them as
-  emoji.
-- **Live collaborative documents.** Any channel can have a shared rich-text
-  document that multiple people edit at the same time, with real-time cursors.
-- **File sharing** with control over who can download, for how long.
-- **Server-rendered link previews** so links look like links.
-- **Push notifications** on Android.
-- **Join-time onboarding** so new members are dropped into the right
-  channels with the right roles.
-- **Profile customization** including avatars, banners, name styles,
-  glow effects, and animated frames.
-
-## Who it is for
-
-<Tabs>
-  <TabItem label="Just want to talk" icon="seti:default">
-    Someone gave you a server address. Install the app and connect.
-    Start at [Install Fancy Mumble](/getting-started/install/).
-  </TabItem>
-  <TabItem label="Running a server" icon="seti:docker">
-    You want to host your own server for your community. Start at the
-    [Docker quick start](/server/docker/).
-  </TabItem>
-  <TabItem label="Server admin" icon="seti:lock">
-    A server already exists and you are the admin. Start at
-    [SuperUser & first login](/admin/superuser/) and then
-    [Roles & permissions](/admin/roles/).
-  </TabItem>
-</Tabs>
-
-## How the pieces talk to each other
-
-You do not need to memorize this, but if you ever need to ask your
-network admin to open a port, this is what the traffic looks like:
-
-<PlantUML alt="How the app, server, and push service communicate" code={`
-@startuml
-skinparam backgroundColor transparent
-skinparam componentStyle rectangle
-skinparam componentBorderColor #7c3aed
-skinparam componentBackgroundColor #ede7f6
-skinparam componentFontColor #311b92
-skinparam arrowColor #5e35b1
-skinparam packageBorderColor #7c3aed
-skinparam packageBackgroundColor #f5f3ff
-skinparam packageFontColor #311b92
-skinparam noteBorderColor #9575cd
-skinparam noteBackgroundColor #f3e5f5
-skinparam noteFontColor #4a148c
-
-top to bottom direction
-
-component "Fancy Mumble App\\ndesktop / mobile" as App
-
-component "Reverse Proxy\\nnginx / Traefik / Caddy\\n//(optional)//" as RP
-
-package "Fancy Mumble Server" as SrvBox {
-  component "Voice + Control\\nTCP/UDP 64738" as Voice
-  component "WebRTC SFU\\nscreen-share relay\\nUDP 10000" as SFU
-  component "File Server\\nHTTP 64739" as FS
-  component "Live-doc WebSocket\\nTCP 64740" as LiveDoc
-  component "Push Relay\\n→ Firebase" as Push
-}
-
-component "Firebase Cloud Messaging\\n//(optional)//" as FCM
-
-App --> Voice : TCP/UDP 64738  direct
-App --> RP : HTTPS 443  HTTP traffic
-RP --> FS : HTTP 64739
-RP --> LiveDoc : WS 64740
-App ..> SFU : UDP 10000  screen share\\n//(direct, bypasses proxy)//
-App ..> LiveDoc : WS 64740  live doc\\n//(direct, LAN only)//
-Push ..> FCM : push event
-@enduml
-`} />
-
-<Aside type="caution" title="Ports recap">
-Default ports: **64738** for voice and control, **64739** for the
-file server, **64740** for live documents, **10000** for screen
-sharing. Full reference on the [Ports & protocols](/reference/ports/) page.
-</Aside>
-
-## Where to go next
-
-<Steps>
-
-1. Take the [60-second UI tour](/welcome/tour/), see what every panel does.
-2. [Install the app](/getting-started/install/) for your platform.
-3. If you do not yet have a server to connect to, follow the
-   [Docker quick start](/server/docker/) to spin up your own.
-4. Tune your mic with [Audio configuration](/users/audio/), the most
-   common cause of "I cannot hear you" complaints.
-
-</Steps>
+Fancy Mumble is independent of the official [Mumble project](https://www.mumble.info/). Mumble names here refer to protocol compatibility.

@@ -16,15 +16,16 @@ import { Aside } from '@astrojs/starlight/components';
 <tr><td>**Channel**</td><td>A folder-like room for users and chat history. Channels can nest.</td></tr>
 <tr><td>**Custom emote**</td><td>An image uploaded by a server admin that everyone in the server can use in chat as a shortcode, like `:partyparrot:`.</td></tr>
 <tr><td>**Deafened**</td><td>You can neither send nor hear audio. Implies muted.</td></tr>
-<tr><td>**File server**</td><td>The part of a Fancy Mumble server that stores avatar uploads, custom emotes, and shared files. Runs on port 64739 by default.</td></tr>
+<tr><td>**Files service**</td><td>Starling's upload and download service. The shipped Compose deployment publishes its HTTP listener on port 8080.</td></tr>
 <tr><td>**Frame**</td><td>Decorative ring around your avatar. See [Profile customization](/users/profile/).</td></tr>
 <tr><td>**Group**</td><td>A named bundle of users used inside ACLs. Groups can be inherited across channels.</td></tr>
 <tr><td>**Identity**</td><td>A combination of your default username and a saved certificate. You can have separate identities for separate servers or communities.</td></tr>
-<tr><td>**Mumble server**</td><td><small>also called Murmur</small> The program that everyone connects to. Fancy Mumble adds extra features on top.</td></tr>
+<tr><td>**Mumble server**</td><td>The server a Mumble client connects to. Murmur is the classic server; Starling is Fancy Mumble's current server.</td></tr>
+<tr><td>**Starling**</td><td>Fancy Mumble's current Rust server, made of a gateway and separate feature services. See [Run a server](/server/docker/).</td></tr>
 <tr><td>**Nameplate**</td><td>A gradient background behind your name in user lists.</td></tr>
 <tr><td>**Onboarding**</td><td>A few questions the server asks new members at join time. Their answers decide which channels they end up in and which roles they get. See [Onboarding workflow](/admin/onboarding/).</td></tr>
 <tr><td>**Opus**</td><td>The audio format Mumble uses. Open, low-latency, excellent quality.</td></tr>
-<tr><td>**Persistent chat**</td><td>Chat that stays on the server (encrypted), so you see the conversation history when you reconnect.</td></tr>
+<tr><td>**Persistent chat**</td><td>Chat history that remains available after a reconnect. Storage and encryption depend on the channel policy and server configuration.</td></tr>
 <tr><td>**PTT**</td><td><small>Push-to-Talk</small> Voice transmits only while a key is held.</td></tr>
 <tr><td>**Reaction**</td><td>An emoji attached to a chat message.</td></tr>
 <tr><td>**Register**</td><td>Tell the server "this certificate belongs to this username", so the same name always maps to the same person.</td></tr>
@@ -38,6 +39,6 @@ import { Aside } from '@astrojs/starlight/components';
 </table>
 
 <Aside type="note">
-Do not see a term? [Open an issue](https://github.com/Fancy-Mumble/FancyMumbleNext/issues)
+Do not see a term? [Open an issue](https://github.com/Fancy-Mumble/FancyMumble/issues)
 and we will add it.
 </Aside>

@@ -34,13 +34,7 @@ The user right-clicks their own name in the user list and picks
 - **Auto-approves** (default for many servers).
 - **Queues for admin approval**.
 
-Configure the gate with:
-
-```yaml
-environment:
-  MUMBLE_CONFIG_ALLOWREGISTRATION: true
-  MUMBLE_CONFIG_REGISTRATIONREQUIRESAPPROVAL: false
-```
+Registration policy depends on the server implementation. The older C++ image uses MUMBLE_CONFIG_* variables; they do not configure Starling. Check the current [Starling settings reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml) and test the desired approval flow before inviting users.
 
 ### Admin-initiated
 
