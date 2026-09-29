@@ -1,18 +1,68 @@
-<figure class="example">
+---
+const avatars = [
+  { label: 'Cats', src: '/examples/sample-avatar.png', alt: 'Black cat wearing blue headphones' },
+  { label: 'Dogs', src: '/examples/avatars/dog.png', alt: 'Golden retriever wearing a teal scarf' },
+  { label: 'Cars', src: '/examples/avatars/car-enthusiast.png', alt: 'Midnight-blue sports coupe' },
+  { label: 'Anime', src: '/examples/avatars/anime-girl.png', alt: 'Original colorful anime girl portrait' },
+  { label: 'Manga', src: '/examples/avatars/manga-reader.png', alt: 'Monochrome ink portrait of a manga reader' },
+  { label: 'K-pop', src: '/examples/avatars/k-pop.png', alt: 'Fictional pop performer under stage lights' },
+  { label: 'Comics', src: '/examples/avatars/comics.png', alt: 'Original comic explorer wearing an amber visor' },
+  { label: 'Flowers', src: '/examples/avatars/flowers.png', alt: 'Peach and pink dahlia bouquet' },
+];
+---
+
+<figure class="example" data-profile-example>
   <div class="profile-card" aria-label="Illustrative profile preview with sample avatar and banner">
     <div class="banner">
       <img src="/examples/sample-profile-banner.png" alt="Aurora over a mountain lake" loading="lazy" />
     </div>
     <div class="identity">
-      <img class="avatar" src="/examples/sample-avatar.png" alt="Black cat wearing blue headphones" loading="lazy" />
+      <img class="avatar" data-profile-avatar src={avatars[0].src} alt={avatars[0].alt} loading="lazy" />
       <div>
         <strong>Alex</strong>
         <span>Here for the late-night conversations.</span>
       </div>
     </div>
   </div>
-  <figcaption>Example profile preview with the sample avatar and banner. The app’s own preview also updates as you edit.</figcaption>
+  <figcaption>Example profile preview. Select an avatar below to see its circular crop with the sample banner.</figcaption>
+  <div class="avatar-gallery" role="group" aria-label="Sample avatars">
+    {avatars.map((avatar, index) => (
+      <div class="avatar-option">
+        <button
+          class="avatar-choice"
+          type="button"
+          aria-pressed={index === 0 ? 'true' : 'false'}
+          data-avatar-choice
+          data-src={avatar.src}
+          data-alt={avatar.alt}
+        >
+          <img src={avatar.src} alt="" loading="lazy" />
+          <span>{avatar.label}</span>
+        </button>
+        <a href={avatar.src} download aria-label={`Download ${avatar.label} sample avatar`}>Download</a>
+      </div>
+    ))}
+  </div>
+  <p class="selection-status" aria-live="polite" data-avatar-status>Cats avatar selected</p>
 </figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-profile-example]').forEach((example) => {
+    const preview = example.querySelector<HTMLImageElement>('[data-profile-avatar]');
+    const status = example.querySelector<HTMLElement>('[data-avatar-status]');
+    const choices = example.querySelectorAll<HTMLButtonElement>('[data-avatar-choice]');
+    if (!preview || !status) return;
+
+    choices.forEach((choice) => {
+      choice.addEventListener('click', () => {
+        preview.src = choice.dataset.src ?? preview.src;
+        preview.alt = choice.dataset.alt ?? preview.alt;
+        choices.forEach((other) => other.setAttribute('aria-pressed', String(other === choice)));
+        status.textContent = `${choice.textContent?.trim() ?? 'Sample'} avatar selected`;
+      });
+    });
+  });
+</script>
 
 <style>
   .example { margin: 1.5rem 0; }
@@ -40,11 +90,33 @@
   .identity div { display: grid; gap: .2rem; padding-bottom: .3rem; }
   .identity strong { font-size: 1.3rem; line-height: 1.2; }
   .identity span { color: #bac5db; font-size: .85rem; }
-  figcaption { margin-top: .55rem; color: var(--sl-color-text-accent); font-size: .82rem; }
+  figcaption { margin: .55rem 0 1rem; color: var(--sl-color-text-accent); font-size: .82rem; }
+  .avatar-gallery { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; max-width: 580px; }
+  .avatar-option { min-width: 0; text-align: center; }
+  .avatar-choice {
+    display: grid;
+    justify-items: center;
+    gap: .3rem;
+    width: 100%;
+    padding: .65rem .2rem .45rem;
+    border: 2px solid var(--sl-color-gray-4);
+    border-radius: 12px;
+    background: var(--sl-color-bg-nav);
+    color: var(--sl-color-text);
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+  }
+  .avatar-choice[aria-pressed='true'] { border-color: var(--sl-color-accent); box-shadow: 0 0 0 2px var(--sl-color-accent-low); }
+  .avatar-choice:focus-visible { outline: 3px solid var(--sl-color-accent); outline-offset: 3px; }
+  .avatar-choice img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; }
+  .avatar-option a { display: inline-block; margin-top: .25rem; font-size: .75rem; }
+  .selection-status { margin: .7rem 0 0; color: var(--sl-color-text-accent); font-size: .8rem; }
   @media (max-width: 440px) {
     .banner { height: 120px; }
     .avatar { width: 68px; height: 68px; margin-top: -32px; }
     .identity { align-items: center; gap: .65rem; padding: 0 .85rem .9rem; }
     .identity strong { font-size: 1.1rem; }
+    .avatar-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
