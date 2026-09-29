@@ -7,11 +7,24 @@ sidebar:
 
 import { Steps, Aside, Tabs, TabItem, Card, CardGrid, Badge } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
+import ProfileExample from '../../../components/ProfileExample.astro';
 
 Your **profile** is what others see when they click your name in the
 sidebar. Fancy Mumble lets you make it look the way you want.
 
 Open it from **Settings, Profile**.
+
+<Aside type="note">
+The older settings screenshots below show Standard. Nebula, the default for new profiles, places **Edit** under Avatar and **Image** under Banner. Both open a crop editor and update the live profile preview.
+</Aside>
+
+## Try a sample profile
+
+The same artwork can look different as a round avatar and a wide banner. This example keeps the cat's face centered for the avatar while the banner leaves room for profile details.
+
+<ProfileExample />
+
+Download the [sample avatar](/examples/sample-avatar.png) and [sample banner](/examples/sample-profile-banner.png) to try them in your own profile. In Nebula, open **Settings, Profile**, choose **Edit** under Avatar and **Image** under Banner, then adjust each crop in the editor. These files are examples; you can replace them with your own images.
 
 
 <img src="/screenshot-users-profile-1.png" alt="Profile settings panel showing an Identity dropdown set to MumbleUser, a Default Username field, Avatar section with a circular thumbnail and Edit Avatar button, Banner section with Edit Banner button, and a Bio rich-text editor. A preview card on the right shows the avatar and username." />
@@ -58,6 +71,8 @@ Open it from **Settings, Profile**.
 
 ## Step by step: change your avatar
 
+The following steps use Standard's labels. In Nebula, choose **Edit** under Avatar and confirm the crop in the image editor.
+
 <Steps>
 
 1. Open **Settings, Profile**.
@@ -82,6 +97,8 @@ Open it from **Settings, Profile**.
 ## Step by step: pick a banner
 
 The banner sits **above** your profile card.
+
+In Nebula, choose **Image** under Banner to upload and crop a picture. You can also choose a solid banner color. Standard uses the following flow:
 
 <Steps>
 1. **Settings, Profile, Edit banner**.
@@ -169,9 +186,9 @@ profile is copied into each. You can then edit each one independently.
 | Field | Limit |
 |-------|-------|
 | Bio | 2000 characters |
-| Avatar | 256x256, around 80 KB after compression |
+| Avatar crop in Nebula | 128x128, up to 100 KB after compression |
 | Inline bio image | 400x400, around 80 KB |
-| Banner | up to about 1 MB |
+| Banner crop in Nebula | 400x150, up to 80 KB after compression |
 
 ## Troubleshooting
 

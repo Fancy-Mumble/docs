@@ -7,6 +7,7 @@ sidebar:
 
 import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
 import { Icon } from 'astro-icon/components';
+import ChatBackgroundExample from '../../../components/ChatBackgroundExample.astro';
 
 Open **Settings, Personalize** to change how the app looks. None of
 these settings touch what other people see, they are purely your own.
@@ -65,13 +66,16 @@ Three looks for individual chat messages:
 
 ## Chat background
 
-Drop an image or pick a color to set the background of the chat
-column.
+Use an image behind the chat column. The sample below shows how a dark
+overlay keeps messages readable over an illustrated wallpaper.
 
-- **Fit**: pick **Cover** (fills, may crop) or **Tile** (repeats).
-- **Dim**: darken the image so text stays readable. 0 to 100%.
-- **Blur**: blur the image. The blur is calculated in the backend,
-  so very large values may take a moment to re-process.
+<ChatBackgroundExample />
+
+[Download the sample chat background](/examples/sample-chat-background.png) to try it yourself. In Nebula, open **Settings, Personalize, Chat Background** and choose the image file. You can select it again from the recent-background tiles. Drag the focus point to control which part stays visible when the chat pane crops the image.
+
+Nebula has **Blur**, **Opacity**, and **Dim** controls. Start with a low opacity or a stronger dim setting, then adjust until messages remain easy to read. Standard also offers these controls and a **Cover** or **Tile** fit choice.
+
+**Dim** darkens the image; **Opacity** controls how strongly it shows through. **Blur** softens detail and can take a moment to process at high values.
 
 <Aside type="tip">
 The original image is stored locally and re-processed when you
