@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fancy Mumble sample community scene</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #10121c; color: #f5f6fb; }
+    .app { width: 1280px; height: 720px; overflow: hidden; margin: 0 auto; background: #151929; }
+    .titlebar { height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 20px; background: #11141f; border-bottom: 1px solid #252b3e; font-size: 14px; font-weight: 700; }
+    .logo { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 9px; background: linear-gradient(135deg, #6c96d6, #7152a3); font-size: 13px; }
+    .titlebar .section { margin-left: 23px; padding-left: 20px; border-left: 1px solid #34394c; color: #b9c5df; font-weight: 500; }
+    .window-actions { margin-left: auto; color: #77839c; letter-spacing: 16px; font-size: 18px; }
+    .columns { display: grid; grid-template-columns: 275px 665px 340px; height: 676px; }
+    aside { padding: 20px 14px; background: #1a2032; border-right: 1px solid #2b344b; }
+    .search { padding: 10px 13px; color: #8793aa; background: #242b3e; border: 1px solid #303a52; border-radius: 10px; font-size: 13px; }
+    .section-label { margin: 24px 8px 12px; color: #8996b2; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .channel { padding: 12px; border: 1px solid #4f78b7; border-radius: 12px; background: #263755; font-size: 14px; font-weight: 700; }
+    .channel small { display: block; margin-top: 4px; color: #b5c8eb; font-size: 11px; font-weight: 400; }
+    .member { display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 8px; border: 0; border-radius: 9px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+    .member:hover, .member.is-selected { background: #293750; }
+    .member:focus-visible { outline: 2px solid #8ab8ff; outline-offset: 2px; }
+    .member img, .message img { width: 34px; height: 34px; flex: none; border-radius: 50%; object-fit: cover; }
+    .member span { font-size: 12px; font-weight: 650; }
+    .member small { display: block; margin-top: 3px; color: #8b9ab5; font-size: 10px; font-weight: 400; }
+    .online { width: 7px; height: 7px; margin-left: auto; border-radius: 50%; background: #5bd9a1; }
+    main { position: relative; background: linear-gradient(#171a2bd9, #171a2be0), url('/examples/sample-chat-background.png') center / cover; }
+    .chat-header { height: 76px; padding: 15px 25px; border-bottom: 1px solid #2a3349; }
+    .chat-header h1 { margin: 0 0 4px; font-size: 21px; }
+    .chat-header p { margin: 0; color: #9cacc5; font-size: 12px; }
+    .topic { margin: 20px 24px 15px; padding: 10px 14px; border: 1px solid #385d8c; border-radius: 10px; background: #1b2b45; color: #b8d0f5; font-size: 12px; }
+    .date { margin: 0 24px 12px; color: #8390aa; font-size: 11px; text-align: center; }
+    .messages { padding: 0 24px; }
+    .message { display: flex; gap: 12px; margin-bottom: 16px; }
+    .message-head { display: flex; align-items: baseline; gap: 9px; }
+    .message strong { font-size: 13px; }
+    .message time { color: #7d8ba5; font-size: 10px; }
+    .message p { margin: 4px 0 0; color: #dce3f1; font-size: 13px; line-height: 1.45; }
+    .tag { padding: 2px 6px; border-radius: 5px; background: #33415d; color: #c3d1ec; font-size: 9px; font-weight: 700; text-transform: uppercase; }
+    .reactions { display: flex; gap: 5px; margin-top: 7px; }
+    .reactions span { padding: 4px 8px; border: 1px solid #3c4b6a; border-radius: 7px; background: #263149; color: #cbd8f5; font-size: 11px; }
+    .composer { position: absolute; right: 15px; bottom: 15px; left: 15px; display: flex; align-items: center; gap: 12px; height: 48px; padding: 0 15px; border: 1px solid #354363; border-radius: 13px; background: #26324f; color: #98a6c0; font-size: 13px; }
+    .composer .send { display: grid; place-items: center; width: 29px; height: 29px; margin-left: auto; border-radius: 50%; background: #3a77c4; color: white; font-size: 16px; }
+    .right { padding: 20px 18px; background: #1a1f31; border-left: 1px solid #2b344b; }
+    .right-heading { display: flex; justify-content: space-between; align-items: center; margin: 1px 0 16px; font-size: 14px; font-weight: 750; }
+    .right-heading span { color: #8793af; font-size: 18px; }
+    .profile { overflow: hidden; border: 1px solid #3a4765; border-radius: 14px; background: #20283c; }
+    .banner { height: 102px; background: url('/examples/banners/anime.png') center 50% / cover; }
+    .profile-body { padding: 0 15px 18px; }
+    .profile-avatar { width: 68px; height: 68px; margin-top: -30px; border: 4px solid #20283c; border-radius: 50%; object-fit: cover; }
+    .profile h2 { margin: 5px 0 4px; font-size: 18px; }
+    .profile .handle { color: #a7b7d0; font-size: 11px; }
+    .profile .role { display: inline-block; margin: 13px 0 8px; padding: 4px 8px; border: 1px solid #745cb5; border-radius: 6px; background: #46395f; color: #dac8ff; font-size: 10px; font-weight: 750; }
+    .profile p { margin: 3px 0 0; color: #dae3f2; font-size: 12px; line-height: 1.5; }
+    .profile .status { padding-top: 14px; color: #9eb4d8; font-size: 11px; }
+    .hint { margin: 16px 3px 0; color: #8794b0; font-size: 11px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="titlebar"><span class="logo">F</span> Fancy Mumble <span class="section">Community voice</span><span class="window-actions">− □ ×</span></div>
+    <div class="columns">
+      <aside>
+        <div class="search">⌕ &nbsp; Search channels and members</div>
+        <div class="section-label">Channels</div>
+        <div class="channel"># &nbsp; lounge <small>General conversation · 5 members</small></div>
+        <div class="section-label">In this channel</div>
+        <button class="member is-selected" type="button" data-person="rin" aria-pressed="true"><img src="/examples/avatars/anime-girl.png" alt="" /><div><span>Rin</span><small>Drawing tonight</small></div><i class="online"></i></button>
+        <button class="member" type="button" data-person="torque" aria-pressed="false"><img src="/examples/avatars/car-enthusiast.png" alt="" /><div><span>Torque</span><small>Car club</small></div><i class="online"></i></button>
+        <button class="member" type="button" data-person="hana" aria-pressed="false"><img src="/examples/avatars/k-pop.png" alt="" /><div><span>Hana</span><small>Playlist curator</small></div><i class="online"></i></button>
+        <button class="member" type="button" data-person="flora" aria-pressed="false"><img src="/examples/avatars/flowers.png" alt="" /><div><span>Flora</span><small>Garden updates</small></div><i class="online"></i></button>
+        <button class="member" type="button" data-person="scout" aria-pressed="false"><img src="/examples/avatars/dog.png" alt="" /><div><span>Scout</span><small>Walk break</small></div><i class="online"></i></button>
+      </aside>
+      <main>
+        <div class="chat-header"><h1># lounge</h1><p>Five members · Share what you're working on</p></div>
+        <div class="topic">✦ &nbsp; Welcome to the community lounge. Say hello and share your interests.</div>
+        <div class="date">Today</div>
+        <div class="messages">
+          <div class="message"><img src="/examples/avatars/car-enthusiast.png" alt="" /><div><div class="message-head"><strong>Torque</strong><span class="tag">Car club</span><time>19:42</time></div><p>Just finished the night drive. That coastal road was incredible.</p><div class="reactions"><span>🏁 3</span><span>✨ 2</span></div></div></div>
+          <div class="message"><img src="/examples/avatars/anime-girl.png" alt="" /><div><div class="message-head"><strong>Rin</strong><span class="tag">Artist</span><time>19:44</time></div><p>That sounds like a perfect reference for my next illustration!</p></div></div>
+          <div class="message"><img src="/examples/avatars/k-pop.png" alt="" /><div><div class="message-head"><strong>Hana</strong><span class="tag">Music</span><time>19:46</time></div><p>I made a playlist for tonight's sketch session. 🎵</p></div></div>
+          <div class="message"><img src="/examples/avatars/flowers.png" alt="" /><div><div class="message-head"><strong>Flora</strong><span class="tag">Gardener</span><time>19:49</time></div><p>I'll bring the flower references. My roses are finally blooming.</p><div class="reactions"><span>🌸 4</span></div></div></div>
+        </div>
+        <div class="composer">＋ &nbsp; Write a message… <span class="send">➤</span></div>
+      </main>
+      <div class="right">
+        <div class="right-heading">Member profile <span>×</span></div>
+        <div class="profile">
+          <div class="banner" data-banner role="img" aria-label="Rin's vivid anime banner"></div>
+          <div class="profile-body">
+            <img class="profile-avatar" data-profile-avatar src="/examples/avatars/anime-girl.png" alt="Rin's avatar" />
+            <h2 data-profile-name>Rin</h2>
+            <div class="handle" data-profile-handle>@rin · Online</div>
+            <div class="role" data-profile-role>Artist</div>
+            <p data-profile-bio>Illustrating imaginary places, collecting color palettes, and meeting friends in voice chat.</p>
+            <div class="status" data-profile-status>✦ &nbsp; Sketchbook open · Listening to Hana's playlist</div>
+          </div>
+        </div>
+        <p class="hint">Select a member to see their avatar, banner, bio, and status.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const profiles = {
+      rin: { name: 'Rin', avatar: '/examples/avatars/anime-girl.png', banner: '/examples/banners/anime.png', role: 'Artist', bio: 'Illustrating imaginary places, collecting color palettes, and meeting friends in voice chat.', status: 'Sketchbook open · Listening to Hana’s playlist' },
+      torque: { name: 'Torque', avatar: '/examples/avatars/car-enthusiast.png', banner: '/examples/banners/cars.png', role: 'Car club', bio: 'Weekend drives, winding roads, and photos of every interesting car I find.', status: 'Back from the coastal drive' },
+      hana: { name: 'Hana', avatar: '/examples/avatars/k-pop.png', banner: '/examples/banners/k-pop.png', role: 'Music', bio: 'Making playlists for every mood and sharing new stage performances with friends.', status: 'Tonight’s playlist is live' },
+      flora: { name: 'Flora', avatar: '/examples/avatars/flowers.png', banner: '/examples/banners/flowers.png', role: 'Gardener', bio: 'Growing roses and sharing the best colors from the garden.', status: 'Roses are blooming' },
+      scout: { name: 'Scout', avatar: '/examples/avatars/dog.png', banner: '/examples/banners/dogs.png', role: 'Dog lover', bio: 'Always ready for a walk, a photo, or a friendly voice chat.', status: 'Taking a walk break' },
+    };
+    const buttons = document.querySelectorAll('[data-person]');
+    buttons.forEach((button) => button.addEventListener('click', () => {
+      const profile = profiles[button.dataset.person];
+      if (!profile) return;
+      buttons.forEach((other) => {
+        other.classList.toggle('is-selected', other === button);
+        other.setAttribute('aria-pressed', String(other === button));
+      });
+      const banner = document.querySelector('[data-banner]');
+      banner.style.backgroundImage = `url("${profile.banner}")`;
+      banner.setAttribute('aria-label', `${profile.name}'s banner`);
+      const avatar = document.querySelector('[data-profile-avatar]');
+      avatar.src = profile.avatar;
+      avatar.alt = `${profile.name}'s avatar`;
+      document.querySelector('[data-profile-name]').textContent = profile.name;
+      document.querySelector('[data-profile-handle]').textContent = `@${profile.name.toLowerCase()} · Online`;
+      document.querySelector('[data-profile-role]').textContent = profile.role;
+      document.querySelector('[data-profile-bio]').textContent = profile.bio;
+      document.querySelector('[data-profile-status]').textContent = `✦  ${profile.status}`;
+    }));
+  </script>
+</body>
+</html>

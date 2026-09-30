@@ -1,0 +1,141 @@
+---
+const profiles = [
+  { label: 'Cats', name: 'Alex', tagline: 'Here for the late-night conversations.', avatar: '/examples/sample-avatar.png', avatarAlt: 'Black cat wearing blue headphones', banner: '/examples/banners/cats.png', bannerAlt: 'Cats at a glowing night window' },
+  { label: 'Dogs', name: 'Scout', tagline: 'Walk break and voice chat.', avatar: '/examples/avatars/dog.png', avatarAlt: 'Golden retriever wearing a teal scarf', banner: '/examples/banners/dogs.png', bannerAlt: 'Sunset over a meadow and trail' },
+  { label: 'Cars', name: 'Torque', tagline: 'Back from the coastal drive.', avatar: '/examples/avatars/car-enthusiast.png', avatarAlt: 'Midnight-blue sports coupe', banner: '/examples/banners/cars.png', bannerAlt: 'Sports car on a coastal road at dusk' },
+  { label: 'Anime · pop', name: 'Rin', tagline: 'Sketchbook open.', avatar: '/examples/avatars/anime-girl.png', avatarAlt: 'Original pop-color anime character', banner: '/examples/banners/anime.png', bannerAlt: 'Two anime friends against vivid graphic color' },
+  { label: 'Anime · VN', name: 'Mira', tagline: 'A little art and a little tea.', avatar: '/examples/avatars/anime-pastel.png', avatarAlt: 'Original visual-novel anime character', banner: '/examples/banners/anime-pastel.png', bannerAlt: 'Two anime friends on a clean white background' },
+  { label: 'Anime · demon', name: 'Nyx', tagline: 'Game night starts at eight.', avatar: '/examples/avatars/anime-demon.png', avatarAlt: 'Original cartoon demon character', banner: '/examples/banners/anime-demon.png', bannerAlt: 'Two cartoon demon friends on a burgundy background' },
+  { label: 'Manga', name: 'Sora', tagline: 'One more chapter.', avatar: '/examples/avatars/manga-reader.png', avatarAlt: 'Monochrome ink portrait of a manga reader', banner: '/examples/banners/manga.png', bannerAlt: 'Ink-style rainy street and bookshop' },
+  { label: 'K-pop', name: 'Hana', tagline: 'Playlist curator.', avatar: '/examples/avatars/k-pop.png', avatarAlt: 'Fictional pop performer under stage lights', banner: '/examples/banners/k-pop.png', bannerAlt: 'Lavender and cyan concert lights' },
+  { label: 'Comics', name: 'Comet', tagline: 'Panels, capes, and big ideas.', avatar: '/examples/avatars/comics.png', avatarAlt: 'Original comic explorer wearing an amber visor', banner: '/examples/banners/comics.png', bannerAlt: 'Graphic futuristic city at sunset' },
+  { label: 'Flowers', name: 'Flora', tagline: 'Roses are blooming.', avatar: '/examples/avatars/flowers.png', avatarAlt: 'Peony and rose arrangement', banner: '/examples/banners/flowers.png', bannerAlt: 'Three flowers against an airy peach backdrop' },
+];
+---
+
+<figure class="example" data-profile-example>
+  <div class="profile-card" aria-label="Illustrative profile preview with sample avatar and banner">
+    <div class="banner">
+      <img data-profile-banner src={profiles[0].banner} alt={profiles[0].bannerAlt} loading="lazy" />
+    </div>
+    <div class="identity">
+      <img class="avatar" data-profile-avatar src={profiles[0].avatar} alt={profiles[0].avatarAlt} loading="lazy" />
+      <div>
+        <strong data-profile-name>{profiles[0].name}</strong>
+        <span data-profile-tagline>{profiles[0].tagline}</span>
+      </div>
+    </div>
+  </div>
+  <figcaption>Example profile preview. Select a person to see their avatar and matching banner.</figcaption>
+  <div class="avatar-gallery" role="group" aria-label="Sample profiles">
+    {profiles.map((profile, index) => (
+      <div class="avatar-option">
+        <button
+          class="avatar-choice"
+          type="button"
+          aria-pressed={index === 0 ? 'true' : 'false'}
+          data-profile-choice
+          data-avatar={profile.avatar}
+          data-avatar-alt={profile.avatarAlt}
+          data-banner={profile.banner}
+          data-banner-alt={profile.bannerAlt}
+          data-name={profile.name}
+          data-tagline={profile.tagline}
+          data-label={profile.label}
+        >
+          <img src={profile.avatar} alt="" loading="lazy" />
+          <span>{profile.label}</span>
+        </button>
+        <div class="downloads">
+          <a href={profile.avatar} download aria-label={`Download ${profile.label} avatar`}>Avatar</a>
+          <a href={profile.banner} download aria-label={`Download ${profile.label} banner`}>Banner</a>
+        </div>
+      </div>
+    ))}
+  </div>
+  <p class="selection-status" aria-live="polite" data-profile-status>Cats profile selected</p>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-profile-example]').forEach((example) => {
+    const avatar = example.querySelector<HTMLImageElement>('[data-profile-avatar]');
+    const banner = example.querySelector<HTMLImageElement>('[data-profile-banner]');
+    const name = example.querySelector<HTMLElement>('[data-profile-name]');
+    const tagline = example.querySelector<HTMLElement>('[data-profile-tagline]');
+    const status = example.querySelector<HTMLElement>('[data-profile-status]');
+    const choices = example.querySelectorAll<HTMLButtonElement>('[data-profile-choice]');
+    if (!avatar || !banner || !name || !tagline || !status) return;
+
+    choices.forEach((choice) => {
+      choice.addEventListener('click', () => {
+        avatar.src = choice.dataset.avatar ?? avatar.src;
+        avatar.alt = choice.dataset.avatarAlt ?? avatar.alt;
+        banner.src = choice.dataset.banner ?? banner.src;
+        banner.alt = choice.dataset.bannerAlt ?? banner.alt;
+        name.textContent = choice.dataset.name ?? name.textContent;
+        tagline.textContent = choice.dataset.tagline ?? tagline.textContent;
+        choices.forEach((other) => other.setAttribute('aria-pressed', String(other === choice)));
+        status.textContent = `${choice.dataset.label ?? 'Sample'} profile selected`;
+      });
+    });
+  });
+</script>
+
+<style>
+  .example { margin: 1.5rem 0; }
+  .profile-card {
+    max-width: 580px;
+    overflow: hidden;
+    border: 1px solid #43506f;
+    border-radius: 16px;
+    background: #161c2e;
+    color: #f3f6ff;
+    box-shadow: 0 12px 28px #080d1d40;
+  }
+  .banner { height: 155px; overflow: hidden; }
+  .banner img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .identity { display: flex; align-items: end; gap: 1rem; padding: 0 1.25rem 1.25rem; }
+  .avatar {
+    width: 88px;
+    height: 88px;
+    margin-top: -42px;
+    flex: none;
+    object-fit: cover;
+    border: 4px solid #161c2e;
+    border-radius: 50%;
+  }
+  .identity div { display: grid; gap: .2rem; padding-bottom: .3rem; }
+  .identity strong { font-size: 1.3rem; line-height: 1.2; }
+  .identity span { color: #bac5db; font-size: .85rem; }
+  figcaption { margin: .55rem 0 1rem; color: var(--sl-color-text-accent); font-size: .82rem; }
+  .avatar-gallery { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; max-width: 760px; }
+  .avatar-option { min-width: 0; text-align: center; }
+  .avatar-choice {
+    display: grid;
+    justify-items: center;
+    gap: .3rem;
+    width: 100%;
+    min-height: 119px;
+    padding: .65rem .2rem .45rem;
+    border: 2px solid var(--sl-color-gray-4);
+    border-radius: 12px;
+    background: var(--sl-color-bg-nav);
+    color: var(--sl-color-text);
+    cursor: pointer;
+    font: inherit;
+    font-size: .82rem;
+  }
+  .avatar-choice[aria-pressed='true'] { border-color: var(--sl-color-accent); box-shadow: 0 0 0 2px var(--sl-color-accent-low); }
+  .avatar-choice:focus-visible { outline: 3px solid var(--sl-color-accent); outline-offset: 3px; }
+  .avatar-choice img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; }
+  .downloads { display: flex; justify-content: center; gap: .5rem; margin-top: .25rem; }
+  .downloads a { font-size: .75rem; }
+  .selection-status { margin: .7rem 0 0; color: var(--sl-color-text-accent); font-size: .8rem; }
+  @media (max-width: 560px) {
+    .avatar-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .banner { height: 120px; }
+    .avatar { width: 68px; height: 68px; margin-top: -32px; }
+    .identity { align-items: center; gap: .65rem; padding: 0 .85rem .9rem; }
+    .identity strong { font-size: 1.1rem; }
+  }
+</style>

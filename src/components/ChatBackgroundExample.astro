@@ -1,0 +1,40 @@
+<figure class="example">
+  <div class="chat-preview" aria-label="Illustrative chat preview using the sample background with a dark overlay">
+    <img class="wallpaper" src="/examples/sample-chat-background.png" alt="" loading="lazy" />
+    <div class="dim" aria-hidden="true"></div>
+    <div class="chat-content">
+      <div class="channel"># lounge</div>
+      <div class="message"><strong>Sam</strong><span>Ready to join the call?</span></div>
+      <div class="message"><strong>Alex</strong><span>Yep, I can see the lake behind our chat.</span></div>
+      <div class="composer">Write a message…</div>
+    </div>
+  </div>
+  <figcaption>Illustrative preview with the sample wallpaper, a dark overlay, and readable messages.</figcaption>
+</figure>
+
+<style>
+  .example { margin: 1.5rem 0; }
+  .chat-preview {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    min-height: 350px;
+    max-width: 720px;
+    overflow: hidden;
+    border: 1px solid #43506f;
+    border-radius: 16px;
+    background: #11182b;
+    color: #f3f6ff;
+    box-shadow: 0 12px 28px #080d1d40;
+  }
+  .wallpaper, .dim { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .wallpaper { object-fit: cover; }
+  .dim { background: #07112688; }
+  .chat-content { position: relative; display: flex; flex: 1; flex-direction: column; gap: .65rem; padding: 1rem; }
+  .channel { font-weight: 700; border-bottom: 1px solid #d7e4ff44; padding-bottom: .65rem; }
+  .message { display: grid; gap: .15rem; width: fit-content; max-width: 90%; padding: .55rem .8rem; border-radius: 10px; background: #141e35dd; box-shadow: 0 3px 8px #0005; }
+  .message strong { color: #a7c7ff; font-size: .85rem; }
+  .message span { font-size: .9rem; }
+  .composer { margin-top: auto; padding: .6rem .8rem; border: 1px solid #d7e4ff55; border-radius: 10px; background: #121a2edd; color: #c8d1e5; font-size: .85rem; }
+  figcaption { margin-top: .55rem; color: var(--sl-color-text-accent); font-size: .82rem; }
+</style>

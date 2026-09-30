@@ -12,11 +12,8 @@ Mumble. Every member of a channel can open the same document and
 see each other's edits as they happen, with colored cursors showing
 who is where.
 
-<Aside type="note">
-Your server must be running the **live-doc plugin** (port 64740) and
-a **file-server plugin** (port 64739) for documents to open and
-persist. Ask your admin to check [Live Documents](/server/features/live-doc/)
-if the "Open Document" button does nothing after a few seconds.
+<Aside type="caution" title="Server support varies">
+This client feature needs a compatible live-document server plugin. The checked-out Starling plugin-host porting plan still lists live-doc among the heavier plugins awaiting migration, so a new Starling deployment should not assume it is available. Ports 64740 and 64739 below describe the older C++ server deployment. Ask your admin which server and plugin versions are installed. See [Feature availability](/server/features/).
 </Aside>
 
 
@@ -171,8 +168,9 @@ current channel.
 ## Pitfalls
 
 - **"Open Document" does nothing after a few seconds**: the
-  `FancyLiveDocInvite` reply never arrived. The live-doc plugin is
-  probably not running or port 64740 is not reachable. Ask your admin.
+  `FancyLiveDocInvite` reply never arrived. Ask your admin whether a
+  compatible plugin is installed. On the older C++ server, also check
+  whether its live-doc listener is reachable.
 - **Document resets on every open**: the file server or its persistence
   bridge is not configured. Documents are kept in memory only; they
   survive as long as at least one viewer is connected.

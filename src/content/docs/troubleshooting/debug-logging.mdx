@@ -145,16 +145,16 @@ The folder also contains rotated archives:
 
 ```bash
 # Live:
-docker compose logs -f mumble-server
+docker compose logs -f gateway
 
 # Last 1000 lines:
-docker compose logs --tail=1000 mumble-server > server.log
+docker compose logs --tail=1000 gateway > server.log
 ```
 
 For long-running diagnostics, redirect to a file:
 
 ```bash
-docker compose logs -f mumble-server > server.log 2>&1 &
+docker compose logs -f gateway > server.log 2>&1 &
 # ... reproduce the issue ...
 kill %1
 ```

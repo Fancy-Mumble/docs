@@ -7,28 +7,21 @@ sidebar:
 
 import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 
-Reactions and polls are **client-side features** that ride on top of
-the server's plugin-data transport. They do not need a dedicated
-server configuration. As long as your server is the Fancy Mumble
-fork, both features work.
+Starling handles reactions and polls through its **social service**. The same service carries typing indicators, read receipts, watch-together state, and drawing events. It relays updates only to members of the relevant channel and records the sender from the authenticated connection.
+
+The service is included in the default Starling stack. For a custom deployment, check that `social` is running and healthy. See [feature availability](/server/features/) and the [Starling service inventory](https://github.com/Fancy-Mumble/starling/blob/main/docs/SERVICES.md).
 
 
 <img src="/screenshot-server-features-reactions-1.png" alt="Chat message with three reactions and one open poll card" />
 
 ## Reactions
 
-Any user who has post permission in a channel can attach an emoji
-reaction to a message. The reaction is broadcast through the plugin-
-data channel and replicated to every Fancy client in the room.
+Users who can enter a channel can react to its messages. Starling checks channel access and sends the reaction to members of that channel, including its sender so their client can display it.
 
 - Standard Unicode emoji are supported.
-- Custom server emotes (see [Custom emotes](/admin/emotes/)) can be
-  used as reactions as long as the server has the file-server plugin
-  enabled.
+- Custom server emotes (see [Custom emotes](/admin/emotes/)) need the emote assets to be available to clients.
 
-There are no server-side `MUMBLE_CONFIG_*` or `plugin.*` keys to
-tune this behavior in the public configuration. The client enforces
-its own per-message limits.
+Starling accepts emoji strings up to 64 bytes. The client controls its own per-message presentation limits.
 
 ## Polls
 
@@ -38,10 +31,7 @@ A user can create a poll inside a channel:
 - Single-choice or multiple-choice (the creator picks).
 - Votes are visible to other users.
 
-Polls travel through the plugin-data channel the same way reactions
-do. There is no separate retention setting; once a poll's chat
-message ages out under your persistent-chat retention, the poll goes
-with it.
+Starling stores polls and ballots in the social service's database, so votes continue to work after a server restart. A poll and its ballots are retained for up to **90 days** after it closes, or after creation if it has no closing time. Chat history has its own retention policy; a poll card can disappear from chat while the social record remains, or remain visible after voting has expired.
 
 ## Compatibility
 
@@ -58,9 +48,8 @@ messages and ignore the plugin-data carrying the reaction or vote.
 - **Reactions or polls do not appear**: confirm both users are on
   Fancy Mumble. A mixed-client channel will display the original
   message but skip the overlay.
-- **Cannot react**: the user does not have post permission in the
-  channel, or the message is too old (under your persistent-chat
-  retention).
+- **Cannot react**: check that the user can enter the channel and that `social` is healthy.
+- **Cannot vote on an older poll**: the poll may be closed or beyond Starling's 90-day social retention.
 
 ## Next step
 
