@@ -333,7 +333,8 @@ div.header {
   cursor: zoom-in;
 }
 .doc-image-trigger img { display: block; margin: 0; }
-.doc-image-trigger:focus-visible { outline: 3px solid var(--sl-color-accent-high); outline-offset: 4px; }
+.doc-image-target { cursor: zoom-in; }
+.doc-image-trigger:focus-visible, .doc-image-target:focus-visible { outline: 3px solid var(--sl-color-accent-high); outline-offset: 4px; }
 #doc-image-lightbox {
   width: 96vw;
   max-width: 1800px;
