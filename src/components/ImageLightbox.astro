@@ -1,0 +1,86 @@
+<dialog id="doc-image-lightbox" aria-label="Image preview">
+  <div class="image-lightbox-toolbar">
+    <button type="button" data-image-zoom aria-pressed="false">Actual size</button>
+    <button type="button" data-image-close aria-label="Close image preview">Close ×</button>
+  </div>
+  <div class="image-lightbox-view"><img alt="" /></div>
+  <p class="image-lightbox-caption"></p>
+</dialog>
+
+<script>
+  function setupLightbox() {
+    const dialog = document.querySelector<HTMLDialogElement>('#doc-image-lightbox');
+    if (!dialog || dialog.dataset.ready) return;
+    dialog.dataset.ready = 'true';
+    const preview = dialog.querySelector<HTMLImageElement>('img')!;
+    const caption = dialog.querySelector<HTMLElement>('.image-lightbox-caption')!;
+    const zoom = dialog.querySelector<HTMLButtonElement>('[data-image-zoom]')!;
+    let opener: HTMLElement | null = null;
+    let source: HTMLImageElement | null = null;
+
+    function updateImage() {
+      if (!source) return;
+      const pair = source.closest('.theme-screenshot');
+      const visible = pair
+        ? Array.from(pair.querySelectorAll('img')).find(image => getComputedStyle(image).display !== 'none')
+        : source;
+      if (!visible) return;
+      preview.src = visible.currentSrc || visible.src;
+      preview.alt = visible.alt;
+      caption.textContent = visible.alt;
+    }
+
+    document.querySelectorAll<HTMLImageElement>('.sl-markdown-content img, .hero img').forEach(image => {
+      if (image.closest('a, button') || image.dataset.noLightbox !== undefined) return;
+      // Profile cards position their images independently; preserve that layout.
+      const positioned = image.closest('[data-profile-example]') !== null;
+      const trigger = positioned ? image : document.createElement('button');
+      if (trigger instanceof HTMLButtonElement) trigger.type = 'button';
+      else { trigger.setAttribute('role', 'button'); trigger.tabIndex = 0; }
+      trigger.classList.add(positioned ? 'doc-image-target' : 'doc-image-trigger');
+      trigger.setAttribute('aria-label', `Enlarge image${image.alt ? ': ' + image.alt : ''}`);
+      trigger.setAttribute('aria-haspopup', 'dialog');
+      // Keep the trigger hidden whenever its theme variant is hidden.
+      if (image.classList.contains('screenshot-light')) trigger.classList.add('screenshot-light');
+      if (image.classList.contains('screenshot-dark')) trigger.classList.add('screenshot-dark');
+      if (!positioned) { image.before(trigger); trigger.append(image); }
+      const open = () => {
+        opener = trigger;
+        source = image;
+        dialog.classList.remove('actual-size');
+        zoom.setAttribute('aria-pressed', 'false');
+        zoom.textContent = 'Actual size';
+        updateImage();
+        dialog.showModal();
+      };
+      trigger.addEventListener('click', open);
+      if (positioned) trigger.addEventListener('keydown', event => {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); }
+      });
+    });
+
+    dialog.querySelector('[data-image-close]')!.addEventListener('click', () => dialog.close());
+    dialog.addEventListener('click', event => {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => {
+      const pair = source?.closest('.theme-screenshot');
+      if (pair && opener && !opener.getClientRects().length) {
+        opener = Array.from(pair.querySelectorAll<HTMLButtonElement>('.doc-image-trigger'))
+          .find(button => button.getClientRects().length > 0) ?? opener;
+      }
+      preview.removeAttribute('src');
+      source = null;
+      opener?.focus();
+    });
+    zoom.addEventListener('click', () => {
+      const actual = dialog.classList.toggle('actual-size');
+      zoom.setAttribute('aria-pressed', String(actual));
+      zoom.textContent = actual ? 'Fit to window' : 'Actual size';
+    });
+    new MutationObserver(() => { if (dialog.open) updateImage(); })
+      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
+  setupLightbox();
+  document.addEventListener('astro:page-load', setupLightbox);
+</script>

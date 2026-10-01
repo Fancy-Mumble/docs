@@ -42,6 +42,7 @@ export default defineConfig({
       },
     }),
     starlight({
+      components: { Footer: './src/components/Footer.astro' },
       title: "Fancy Mumble",
       description:
         "Documentation for the Fancy Mumble app and Starling server. Voice chat reimagined for 2026.",
