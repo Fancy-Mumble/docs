@@ -13,13 +13,11 @@ see each other's edits as they happen, with colored cursors showing
 who is where.
 
 <Aside type="caution" title="Server support varies">
-This client feature needs a compatible live-document server plugin. The checked-out Starling plugin-host porting plan still lists live-doc among the heavier plugins awaiting migration, so a new Starling deployment should not assume it is available. Ports 64740 and 64739 below describe the older C++ server deployment. Ask your admin which server and plugin versions are installed. See [Feature availability](/server/features/).
+This feature needs a compatible live-document plugin. Verify its advertised capability and deployment status with your administrator. See [Feature availability](/server/features/).
 </Aside>
 
 
-<div id="screenshot-users-livedoc-1" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: the live document editor with the toolbar visible and a collaborator cursor.
-</div>
+
 
 ## Open a document
 
@@ -169,8 +167,7 @@ current channel.
 
 - **"Open Document" does nothing after a few seconds**: the
   `FancyLiveDocInvite` reply never arrived. Ask your admin whether a
-  compatible plugin is installed. On the older C++ server, also check
-  whether its live-doc listener is reachable.
+  compatible plugin is installed. Check the plugin's advertised endpoint and logs.
 - **Document resets on every open**: the file server or its persistence
   bridge is not configured. Documents are kept in memory only; they
   survive as long as at least one viewer is connected.

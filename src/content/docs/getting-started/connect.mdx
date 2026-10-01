@@ -1,37 +1,21 @@
 ---
 title: Connect to a server
-description: Add a saved server, choose an identity, and connect in Nebula or Standard.
+description: Save a server address and choose the identity you will use.
 ---
 
-Fancy Mumble can connect to Starling and to standard Mumble servers. Ask the server owner for its host name, port if different from **64738**, and any password.
+Ask the server owner for its host name, port, and any password. The default Mumble port is **64738**.
 
-## Add a server in Nebula
+1. Choose **Add a server** from the server list.
+2. Enter the address, port, username, and a friendly server label. Choose a certificate identity if you have more than one.
+3. Save the entry, select it in the server list, and choose **Connect**.
+4. Complete any server password or account prompt. The app can remember passwords in the operating system's credential store.
 
-Nebula is the design for a new profile.
+<img src="/screenshot-getting-started-connect-1.png" alt="Current Add a server dialog with address, port, username, identity, and password fields" />
 
-1. Open **Add server** from the server rail or choose **Add server by address…** from **Quick connect**.
-2. Enter the host, port, and the username others should see. The dialog can also save a friendly label, certificate identity, and password.
-3. Save the server. Select it in the server rail, then choose **Connect** on its server screen.
-4. If prompted, enter the server password or account credentials. The app can remember a password in the operating system's credential store.
+The saved entry belongs to the identity you chose. Use your server owner's address; sample addresses in documentation are examples.
 
-<img src="/screenshot-getting-started-connect-1.png" alt="Nebula Add a server dialog filled with an example display name, address, default port, and username" />
+## Server certificates
 
-After saving, the server screen shows the identity and **Connect** action. The example address in these screenshots is illustrative; use the address from your server owner.
+The client remembers the server's TLS certificate after the first connection. If its fingerprint changes, confirm the new fingerprint with the owner before accepting it. Keep your client certificate identity when reconnecting so registered access and profile data continue to match.
 
-<img src="/screenshot-getting-started-connect-2.png" alt="Nebula saved-server screen showing an example identity and Connect action" />
-
-To find a server instead, choose **Browse public servers** from Quick connect. A server must opt into the public directory to appear there.
-
-## Add a server in Standard
-
-Open the **Connect** screen and use the **Wizard** or **+ Add Server** action. Enter the address and username, save, then select the server card to connect. Standard also has a **Public** view for browsing listed servers. Existing profiles that use Standard keep that design.
-
-## Certificate and identity
-
-The app remembers a server's TLS certificate after the first connection. If its fingerprint changes later, confirm the change with the server owner before accepting it. The owner may have restored a new data directory or replaced the certificate.
-
-A saved certificate identity matters for registration and some Fancy features. Nebula selects an existing default certificate when you add a server, while an existing saved server keeps the identity you chose. For account or server password problems, see [Connection troubleshooting](/troubleshooting/connection/).
-
-## Next step
-
-[Join a channel and make your first call](/getting-started/first-call/).
+For failed logins, see [Connection troubleshooting](/troubleshooting/connection/). Next, [join a channel and make your first call](/getting-started/first-call/).

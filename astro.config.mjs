@@ -44,7 +44,7 @@ export default defineConfig({
     starlight({
       title: "Fancy Mumble",
       description:
-        "Documentation for the Fancy Mumble app, server, and Docker image. Voice chat reimagined for 2026.",
+        "Documentation for the Fancy Mumble app and Starling server. Voice chat reimagined for 2026.",
       logo: {
         src: "./src/assets/logo.svg",
         replacesTitle: false,
@@ -168,6 +168,7 @@ export default defineConfig({
           badge: { text: "Ops", variant: "note" },
           items: [
             { label: "Docker quick start", link: "/server/docker/" },
+            { label: "Migrating to Starling", link: "/server/migrating-to-starling/" },
             { label: "First-run setup", link: "/server/wizard/" },
             { label: "Configuration reference", link: "/server/config/" },
             { label: "Ports & networking", link: "/server/network/" },

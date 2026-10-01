@@ -1,70 +1,16 @@
 ---
 title: Watch Together
-description: Synchronized video playback for everyone in a channel.
-sidebar:
-  order: 7
+description: Synchronized video playback in a channel.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+Watch Together shares playback state with members of a channel. Starling's **social** service relays the start, pause, play, and seek updates. Each client fetches the video from its source.
 
-:::caution[Legacy C++ server instructions]
-This page documents the older mumble-server fork. Its INI keys, plugin paths, and ports do not configure Starling. For a new deployment, start with [Starling feature availability](/server/features/) and the [Starling configuration guide](/server/config/).
-:::
+## Start a session
 
-Watch Together lets one user in a channel play a video that is
-synchronized for everyone else. Play, pause, and seek events
-propagate to the other viewers.
+Open the attachment menu in chat and choose **Watch Together**, then provide a supported video URL. The client supports YouTube and direct media URLs such as MP4 or WebM. All viewers need access to the source and a codec their client can play.
 
+## Server requirements
 
-<img src="/screenshot-server-features-watch-together-1.png" alt="Shared video playing with three viewers and a sync indicator" />
+Keep the social service healthy and permit members to enter the channel. The server does not upload or proxy the video. Source authentication, region restrictions, and blocked embeds can make playback differ between viewers.
 
-## Supported sources
-
-Two source kinds are supported by the client today:
-
-- **YouTube**, played inside an embedded IFrame.
-- **Direct media URL** (a `.mp4` or `.webm` URL the client can fetch
-  directly).
-
-Other providers (Vimeo, Twitch, and so on) are not implemented.
-
-## How it works
-
-The session is fully client-side. The server only relays plugin-data
-messages between participants:
-
-- The starter sends a "start" message with the source URL and kind.
-- Each viewer's app fetches the video from the source directly (the
-  server does **not** proxy or stream it).
-- Play, pause, and seek actions are broadcast as small plugin-data
-  messages.
-
-There are no server-side `MUMBLE_CONFIG_*` or `plugin.*` keys for
-Watch Together. Disabling it on a server requires building a custom
-server image.
-
-## Privacy
-
-The video is **not** streamed through the server. Each client
-fetches the content directly from YouTube or the URL host. The same
-caveats apply as for normal browser usage of those sites: the host
-sees each viewer's IP.
-
-## YouTube playback opt-in
-
-Some clients require the user to opt in to external embeds before
-the YouTube IFrame loads. A starter who picks a YouTube URL will
-see an explanation if their own client has not enabled the opt-in.
-
-## Pitfalls
-
-- **Out of sync after a long pause**: the next play / pause / seek
-  event re-syncs everyone.
-- **Video is geo-blocked for some viewers**: the server cannot help.
-  The viewer needs a working route to the provider.
-- **Direct URL refuses to play**: the file must serve `Accept-Ranges:
-  bytes` and a video MIME type.
-
-## Next step
-
-Continue with [Whiteboard](/server/features/whiteboard/).
+See [Starling service guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/SERVICES.md) for the service's role and [feature availability](/server/features/) for related setup.

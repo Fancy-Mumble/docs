@@ -317,23 +317,3 @@ div.header {
   flex-shrink: 0;
   color: var(--sl-color-accent-high);
 }
-
-/* Boxed screenshot placeholder pattern. */
-.screenshot-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 220px;
-  border: 2px dashed var(--sl-color-gray-4);
-  border-radius: 0.75rem;
-  color: var(--sl-color-gray-3);
-  font-style: italic;
-  background:
-    repeating-linear-gradient(
-      45deg,
-      transparent 0,
-      transparent 12px,
-      rgba(126, 87, 194, 0.06) 12px,
-      rgba(126, 87, 194, 0.06) 24px
-    );
-}

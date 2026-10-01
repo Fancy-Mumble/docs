@@ -1,0 +1,50 @@
+---
+title: Migrating to Starling
+description: Move an end-of-life Fancy Mumble server deployment to Starling.
+---
+
+The Fancy Mumble C++ server fork and its Docker image are end of life. Move existing deployments to [Starling](/server/docker/). Keep the original deployment and a verified backup until the new server has passed your login, permission, voice, and feature checks.
+
+## 1. Back up and inventory
+
+Stop the old server before taking a consistent copy of its database. Preserve its configuration, TLS certificate and private key, uploaded files, plugin data, and any secrets mounted separately. Record the virtual server IDs, channel tree, registered accounts, groups, ACLs, bans, and features your community uses.
+
+Starling owns separate service databases. The importer does not turn an old database into a Starling database in place.
+
+## 2. Convert the configuration
+
+Run the migration command from the Starling release you will deploy:
+
+~~~sh
+starling migrate-config /backup/mumble-server.ini > starling.toml
+~~~
+
+Review the generated overlay and every warning. Configure Starling's data directory, service endpoints, public file and media addresses, TLS paths, and target instance. The old `MUMBLE_CONFIG_*` environment variables and `plugin.*` INI configuration are not the new deployment's runtime configuration. Use the [TOML reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml).
+
+## 3. Preview the database import
+
+The importer reads a SQLite source and writes to the service databases selected by the target TOML. The usual single-server deployment uses Starling instance **1**; the old virtual server ID may be **0**. Confirm both IDs for your deployment.
+
+~~~sh
+starling migrate-db --from sqlite:/backup/mumble-server.sqlite --server-id 0 --instance 1 --config starling.toml --dry-run
+~~~
+
+Read the counts and reported unmapped values before writing. The import covers registered users, channels and links, ACLs and groups, bans, and mapped instance settings. Existing password hashes are verified in their imported form and upgraded after a successful password login.
+
+## 4. Import and verify
+
+~~~sh
+starling migrate-db --from sqlite:/backup/mumble-server.sqlite --server-id 0 --instance 1 --config starling.toml --verify
+~~~
+
+The importer is resumable and uses upserts. Verification compares source and destination entity counts. Use the [Starling storage and migration guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/STORAGE.md#4-the-migration-tool) for `--table-prefix`, multi-instance imports, and exact coverage in your release.
+
+Persistent chat history and plugin-owned data are not carried by the core database importer. Preserve their original backups and plan their migration separately. Uploaded file bytes and provider credentials also need their own transfer; do not treat matching database counts as a complete feature migration.
+
+## 5. Test and switch clients
+
+Start Starling on a temporary address or port. Test registered certificate and password login, guest access, channel permissions, moderation, voice over UDP and TCP, file downloads, screen sharing, and every advertised plugin you use. Compare the channel tree and account counts with the inventory.
+
+Preserving the original TLS certificate avoids an unnecessary server fingerprint change. If you intentionally replace it, tell members the new fingerprint before switching the public address.
+
+Switch the public address after these checks. Keep the old deployment stopped and its backup intact until you have confirmed the new server and its backups. Continue with [Upgrade and backup](/server/upgrade/).

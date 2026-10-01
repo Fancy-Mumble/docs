@@ -50,9 +50,7 @@ debug: voice frame dropped: jitter buffer late by 47ms (threshold 30ms), last 3 
 </Steps>
 
 
-<div id="screenshot-troubleshooting-debug-logging-1" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: advanced settings with the log level dropdown set to debug.
-</div>
+<img src="/screenshot-troubleshooting-debug-logging-1.png" alt="Current client settings screen with sample data" />
 
 ## App: where is the log file?
 
@@ -116,30 +114,7 @@ The folder also contains rotated archives:
 
 ## Server: enable verbose logging
 
-<Tabs>
-  <TabItem label="Environment variable">
-    ```yaml
-    environment:
-      MUMBLE_VERBOSE: true
-    ```
-    Restart the container. Logs now include `info` and `debug` lines.
-  </TabItem>
-  <TabItem label="Per-component">
-    Mumble has separate log channels per plugin. Set in your custom
-    INI:
-
-    ```ini
-    plugin.webrtc-sfu.logLevel=debug
-    plugin.file-server.logLevel=debug
-    plugin.link-previews.logLevel=debug
-    plugin.push-fcm.logLevel=debug
-    plugin.persistent-chat.logLevel=debug
-    ```
-
-    Useful when one feature misbehaves and you do not want the noise
-    of all the others.
-  </TabItem>
-</Tabs>
+Starling services use Rust tracing. Set `RUST_LOG=info` for normal operation or `RUST_LOG=debug` while investigating a problem, then restart the affected service. Apply the variable to the service you are diagnosing in your Compose environment. Return to the normal level after collecting the relevant logs.
 
 ## Server: where to read the log
 

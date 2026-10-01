@@ -11,5 +11,3 @@ description: Listener reference for the maintained Starling Compose deployment.
 | 8081 | TCP | Optional operator API; the Compose admin profile binds it to localhost. |
 
 The first two are needed for a normal public server. The other ports and service listeners depend on the deployment and its TOML. A configured screen-share relay needs a separately reachable UDP media port. Internal gRPC endpoints should remain private. See [Ports and networking](/server/network/) and the [Starling Compose file](https://github.com/Fancy-Mumble/starling/blob/main/docker-compose.yml).
-
-The older C++ server image uses different optional ports, including 64739 for its file plugin, 64740 for live documents, 10000/UDP for screen sharing, and 6502 for Ice. Those are not Starling defaults.

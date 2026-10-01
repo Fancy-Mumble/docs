@@ -3,7 +3,7 @@ title: Starling configuration
 description: Configure the current server with a small TOML overlay and live instance settings.
 ---
 
-Starling reads starling.toml. A file overlays built-in defaults: omitted keys keep their defaults, while unknown keys cause startup to fail. The old MUMBLE_CONFIG_* variables and mumble-server.ini apply to the legacy C++ image, not Starling.
+Starling reads starling.toml. A file overlays built-in defaults: omitted keys keep their defaults, while unknown keys cause startup to fail. For an existing deployment, use [Migrating to Starling](/server/migrating-to-starling/).
 
 ## A small server
 
@@ -26,4 +26,4 @@ Settings under the instances.settings table, such as max_users, password, and we
 
 Services use services.NAME tables. To turn a built-in service off, set enabled = false; leaving a table out keeps its default. The operator API is an exception: it is absent until explicitly configured. Files use the services.files table with an HTTP listen address and a client-reachable public_url. Screen-share relay needs a reachable media address. See the [configuration guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/CONFIGURATION.md) and [reference TOML](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml) for the full schema.
 
-Starling can reload supported settings on SIGHUP. Listener changes can require a restart; check the reload log for applied, next_connection, and pending_restart. For an existing C++ server, use the Starling migrate-config command to produce a starting TOML overlay, then review it before starting Starling.
+Starling can reload supported settings on SIGHUP. Listener changes can require a restart; check the reload log for applied, next_connection, and pending_restart. See [Migrating to Starling](/server/migrating-to-starling/) for configuration conversion and database import.

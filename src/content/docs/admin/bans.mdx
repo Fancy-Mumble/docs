@@ -15,9 +15,7 @@ The **Ban list** is a server-wide block list of:
 Banned identities cannot connect. The list survives restarts.
 
 
-<div id="screenshot-admin-bans-1" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: ban list with five entries and the "Add ban" button.
-</div>
+<img src="/screenshot-admin-bans-1.png" alt="Current client administration screen with sample data" />
 
 ## Ban from the user list
 
@@ -48,25 +46,9 @@ Open **Admin, Ban list**, click **Add ban**:
 
 Useful when you know who you want to block before they connect.
 
-## Auto-ban on the older C++ server
+## Connection limits
 
-The settings below apply only to the older C++ server image. They are not Starling configuration. For Starling, consult its [current TOML reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml) before configuring connection limits:
-
-```yaml
-environment:
-  MUMBLE_CONFIG_AUTOBANATTEMPTS: 5
-  MUMBLE_CONFIG_AUTOBANTIMEFRAME: 60
-  MUMBLE_CONFIG_AUTOBANTIME: 3600
-```
-
-| Key | What |
-|-----|------|
-| `autobanattempts` | Failed connections per source IP that triggers a ban. |
-| `autobantimeframe` | Window (seconds) in which the attempts are counted. |
-| `autobantime` | How long the auto-ban lasts (seconds). |
-
-Auto-bans show in the ban list with a "auto" tag and can be removed
-manually.
+Use the [Starling configuration reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml) for gateway connection and rate limits.
 
 ## IP-range bans
 

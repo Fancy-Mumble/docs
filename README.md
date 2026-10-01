@@ -48,7 +48,7 @@ docs/
 │   │       └── reference/
 │   ├── content.config.ts      # registers the docs collection
 │   └── styles/
-│       └── custom.css         # brand colours, screenshot-placeholder style
+│       └── custom.css         # brand colours
 └── tsconfig.json
 ```
 
@@ -91,30 +91,9 @@ import { Icon } from 'astro-icon/components';
 See the [Starlight docs](https://starlight.astro.build/components/asides/)
 for the full component list.
 
-### Screenshot placeholders
+### Screenshots
 
-The site uses styled placeholders so every screenshot slot is visible
-while writing:
-
-```mdx
-<div class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: short description of what should be here.
-</div>
-```
-
-The style lives in [src/styles/custom.css](src/styles/custom.css).
-Replace the `<div>` with a real `![alt](path.png)` (and drop the image
-into `src/assets/`) when the screenshot lands.
-
-### Em-dashes and special characters
-
-By convention this site avoids em-dashes (`-`) and decorative Unicode
-that does not render predictably across platforms. Use commas,
-periods, or hyphens.
-
-For autolinks, write `[label](https://example.com)` instead of
-`<https://example.com>`. MDX is stricter than plain Markdown about
-the latter inside lists.
+Use real captures of the current client with descriptive alt text. Do not add screenshot placeholders to published pages.
 
 ## Verify before pushing
 
@@ -181,19 +160,11 @@ culprits are:
 
 ## Contributing screenshots
 
-1. Take a screenshot at a sensible window size (the default app
-   width, around 1280 wide, looks best on the docs site).
-2. Save as `.png` or `.webp` under `src/assets/screenshots/<section>/`.
-3. Replace the matching `<div class="screenshot-placeholder">` with:
+Capture the current client at a readable window size and save PNG or WebP files under `public/`. Use original sample assets from the parent e2e repository’s `assets/sample-profiles/` directory.
 
-   ```mdx
-   import myShot from '../../assets/screenshots/section/my-shot.png';
+The October 2026 desktop captures render the actual React client in Edge with deterministic sample users, avatars, messages, and settings. Native responses are fixtures; these images demonstrate the UI and do not verify a live server operation. The screen-sharing capture uses the client’s preview harness.
 
-   <Image src={myShot} alt="Short description of the screenshot." />
-   ```
-
-4. Run `npm run build` to confirm the image is included and the
-   build passes.
+Add an image with descriptive alt text to the relevant guide, inspect the rendered result, and run `npm run build`. Remove unused superseded screenshots.
 
 ## License
 
