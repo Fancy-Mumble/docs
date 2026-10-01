@@ -189,6 +189,8 @@ export default defineConfig({
             { label: "Channel ACL", link: "/admin/acl/" },
             { label: "Groups", link: "/admin/groups/" },
             { label: "Ban list", link: "/admin/bans/" },
+            { label: "Audit log", link: "/admin/audit-log/" },
+            { label: "Welcome message", link: "/admin/welcome-message/" },
             { label: "Custom emotes", link: "/admin/emotes/" },
             { label: "Onboarding workflow", link: "/admin/onboarding/" },
             { label: "Server Plugins", link: "/admin/server-plugins/" },
