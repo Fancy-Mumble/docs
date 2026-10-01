@@ -1,54 +1,10 @@
 ---
-title: Whiteboard
-description: Real-time collaborative drawing on top of any screen share.
-sidebar:
-  order: 8
+title: Whiteboard and drawing
+description: Drawing events shared with a channel or stream.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+The client can draw over a shared stream. Starling's **social** service relays drawing updates to the relevant channel; screen media is handled separately by the screenshare service.
 
-:::caution[Legacy C++ server instructions]
-This page documents the older mumble-server fork. Its INI keys, plugin paths, and ports do not configure Starling. For a new deployment, start with [Starling feature availability](/server/features/) and the [Starling configuration guide](/server/config/).
-:::
+Open a stream's drawing controls, choose a tool and colour, then draw on the shared view. Other viewers need a compatible Fancy Mumble client and access to the channel. If video works but drawing does not, check the social service and the client's feature availability.
 
-The whiteboard lets anyone watching a screen share **draw on top of
-it**. Useful for "point at this", code reviews, or just decorating a
-movie night.
-
-Strokes are sent through the server in real time, so every viewer
-sees them as they are drawn.
-
-
-<div id="screenshot-server-features-whiteboard-1" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: stream with annotations layered on top.
-</div>
-
-## How it works
-
-Each stroke is a small batch of points (position, color, width) sent
-as a plugin-data message. The server forwards the message to every
-participant in the channel. There is no per-stroke persistence; when
-the stream ends, the strokes are cleared.
-
-The whiteboard is a **client-side feature**. There are no documented
-server `MUMBLE_CONFIG_*` or `plugin.*` keys for tuning it.
-
-## Compatibility
-
-| Client | Can draw? | Can see strokes? |
-|--------|:---------:|:----------------:|
-| Fancy Mumble desktop | yes | yes |
-| Fancy Mumble mobile | no (view-only on mobile) | yes |
-| Vanilla Mumble | no | no |
-
-## Pitfalls
-
-- **Cannot draw on mobile**: the mobile build is view-only for the
-  whiteboard. Use the desktop app to draw.
-
-## Next step
-
-Continue with [Live Documents](/server/features/live-doc/) for real-time
-collaborative document editing, or skip to
-[Customize & disable features](/server/customize/) for the consolidated
-toggle reference.
+See [Screen sharing](/users/screen-sharing/) for the workflow and [Starling service guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/SERVICES.md) for the server components.

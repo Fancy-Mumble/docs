@@ -1,120 +1,32 @@
 ---
 title: Quick tour of the UI
-description: A whirlwind walkthrough of every part of the Fancy Mumble window.
-sidebar:
-  order: 2
+description: Find channels, chat, voice controls, profiles, and settings.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+The connected client has a server rail, a channel sidebar, and a conversation pane. This capture uses sample members and messages.
 
-<Aside type="note" title="Choose a design">
-New profiles open in Nebula. This tour and its screenshots follow the Standard design; some controls have different names or positions in Nebula. Existing Standard profiles keep their choice. Aurora is deprecated.
-</Aside>
+<img src="/mainpage.png" alt="Current Fancy Mumble client with a server rail, lounge channel, five members with different avatars, chat messages, and voice controls" />
 
-This is the **main chat view** once you are connected. Three columns,
-each doing one job.
+## Servers and channels
 
+The narrow server rail switches between saved connections. Expand it when you want server names to stay visible. The channel sidebar includes search, channels, and the members in each room.
 
-<div id="screenshot-welcome-tour-1" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: full chat view with channels left, chat center, members right.
-</div>
+Select a channel to view its chat. Use its **Join** action to enter voice. Right-click a channel for the actions your permissions allow, including channel settings and permissions.
 
-## 1. Channel sidebar (left)
+## Chat
 
-- The server name and a status pip live at the top.
-- **Channels** are folder-like containers. Clicking a channel joins
-  voice and shows that channel's chat.
-- A small badge on a channel name means **persistent chat is enabled**,
-  meaning your messages will still be there next time you connect.
-- Right-click a channel to **edit, link, delete, or set ACLs** (if you
-  have permission).
-- Three sidebar looks are available. Switch in
-  [Personalization](/users/personalization/):
-  - **Classic**, closest to traditional Mumble.
-  - **Flat**, compact look.
-  - **Modern**, large icons and soft glass.
+Write in the composer at the bottom. The attachment menu offers the features your server supports, such as files, polls, and Watch Together. Hover or right-click a message for reply, reaction, copy, pin, and moderation actions.
 
-## 2. Chat (center)
+The chat header contains member, search, pinned-message, and channel-menu controls. Select a member to open their profile. Banners, avatars, status, bio, and name styling can differ for every person.
 
-The chat column is more than just text:
+## Voice controls
 
-- **Formatted text** with bold, italic, code, lists, and links.
-- Type **`@`** to mention a user or a role.
-- Type **`:`** to pick an emoji, including custom server emotes.
-- A **GIF browser** is one click away (paperclip, GIF icon).
-- **Polls** with multiple options and a live vote count.
-- **Attachments**: drop a file or paste an image to start the
-  [share dialog](/users/file-sharing/).
-- **Reactions**: hover a message, click the smiley.
-- **Pin** important messages from the context menu. Pinned messages
-  appear in a tray at the top.
-- **Reply** and **quote** by right-clicking a message.
-- **Read receipts** show who has read what.
-- **Mobile call controls** are an overlay bar at the bottom on Android.
+Your identity and voice controls sit at the bottom of the channel sidebar. Use the microphone and headphones controls to change your audio state. The screen-share control indicates the available delivery mode. Open **More**, then **Settings**, to configure your microphone, profile, or appearance.
 
-<Aside type="tip">
-Selecting multiple messages (long-press on mobile, shift-click on
-desktop) reveals the **message selection bar** for bulk copy or delete.
-</Aside>
+## Settings and administration
 
+Settings uses a searchable sidebar. **Profile**, **Voice**, **Personalize**, **Notifications**, **Privacy**, and **Language & format** are common starting points. Desktop builds also offer shortcuts and a game overlay.
 
-<div id="screenshot-welcome-tour-2" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: chat composer with the mentions popover open.
-</div>
+If your identity has administration permission, server administration pages appear in the same sidebar. The server's advertised capabilities determine which pages and controls are available.
 
-## 3. Member panel (right)
-
-- The active speaker gets a soft green ring.
-- Click any user to open their **profile card**, with bio, frame, and
-  nameplate.
-- Right-click for the **user context menu**, with private message,
-  mute, deafen, kick, ban, and role-change options.
-- Edit your own profile from **Settings, Profile**.
-
-## 4. Header bar
-
-The top bar gives you global controls:
-
-- **Mute** and **Deafen** toggles.
-- **Push-to-talk indicator**, lights up when you are transmitting.
-- **Voice level meter**.
-- **Settings** icon, opens the full settings page.
-- **Admin** icon, opens the admin panel if you have permission.
-- **Activity log**, server-wide activity. Useful for moderators.
-
-## 5. Stream grid (when screen sharing)
-
-When anyone in the channel is sharing a screen, a **stream grid**
-appears between the chat and the member list. See
-[Screen sharing](/users/screen-sharing/).
-
-
-<div id="screenshot-welcome-tour-3" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: stream grid with three active streams plus the focus view.
-</div>
-
-## 6. Settings
-
-Opens an overlay with tabs:
-
-- **Profile**, your name, avatar, banner, bio, nameplate, frame, name
-  style.
-- **Voice and Audio**, devices, activation mode, noise suppression,
-  gate, gain, quality.
-- **Personalization**, themes, fonts, channel-viewer style, bubble
-  style, chat background.
-- **Notifications**, per-event sounds, push, focus rules.
-- **Shortcuts**, global hotkeys for push-to-talk, mute, deafen, and
-  more.
-- **Privacy**, what you share with the server.
-- **Identities**, your saved identities for different servers.
-- **Advanced**, expert mode, log level, GIF key, time format,
-  auto-update, reset.
-
-## What is next?
-
-<Steps>
-1. [Connect to a server](/getting-started/connect/) if you have not yet.
-2. Run through [Audio configuration](/users/audio/), five minutes saves you ten future ones.
-3. Personalize your [profile](/users/profile/).
-</Steps>
+Continue with [Audio configuration](/users/audio/) or [Profile customization](/users/profile/).

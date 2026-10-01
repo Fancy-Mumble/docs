@@ -7,7 +7,7 @@ For the maintained Starling Compose deployment, expose **64738/TCP** for the Mum
 
 The Compose file also publishes **8080/TCP** for HTTP file transfers. Its sample public_url points to localhost; replace that URL with an address your users can reach, normally HTTPS through a reverse proxy. File links cannot work for remote clients while they point at localhost.
 
-Screen-share media uses a separate UDP listener when the relay is configured. Set the screenshare service public_url to a reachable literal IP and port; open that UDP port in your firewall. The old C++ server's port 10000 is not a Starling default. The [example TOML](https://github.com/Fancy-Mumble/starling/blob/main/starling.example.toml) shows the relevant settings.
+Screen-share media uses a separate UDP listener when the relay is configured. Set the screenshare service public_url to a reachable literal IP and port; open that UDP port in your firewall.  The [example TOML](https://github.com/Fancy-Mumble/starling/blob/main/starling.example.toml) shows the relevant settings.
 
 The optional operator API is plain HTTP and should remain on a trusted network. The Compose admin profile binds its port 8081 to the host loopback interface. See the [operator API guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/OPERATOR-API.md) before exposing it through a proxy.
 

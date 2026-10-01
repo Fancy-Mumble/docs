@@ -6,5 +6,3 @@ description: Start Starling and find its generated administrator credentials.
 Starling starts with working defaults. On its first run it writes a starter config, creates the server certificate and SuperUser account, and prints the generated password. Save that password and keep the data directory or Docker volume.
 
 For a local binary, run Starling in all-in-one mode and connect to localhost:64738. For Docker, follow [Run Starling with Docker](/server/docker/). Then adjust starling.toml using [Configuration](/server/config/).
-
-The Python terminal and graphical setup wizard in mumble-docker configures the older C++ server image. It does not generate Starling's TOML configuration. If you are maintaining that deployment, see the [legacy Docker repository](https://github.com/Fancy-Mumble/mumble-docker).

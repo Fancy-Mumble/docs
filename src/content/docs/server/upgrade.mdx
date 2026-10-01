@@ -21,13 +21,6 @@ docker compose logs gateway
 
 If you use a local build, update the source and run Docker Compose with --build instead. Keep the data volume mounted across restarts.
 
-## Move from the C++ server
+## Migrate an existing deployment
 
-Starling includes migration commands for the old mumble-server.ini and murmur database. Preview the database import before writing:
-
-~~~sh
-starling migrate-config /path/to/mumble-server.ini > starling.toml
-starling migrate-db --from sqlite:/path/to/murmur.sqlite --dry-run
-~~~
-
-Review the reported differences, then follow the [Starling migration guide](https://github.com/Fancy-Mumble/starling/blob/main/docs/PROTOCOL-MIGRATION.md) for the target instance, import, and verification steps. Keep the old database and configuration backup until you have tested client login, channels, ACLs, and files on Starling.
+Follow [Migrating to Starling](/server/migrating-to-starling/) for configuration conversion, database import, and the checks to complete before switching clients.

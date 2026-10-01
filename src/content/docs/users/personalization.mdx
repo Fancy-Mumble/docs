@@ -1,108 +1,36 @@
 ---
 title: Personalization & themes
-description: Themes, fonts, chat background, channel viewer style, bubble style, font size.
-sidebar:
-  order: 7
+description: Themes, light and dark appearance, message layout, and chat backgrounds.
 ---
 
-import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
-import { Icon } from 'astro-icon/components';
 import ChatBackgroundExample from '../../../components/ChatBackgroundExample.astro';
 
-Open **Settings, Personalize** to change how the app looks. None of
-these settings touch what other people see, they are purely your own.
+Open **Settings, Personalize** to change the appearance of your client. These choices affect your own window; edit **Settings, Profile** for the styling other members see.
 
-<Aside type="note" title="Design packs">
-Nebula is the default for new profiles and has its own skins and layout settings. Standard remains available and keeps the classic glass look; existing profiles retain it. Aurora is deprecated. Switch designs under Settings, Personalization, Interface design. The theme and channel-viewer options below describe Standard and can differ in Nebula.
-</Aside>
+## Theme and appearance
 
+Choose a theme from the preview tiles. Each theme has a light and dark scheme. **Appearance** can follow your system or use a fixed **Light** or **Dark** scheme.
 
-<img src="/screenshot-users-personalization-1.png" alt="Profile settings panel showing identity selector, default username field, avatar and banner editors, and bio text editor with a live preview card on the right" />
+<img src="/screenshot-users-personalization-2.png" alt="Current Personalize settings with theme tiles, light and dark appearance choices, and message style controls" />
 
-## Theme
+## Messages and text
 
-Fancy Mumble ships with eleven themes. Click a swatch card to apply
-it instantly.
+Choose **Bubbles**, **Flat**, or **Compact** message style. **Text size** offers Small, Medium, and Large. **Compact mode** hides avatars and tightens spacing; **Always show message actions** keeps the action controls visible without hovering.
 
-- **Dark** (default)
-- **Light**
-- **Apprentice**
-- **Mobel**
-- **Rose**
-- **Inversa**
-- **Hearth**
-- **Macchiato**
-- **Midnight Pretenders**
-- **Ply**
-- **Guardbase**
-
-
-<img src="/screenshot-users-personalization-2.png" alt="Personalize panel showing the Theme section with eleven swatch cards: Dark (selected with blue outline), Light, Apprentice, Mobel, Rose, Inversa, Hearth, Macchiato, Midnight Pretenders, Ply, and Guardbase" />
-
-## Channel viewer style
-
-The left sidebar comes in three looks:
-
-<Tabs>
-  <TabItem label="Classic" icon="seti:default">
-    Closest to traditional Mumble. Compact tree with bracket-style
-    branches. Best for big servers with deep channel trees.
-  </TabItem>
-  <TabItem label="Flat (default)" icon="seti:default">
-    Compact one-line-per-channel view. Looks like a chat-app sidebar.
-  </TabItem>
-  <TabItem label="Modern" icon="seti:default">
-    Large channel cards.
-  </TabItem>
-</Tabs>
-
-## Bubble style (chat messages)
-
-Three looks for individual chat messages:
-
-- **Bubbles** (default): rounded chat bubbles, like a messenger app.
-- **Flat**: clean rows, like a classic forum.
-- **Compact**: dense, several lines fit per visible row.
+<img src="/screenshot-users-personalization-3.png" alt="Current Personalize controls for appearance, message style, text size, and message density" />
 
 ## Chat background
 
-Use an image behind the chat column. The sample below shows how a dark
-overlay keeps messages readable over an illustrated wallpaper.
+Choose an image or video behind the conversation. The client keeps your last five backgrounds so you can switch without choosing the file again. Adjust **Blur**, **Opacity**, and **Dim**, and move the focus point to keep the subject visible when the chat pane crops the image.
+
+<img src="/screenshot-users-personalization-3.png" alt="Current Personalize controls for appearance, message style, text size, and message density" />
 
 <ChatBackgroundExample />
 
-[Download the sample chat background](/examples/sample-chat-background.png) to try it yourself. In Nebula, open **Settings, Personalize, Chat Background** and choose the image file. You can select it again from the recent-background tiles. Drag the focus point to control which part stays visible when the chat pane crops the image.
+[Download the sample background](/examples/sample-chat-background.png) to try these controls. Start with low opacity or stronger dimming so text remains readable. Video backgrounds may take time to process after changing blur or dimming.
 
-Nebula has **Blur**, **Opacity**, and **Dim** controls. Start with a low opacity or a stronger dim setting, then adjust until messages remain easy to read. Standard also offers these controls and a **Cover** or **Tile** fit choice.
+## Server list and channels
 
-**Dim** darkens the image; **Opacity** controls how strongly it shows through. **Blur** softens detail and can take a moment to process at high values.
+Place the server list in the **Sidebar**, **Title bar**, or **Both**. The **Channel viewer** offers Flat and Modern layouts. Choose the layout that suits the size of your channel tree.
 
-<Aside type="tip">
-The original image is stored locally and re-processed when you
-change blur or dim, so you can iterate without re-uploading.
-</Aside>
-
-
-<img src="/screenshot-users-personalization-3.png" alt="Chat Background settings showing a nature photo preview with a Remove button, and Background Effects controls: Blur Background toggle (off), Image Fit buttons (Cover selected, Tile), Image Opacity slider at 25%, and Dim Overlay slider at 50%" />
-
-## Font
-
-Pick from a curated list of fonts. The default is your system font.
-
-## Font size
-
-Three sizes: small, **medium** (default), large.
-
-## Compact mode
-
-A toggle that hides avatars and tightens the chat spacing for a
-denser layout.
-
-## Resetting
-
-The **Danger Zone** at the bottom of **Settings, Advanced** has a
-**Reset** button that restores everything to defaults.
-
-## Next step
-
-Continue with [Keyboard shortcuts](/users/shortcuts/).
+For your name, avatar, banner, and card styling, see [Profile customization](/users/profile/).

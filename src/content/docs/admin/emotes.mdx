@@ -15,9 +15,7 @@ This feature requires the [file server](/server/features/file-server/)
 to be enabled and the **Manage emotes** permission.
 
 
-<div id="screenshot-admin-emotes-1" class="screenshot-placeholder">
-  &nbsp;Screenshot placeholder: custom emotes admin tab with five uploaded emotes.
-</div>
+<img src="/screenshot-admin-emotes-1.png" alt="Current client administration screen with sample data" />
 
 ## Upload an emote
 
@@ -99,16 +97,7 @@ custom ones.
 
 ## Storage and limits
 
-Stored in the file server at `/data/file-server-storage/emotes/`.
-
-Default limits:
-
-```ini
-plugin.file-server.maxEmoteSizeBytes=1048576
-plugin.file-server.maxEmoteCount=1000
-```
-
-Bump these in your custom INI for very large communities.
+Starling stores emote assets through its file service. Keep that service’s database and object storage in your backups. Upload limits and access permissions depend on the running service configuration; use the [file-storage guide](/server/features/file-server/) and your release’s TOML reference. Legacy plugin INI keys do not configure Starling.
 
 ## Pitfalls
 

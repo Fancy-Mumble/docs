@@ -1,10 +1,19 @@
 ---
 title: Server plugins
-description: Understand Starling's plugin host and its current installation path.
+description: Inspect and manage plugins advertised by Starling.
 ---
 
-Starling has a plugins service and a Rust plugin host. It can load native plugins and WebAssembly components from its configured plugin directory. The host has been exercised with the published native examples and a WebAssembly component; installing plugin bytes over the wire and operator REST routes remain unfinished in the checked-out implementation.
+Starling runs plugins inside its **plugins** service. Native plugin libraries and WebAssembly components use the host's scoped capabilities for configuration, sessions, channels, permissions, and messaging.
 
-For now, operators place a compatible plugin binary in the configured plugins directory and enable it through the available plugin RPC. Check its startup logs and advertised plugin registry before expecting client controls to appear. A built-in service named plugins does not mean every plugin from the older C++ server has been ported.
+The service reads its host options from `[services.plugins.options]`. Configure `plugins_dir` to the directory containing compatible plugin artifacts. With no directory configured, no plugins are loaded.
 
-See the [Starling plugin-host status and porting plan](https://github.com/Fancy-Mumble/starling/blob/main/docs/PLUGIN-HOST-PLAN.md) and [feature availability](/server/features/). The older [plugin guides](/server/plugins/overview/) describe the C++ fork's host and INI configuration.
+~~~toml
+[services.plugins.options]
+plugins_dir = "/var/lib/starling/plugins"
+~~~
+
+Per-plugin settings use the `plugin.<name>.` prefix inside that options table. Read the plugin's own documentation for its keys. After startup, check the service logs and advertised registry; a plugin file on disk does not prove that it loaded successfully.
+
+The host supports listing, enabling, disabling, and uninstalling loaded plugins. Installation from remotely uploaded bytes and the operator REST plugin routes remain unfinished in the current host plan. Place artifacts through your deployment tooling and use only the administration operations supported by your release.
+
+See the [plugin host implementation and plan](https://github.com/Fancy-Mumble/starling/blob/main/docs/PLUGIN-HOST-PLAN.md), [Starling configuration reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml), and [feature availability](/server/features/).

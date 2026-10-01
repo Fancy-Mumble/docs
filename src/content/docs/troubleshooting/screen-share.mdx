@@ -7,6 +7,5 @@ If the share does not start, first check the sender's operating-system capture p
 
 If the sender sees a preview but viewers see a black frame or no stream, check the Starling screenshare service logs. The relay needs a public_url with a literal IP and UDP port reachable by viewers; the corresponding UDP listener must be open in the host and cloud firewalls. The [Starling example TOML](https://github.com/Fancy-Mumble/starling/blob/main/starling.example.toml) shows the setting. A private address or localhost will fail for remote viewers.
 
-The legacy C++ server's WEBRTCSFUPUBLICIP setting and fixed UDP port 10000 are not Starling settings. The active port comes from your Starling configuration.
 
 For diagnosis, record the client and server versions, whether the sender's local preview works, whether all viewers fail, and the relevant logs. See [Reporting bugs](/troubleshooting/reporting-bugs/).
