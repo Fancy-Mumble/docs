@@ -16,6 +16,10 @@ small adjustments for touch.
 
 
 
+<img src="/screenshot-mobile-chat.png" alt="Current mobile conversation with sample members using anime, car, flower, and dog avatars, plus the call bar and message composer" style="width: 100%; max-width: 360px; margin: 0 auto;" />
+
+The screenshots show the current phone layout with a sample community.
+
 ## Install
 
 See the [installer page](/getting-started/install/) and pick the
@@ -51,27 +55,25 @@ notifications. Open **Settings, Battery, Fancy Mumble** and pick
 **Unrestricted** to keep notifications on time.
 </Aside>
 
-## Mobile-only UI bits
+## Channels and conversations
 
-The desktop layout is rebalanced for touch:
+The **Channels**, **Friends**, and **Settings** tabs sit at the bottom of the navigation screen. Select a channel to open its conversation; use **Back** to return to the channel list. The server-strip control shows or hides saved servers.
 
-<CardGrid>
-  <Card title="Mobile call controls" icon="phone">
-    A floating bar at the bottom with mute, deafen, leave, and stream
-    toggles. Auto-hides when no audio is active.
-  </Card>
-  <Card title="Channel drawer" icon="bars">
-    Channels live in a left drawer, swipe from the edge or tap the
-    menu button to open.
-  </Card>
-  <Card title="Member sheet" icon="seti:default">
-    Tap a user to open a bottom-sheet with their profile, frame,
-    banner, and actions (private message, mute, kick).
-  </Card>
-  <Card title="Message action sheet" icon="comment-alt">
-    Long-press a message to reply, react, copy, pin, or delete.
-  </Card>
-</CardGrid>
+<img src="/screenshot-mobile-channels.png" alt="Current mobile channel list with a lounge and five members with distinct avatars" style="width: 100%; max-width: 360px; margin: 0 auto;" />
+
+Chat gives the conversation the whole screen. Its composer stays at the bottom, and an active voice call adds a compact call bar above it. File-sharing controls depend on the connected server's capabilities.
+
+## Call controls
+
+Tap **In voice** on the call bar to expand the call screen. It shows the channel's participants and their audio states. Use the large microphone and headphones controls to mute or deafen, **Disconnect** to leave voice, and the down arrow to return to chat.
+
+<img src="/screenshot-mobile-voice.png" alt="Expanded mobile call screen showing five participants, listening and muted states, microphone and headphones controls, and Disconnect" style="width: 100%; max-width: 360px; margin: 0 auto;" />
+
+## Profiles and message actions
+
+Tap a member's name or avatar to inspect their profile and available actions. Profiles can include their own avatar, banner, status, pronouns, and bio. Long-press a message for its available actions, such as reply, reaction, or copy; moderation actions depend on your permissions.
+
+<img src="/screenshot-mobile-profile.png" alt="Mobile profile sheet for Rin with anime avatar and banner, pronouns, sketching status, bio, and profile actions" style="width: 100%; max-width: 360px; margin: 0 auto;" />
 
 ## Battery and data
 
@@ -80,7 +82,7 @@ The desktop layout is rebalanced for touch:
 - Watching a screen share takes about 1 to 3 Mbps per stream.
 - File downloads use whatever the file weighs, once.
 
-Force **TCP** mode (Settings, Voice, Network) on flaky cell data. It
+Enable **Force TCP audio** in **Settings, Voice** on flaky cell data. It
 adds a little latency but avoids packet-loss audio glitches.
 
 ## Known mobile limits
