@@ -1,43 +1,41 @@
 ---
 title: Run Starling with Docker
-description: Start the current Fancy Mumble server using Starling's maintained Compose deployment.
+description: Start Starling with the published GitHub container image.
 ---
 
-Starling is the current Fancy Mumble server. Its repository contains the Compose file and the matching configuration file. For an existing deployment, follow [Migrating to Starling](/server/migrating-to-starling/).
+Starling is the current Fancy Mumble server. With Docker installed and running, start its published image directly. For an existing deployment, follow [Migrating to Starling](/server/migrating-to-starling/).
 
 ## Start a server
 
 ~~~sh
-git clone https://github.com/Fancy-Mumble/starling.git
-cd starling
-STARLING_IMAGE=ghcr.io/fancy-mumble/starling:latest docker compose up -d --wait
-docker compose logs gateway
+docker run -d --name starling --restart unless-stopped -p 64738:64738/tcp -p 64738:64738/udp -p 8080:8080 -p 64740:64740 -v starling-data:/var/lib/starling ghcr.io/fancy-mumble/starling:latest
 ~~~
 
-On Windows PowerShell, set the image with `$env:STARLING_IMAGE='ghcr.io/fancy-mumble/starling:latest'` before running `docker compose up -d --wait`.
+The same command works in PowerShell. Docker downloads the image automatically; its default starts all services in one container.
 
-Connect Fancy Mumble to localhost:64738. On first boot Starling creates a self-signed server certificate and a SuperUser password. In the distributed stack, find the password in `docker compose logs userdata`; in the all-in-one service, check `docker compose logs starling`. Save it. Keep the starling-data volume: it holds the certificate, accounts, channels, and service data.
-
-To build from source, use:
-
-~~~sh
-docker compose up -d --wait --build
-~~~
-
-The Compose file also supports a single-container deployment with the starling service. Start that service by name; it replaces the distributed services.
+Connect Fancy Mumble to **localhost:64738**. On first boot Starling creates a self-signed server certificate and a SuperUser password. Run `docker logs starling` to find the password and save it. The **starling-data** volume preserves the generated configuration, certificate, accounts, channels, and service data.
 
 ## Configure and operate
 
-Edit deploy/starling.toml before starting the distributed stack. The file is mounted into every service. Set an instance name and password under the instances tables. For a single process, start with starling.example.toml instead. See [Configuration](/server/config/).
-
-The Compose deployment publishes TCP and UDP port 64738 and HTTP port 8080 for files. Its sample public URL is localhost:8080; set a URL that other users can reach before sharing files outside your machine. See [Ports and networking](/server/network/).
+The container generates a starter configuration on first run. See [Configuration](/server/config/) for changing settings. Set a public file-server URL that other members can reach before sharing files outside your machine. See [Ports and networking](/server/network/) for remote access and feature-specific media ports.
 
 ~~~sh
-docker compose ps
-docker compose logs -f gateway
-docker compose down
+docker logs -f starling
+docker stop starling
+docker start starling
 ~~~
 
-Docker Compose down keeps the data volume. Adding -v deletes it, including the server certificate and database. See [Upgrade and backup](/server/upgrade/).
+Stopping or removing the container keeps its named data volume. Deleting **starling-data** deletes its configuration, certificate, and databases. See [Upgrade and backup](/server/upgrade/).
 
-For current Compose options, see the [Starling README](https://github.com/Fancy-Mumble/starling#install) and [Compose file](https://github.com/Fancy-Mumble/starling/blob/main/docker-compose.yml).
+## Distributed deployment or source builds
+
+Use the repository's Compose deployment when you want separate services or a local source build:
+
+~~~sh
+git clone https://github.com/Fancy-Mumble/starling.git
+cd starling
+~~~
+
+Edit **deploy/starling.toml** for the distributed stack. To use the published image, set `STARLING_IMAGE=ghcr.io/fancy-mumble/starling:latest` in a `.env` file, then run `docker compose up -d --wait`. To build locally, run `docker compose up -d --wait --build`.
+
+The Compose **starling** service is the single-container alternative: `docker compose up -d --wait starling` starts it instead of the distributed services. It uses the same **deploy/starling.toml** mount with service routing overrides; see the [Compose file](https://github.com/Fancy-Mumble/starling/blob/main/docker-compose.yml) for its mounts and settings.
