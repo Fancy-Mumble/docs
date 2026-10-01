@@ -1,11 +1,43 @@
 ---
 title: Screen-share problems
-description: Check client capture permissions and Starling's media relay address.
+description: Distinguish source capture, media transport, and viewer rendering failures.
 ---
 
-If the share does not start, first check the sender's operating-system capture permission and whether another app can capture the same window. On Linux, confirm the desktop portal is available for your session. Try sharing a different window to separate a capture failure from a transport failure.
+Test with one sender and one viewer. Record whether the sender's local preview contains the expected window before changing server settings.
 
-If the sender sees a preview but viewers see a black frame or no stream, check the Starling screenshare service logs. The relay needs a public_url with a literal IP and UDP port reachable by viewers; the corresponding UDP listener must be open in the host and cloud firewalls. The [Starling example TOML](https://github.com/Fancy-Mumble/starling/blob/main/starling.example.toml) shows the setting. A private address or localhost will fail for remote viewers.
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-users-screen-sharing-1.png" alt="Current share stage and menu with source, scale, stream quality, and diagnostic controls" /><img class="screenshot-dark" src="/screenshot-users-screen-sharing-1-dark.png" alt="Current share stage and menu with source, scale, stream quality, and diagnostic controls" /></span>
 
+## No source, permission error, or wrong window
 
-For diagnosis, record the client and server versions, whether the sender's local preview works, whether all viewers fail, and the relevant logs. See [Reporting bugs](/troubleshooting/reporting-bugs/).
+Open **Change source** in the share menu and choose the intended screen or window again. Check the sender's OS capture permission. On a Wayland desktop, confirm that the screen-capture portal opens and that a source was accepted; selecting a window in another application does not grant this application's portal request.
+
+Compare sharing a simple application window with sharing the whole desktop. If one source fails and the other works, report the application and capture type. Protected video can intentionally appear black; it is not a relay configuration test.
+
+## Sender sees the picture; viewer does not
+
+Ask a second viewer to try the same share. Open **Stats for Nerds** from the share menu and record the available transport and stream counters, plus whether they change. Capture the visible error rather than describing every blank view as a capture failure.
+
+| Comparison | Where to investigate |
+| --- | --- |
+| No sender preview | Sender capture permission, source selection, or capture backend. |
+| Preview works; all remote viewers fail | Advertised delivery mode, server media endpoint, and network reachability. |
+| One viewer fails; others work | That viewer's network, decoding/rendering backend, and logs. |
+| Same-LAN viewers work; off-network viewers fail | Private/loopback advertised addresses, NAT, and firewall rules. |
+| Picture arrives but is cropped | Compare **Fit**, **Fill**, and **1:1**. These are display modes, not transport repairs. |
+
+For a Starling relay, the owner should inspect:
+
+~~~sh
+docker compose ps screenshare
+docker compose logs --since=10m screenshare
+~~~
+
+Check the screenshare service's advertised **public_url** and UDP listener against the actual public IP, published port, and host/cloud firewall. A localhost or private address cannot be reached by arbitrary remote members. Screen-share media uses its own UDP listener; opening only the Mumble voice port does not establish media reachability. See [Media relay](/server/features/webrtc-sfu/) and [Ports and networking](/server/network/).
+
+If the client advertises peer-to-peer delivery instead, investigate reachability between sender and viewer. Do not treat relay settings as active merely because a relay exists on the server.
+
+## Freezes, high delay, or poor quality
+
+Compare a smaller capture source or lower **Stream Quality** while keeping the same viewer and network. Record whether only playback freezes or the sender preview also stops. Include the available stats and hardware/driver information. A successful low-resolution test suggests a capacity or encoding/decoding issue; it does not prove which machine is responsible.
+
+Before [reporting](/troubleshooting/reporting-bugs/), include sender/receiver OS and versions, source type, delivery mode, local-preview result, same-LAN/off-network result, number of affected viewers, stats screenshot, and matching client/server log timestamps.

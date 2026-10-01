@@ -1,72 +1,33 @@
 ---
-title: Common issues
-description: First-line checks for the problems we see most often.
-sidebar:
-  order: 1
+title: Find the failing part
+description: Choose a diagnostic path using what works and what fails.
 ---
 
-import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+Start with an observable result. Keep a working comparison—a second channel, listener, device, or network—so each change has a measurable outcome.
 
-Most problems fall into one of four buckets. Pick the closest match
-and follow the link for the deep dive.
+<span class="theme-screenshot"><img class="screenshot-light" src="/mainpage.png" alt="Current connected client showing channel membership, chat, and the voice dock as separate states" /><img class="screenshot-dark" src="/mainpage-dark.png" alt="Current connected client showing channel membership, chat, and the voice dock as separate states" /></span>
 
-<CardGrid>
-  <Card title="Audio is broken" icon="seti:audio">
-    No sound out, no sound in, mic cuts, robot voice, echo. Start at
-    [Audio problems](/troubleshooting/audio/).
-  </Card>
-  <Card title="Cannot connect" icon="warning">
-    Connection refuses, times out, drops, or asks for a password
-    when you do not have one. Start at
-    [Connection problems](/troubleshooting/connection/).
-  </Card>
-  <Card title="Screen share does not work" icon="laptop">
-    Black thumbnail, never appears, only some viewers see it. Start
-    at [Screen-share problems](/troubleshooting/screen-share/).
-  </Card>
-  <Card title="Something else" icon="document">
-    Send debug logs to a developer with the steps in
-    [Debug logging](/troubleshooting/debug-logging/).
-  </Card>
-</CardGrid>
+| What fails | First comparison | Detailed guide |
+| --- | --- | --- |
+| Cannot connect | DNS and TCP listener test before changing credentials | [Connection problems](/troubleshooting/connection/) |
+| Chat works; nobody hears you | Local sample recorder, then Continuous activation, then TCP/UDP comparison | [Audio problems](/troubleshooting/audio/) |
+| You cannot hear members | Local playback and the selected output device | [Audio problems](/troubleshooting/audio/#2-is-the-processed-signal-usable) |
+| Share is blank | Sender preview versus one and then two viewers | [Screen-share problems](/troubleshooting/screen-share/) |
+| A Fancy feature is absent | Server capability and required plugin/service status | [Feature availability](/server/features/) |
+| Failure needs developer investigation | Short reproduction and synchronized logs | [Debug logging](/troubleshooting/debug-logging/) |
 
-## Quick sanity checks
+## File upload or download fails
 
-Before diving into a specific page, try these:
+If the attachment button says the server has no file sharing, ask the owner to check the advertised files service and your permissions. A URL that points to localhost can work on the server itself and fail for every remote client.
 
-### The app
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-users-file-sharing-2.png" alt="Staged attachment options showing quality, visibility, and expiry before sending" /><img class="screenshot-dark" src="/screenshot-users-file-sharing-2-dark.png" alt="Staged attachment options showing quality, visibility, and expiry before sending" /></span>
 
-- **Restart the app**. Many transient bugs go away.
-- **Update the app** to the latest version. Get it from
-  [fancy-mumble.com](https://fancy-mumble.com/) or the
-  [GitHub releases page](https://github.com/Fancy-Mumble/FancyMumble/releases).
-- **Try a different network**. Tether to your phone for a quick A/B.
+For an upload error, record the filename type, size, visibility, expiry choice, and exact error. Compare a small image with the failing file. For a download error, check whether the attachment is expired, requires a password, or is restricted to the conversation. Ask the owner to correlate the request with files-service logs; never publish the private download URL or password in a bug report.
 
-### The server
+## Settings or profile do not appear to apply
 
-- **Check the server is up**: `ping your-host` or
-  `nc -zv your-host 64738`.
-- **Check the Starling logs**: `docker compose logs -f gateway`.
-- **Restart the server** if you can afford a moment of downtime.
+Separate local appearance from shared profile data. **Personalize** changes your window; **Profile** changes the card other members see. Confirm the active certificate identity and server, then ask another Fancy Mumble user to reopen your card. A standard Mumble client will not render every Fancy profile field.
 
-### Your account
+## Crash, hang, or regression
 
-- **Try a different identity**. Settings, Identities, new identity,
-  reconnect.
-- **Try as SuperUser** (server admin only) to rule out a permission
-  issue.
-
-## When you cannot find a solution
-
-- **Search existing issues** in the
-  [client repo](https://github.com/Fancy-Mumble/FancyMumble/issues)
-  or
-  [Starling repo](https://github.com/Fancy-Mumble/starling/issues).
-- **Open a new issue** with the information from
-  [Reporting bugs](/troubleshooting/reporting-bugs/).
-
-<Aside type="tip" title="Have logs ready">
-Most developers will ask for **debug logs** as the first reply. Save
-yourself a round trip and have them ready before opening the issue.
-See [Debug logging](/troubleshooting/debug-logging/).
-</Aside>
+Record the last action, time with timezone, platform, and exact build. Check whether the same steps work on another device or an earlier build without replacing your current identity/data. Capture the error and [export logs](/troubleshooting/debug-logging/). Keep a copy of relevant data before trying a reset; resets can remove the state needed to reproduce the bug.

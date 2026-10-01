@@ -1,208 +1,47 @@
 ---
-title: Debug logging
-description: Enable verbose logging in the app and server, find the log file, and send it to a developer.
-sidebar:
-  order: 5
+title: Collect useful logs
+description: Enable file logging, reproduce one issue, export the archive, and correlate Starling service logs.
 ---
 
-import { Steps, Aside, Tabs, TabItem, Card, CardGrid } from '@astrojs/starlight/components';
-import { Icon } from 'astro-icon/components';
+Logs are most useful when paired with a short reproduction and a timestamp. Record what you expected, what actually happened, and the exact client/server versions before collecting them.
 
-When you report a bug, the developer will almost always ask for
-**debug logs**. This page tells you how to enable them, where to
-find them, and how to share them safely.
-
-## Why debug logs?
-
-A normal log line says "something happened". A debug log line says
-**why** it happened and **what data was involved**. For an audio
-glitch, the difference is between:
-
-```text
-info: voice frame dropped
-```
-
-and
-
-```text
-debug: voice frame dropped: jitter buffer late by 47ms (threshold 30ms), last 3 frames late
-```
-
-## App: enable debug logging
-
-<Steps>
+## Enable client file logging
 
 1. Open **Settings, Advanced**.
+2. Enable **Expert mode**, then **Developer mode**. Logging controls appear in the developer section.
+3. Set **Log level** to **Debug** and enable file logging. A level change alone does not create a file while file logging is off.
+4. Reproduce the failure once and note the time and timezone.
+5. Use the **Log files** actions to open the directory or export the archive. Restore your usual level afterwards.
 
-2. Find the **Log level** dropdown (Expert mode required).
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-troubleshooting-debug-logging-1.png" alt="Advanced settings developer section with logging level, file logging, and log directory/export actions" /><img class="screenshot-dark" src="/screenshot-troubleshooting-debug-logging-1-dark.png" alt="Advanced settings developer section with logging level, file logging, and log directory/export actions" /></span>
 
-3. Pick:
-   - `info` for normal operation (default).
-   - `debug` for the issue you are reporting.
-   - `trace` for the most detail. Massive log files, use sparingly.
+Use **Trace** only when a maintainer needs it for a particular problem; it can produce substantially more output. Terminal logging is a separate sink and is not required for exporting saved file logs.
 
-4. **Reproduce the problem** while debug logging is on. Try to make
-   the minimum reproduction so the log stays short.
+## File names and export format
 
-5. Switch back to `info` afterwards. Debug logging is expensive on
-   disk and CPU.
+The current desktop logger writes date-stamped files named **fancy-mumble.YYYY-MM-DD.log** into the OS application log directory. Use **View log files** to find the actual path for your installation rather than assuming a hard-coded user folder.
 
-</Steps>
+Older files can be compressed to **.log.zst**. **Export saved logs** creates a Zstandard-compressed **.log.zst** archive, not a ZIP file. Keep the filename extension when attaching it. A missing directory before file logging is enabled is expected: the logger creates it when needed.
 
+If export fails, record the displayed error and the destination path's accessibility. Preserve existing logs; deleting them removes the failure evidence.
 
-<img src="/screenshot-troubleshooting-debug-logging-1.png" alt="Current client settings screen with sample data" />
+## Correlate server logs
 
-## App: where is the log file?
+For the maintained Starling Compose deployment, collect the service relevant to the symptom:
 
-The location depends on your operating system.
+~~~sh
+docker compose ps
+docker compose logs --since=10m gateway voice > voice-incident.log
+docker compose logs --since=10m files > files-incident.log
+docker compose logs --since=10m screenshare > share-incident.log
+~~~
 
-<Tabs>
-  <TabItem label="Windows">
-    <div class="platform-heading">
-      <Icon name="simple-icons:windows" size={24} />
-      <span>Windows</span>
-    </div>
+Use only the relevant command for your issue. Service names may differ in a customized Compose file. Include service exit/restart information from **docker compose ps**, and capture the first startup error for a service that never becomes healthy.
 
-    ```text
-    %APPDATA%\com.fancy-mumble.app\logs\fancy-mumble.log
-    ```
+Starling uses Rust tracing. Set **RUST_LOG=debug** on the affected service and restart it when normal logs do not explain the failure. Return to normal logging after the reproduction. Do not apply legacy plugin INI log-level keys to Starling.
 
-    In Explorer, paste `%APPDATA%\com.fancy-mumble.app\logs` into the
-    address bar.
-  </TabItem>
-  <TabItem label="Linux">
-    <div class="platform-heading">
-      <Icon name="simple-icons:linux" size={24} />
-      <span>Linux</span>
-    </div>
+## Review before attaching
 
-    ```text
-    ~/.local/share/com.fancy-mumble.app/logs/fancy-mumble.log
-    ```
+Check for passwords, session tokens, private file URLs, personal messages, public IPs, and usernames you do not want to publish. Redact sensitive values consistently so related events can still be matched. Do not attach certificate private keys or entire data directories.
 
-    Or, with the AppImage build:
-
-    ```text
-    ~/.fancy-mumble/logs/fancy-mumble.log
-    ```
-  </TabItem>
-  <TabItem label="macOS">
-    <div class="platform-heading">
-      <Icon name="simple-icons:apple" size={24} />
-      <span>macOS</span>
-    </div>
-
-    ```text
-    ~/Library/Logs/com.fancy-mumble.app/fancy-mumble.log
-    ```
-  </TabItem>
-  <TabItem label="Android">
-    <div class="platform-heading">
-      <Icon name="simple-icons:android" size={24} />
-      <span>Android</span>
-    </div>
-
-    The app cannot easily expose the log file. Use **Settings,
-    Advanced, Export logs** to get a zip that you can save or share.
-  </TabItem>
-</Tabs>
-
-The folder also contains rotated archives:
-
-- `fancy-mumble.log` is the live file.
-- `fancy-mumble.log.1`, `.2`, ... are previous sessions.
-
-## Server: enable verbose logging
-
-Starling services use Rust tracing. Set `RUST_LOG=info` for normal operation or `RUST_LOG=debug` while investigating a problem, then restart the affected service. Apply the variable to the service you are diagnosing in your Compose environment. Return to the normal level after collecting the relevant logs.
-
-## Server: where to read the log
-
-```bash
-# Live:
-docker compose logs -f gateway
-
-# Last 1000 lines:
-docker compose logs --tail=1000 gateway > server.log
-```
-
-For long-running diagnostics, redirect to a file:
-
-```bash
-docker compose logs -f gateway > server.log 2>&1 &
-# ... reproduce the issue ...
-kill %1
-```
-
-## Redacting before you share
-
-Before posting a log on GitHub or in chat, **strip personally
-identifying data**:
-
-- Your **public IP** (search and replace with `1.2.3.4`).
-- **Tokens** in the form `Authorization: Bearer ...`.
-- **Push credentials** (rare in logs, but check).
-- **Other users' usernames** if your community values privacy.
-
-A quick one-liner:
-
-```bash
-sed -E -e 's/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/1.2.3.4/g' \
-       -e 's/Authorization: [^[:space:]]*/Authorization: [REDACTED]/g' \
-  fancy-mumble.log > fancy-mumble.redacted.log
-```
-
-## What to include in a bug report
-
-<Card title="The good report formula" icon="document">
-
-1. **Steps to reproduce**, minimum reproduction.
-2. **Expected** vs **observed** behavior.
-3. The **app version** and **server version**.
-4. **Operating system** and version.
-5. **Network setup** (home, office, mobile, VPN).
-6. **The debug log** for the reproduction window, redacted.
-
-</Card>
-
-## A round trip example
-
-You: "audio cuts mid-sentence".
-
-Developer: "can you enable debug logging and reproduce with a 10-
-second sample?"
-
-You:
-
-1. Settings, Advanced, Log level, debug.
-2. Reconnect to the server.
-3. Talk for 10 seconds with a friend in the call, including the
-   moment the cut happens.
-4. Disconnect.
-5. Grab the log file, redact.
-6. Attach to the issue.
-
-Developer: "the audio packet `seq=4231` was dropped because the
-jitter buffer was full. Increase `jitterBufferSize` in your config
-to 200." Issue closed.
-
-That round trip would take an extra five messages without debug
-logs.
-
-## Real-time tracing (advanced)
-
-Both client and server can stream events to a TCP listener for live
-diagnosis. Set:
-
-```yaml
-environment:
-  MUMBLE_TRACE_TCP: "192.0.2.5:4444"
-```
-
-A `nc -l 4444` on the listener side captures everything. Useful for
-sessions where you cannot reproduce locally.
-
-## Next step
-
-You are ready to file a bug report. Head to
-[Reporting bugs](/troubleshooting/reporting-bugs/) for the checklist.
+In the report, identify the start/end times of the reproduction and attach the screenshot of the affected controls alongside the logs. See [Reporting bugs](/troubleshooting/reporting-bugs/) for an evidence template.

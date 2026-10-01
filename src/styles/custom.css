@@ -317,3 +317,9 @@ div.header {
   flex-shrink: 0;
   color: var(--sl-color-accent-high);
 }
+
+/* Follow the documentation theme, including its system preference. */
+.theme-screenshot { display: block; }
+.theme-screenshot .screenshot-dark { display: none; }
+:root[data-theme="dark"] .theme-screenshot .screenshot-light { display: none; }
+:root[data-theme="dark"] .theme-screenshot .screenshot-dark { display: block; }

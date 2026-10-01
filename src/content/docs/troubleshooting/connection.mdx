@@ -1,39 +1,65 @@
 ---
 title: Connection problems
-description: Check the client address, Starling listener, credentials, and certificate.
+description: Separate DNS, control-port, authentication, certificate, and voice failures.
 ---
 
-## Connection refused or timed out
+First record the exact error and whether it occurs before connecting, during login, or after chat is already working. A voice failure after successful login follows a different path from a failed control connection.
 
-Check the server address and port. Starling's default Mumble port is **64738**. On the server, check the gateway and both TCP and UDP firewall rules:
+## Check the saved address and identity
+
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-getting-started-connect-1.png" alt="Add a server dialog showing the address, port, username, password, and identity fields to check" /><img class="screenshot-dark" src="/screenshot-getting-started-connect-1-dark.png" alt="Add a server dialog showing the address, port, username, password, and identity fields to check" /></span>
+
+Confirm the host and port with the owner. Starling's maintained deployment uses **64738/TCP** for control and **64738/UDP** for voice. A web address that opens the administration site is not necessarily the Mumble listener. Select the same certificate identity previously registered on that server.
+
+## DNS, timeout, or connection refused
+
+On Windows PowerShell, substitute the owner's host name:
+
+~~~powershell
+Resolve-DnsName voice.example.org
+Test-NetConnection voice.example.org -Port 64738
+~~~
+
+On Linux or macOS:
+
+~~~sh
+nslookup voice.example.org
+nc -vz voice.example.org 64738
+~~~
+
+| Result | Next action |
+| --- | --- |
+| Name does not resolve | Correct the name or ask the owner to fix DNS. Record whether IPv4, IPv6, or both records are returned. |
+| TCP test fails | Ask the owner to check the listener, published port, routing, and firewall. A refusal often means nothing is accepting the connection; a timeout does not identify which network device dropped it. |
+| TCP succeeds but login fails | Continue with credentials, identity, and the displayed certificate/login error. A TCP success does not prove the application handshake succeeded. |
+| Chat works but voice does not | Use the UDP/TCP comparison in [Audio problems](/troubleshooting/audio/#4-is-voice-transport-the-failing-part). |
+
+The server owner can check the Compose deployment with:
 
 ~~~sh
 docker compose ps
-docker compose logs gateway
+docker compose logs --since=10m gateway voice
+docker compose config
 ~~~
 
-A TCP port probe can show whether the control listener is reachable:
+Check that services are running and the intended TCP and UDP ports are published. If the port is customized, use the same number in the client, firewall, and container mapping. Keep internal gRPC listeners private. See [Ports and networking](/server/network/).
 
-~~~sh
-nc -zv your-server.example.org 64738
-~~~
+## Password or account rejected
 
-If TCP works but voice does not, check **64738/UDP**. Force TCP in the client's voice network settings as a diagnostic fallback.
+Do not repeatedly guess passwords. Ask the owner whether the prompt is a server password, registered-user password, or SuperUser login. A registered account can be tied to a client certificate; changing the username alone does not restore that identity. Compare the identity selected in the connection entry with **Settings, Identities**.
 
-## Password or identity rejected
+For a new Starling instance, use [SuperUser and first login](/admin/superuser/). For a migrated instance, verify the imported account and target instance rather than registering a replacement over it.
 
-Check the username and password with the server owner. A registered account may also be tied to a certificate, so verify the selected client identity. For a fresh Starling server, the SuperUser password was printed once at first boot; see [SuperUser and first login](/admin/superuser/).
+## Certificate fingerprint changed
 
-## Certificate changed
+Record the host, port, and displayed fingerprint and verify it with the owner. A replaced TLS certificate or a lost data volume can legitimately cause a change, but the dialog cannot establish that by itself. The owner should compare the running gateway certificate with its backup. Preserve the TLS files during upgrades.
 
-Starling keeps its self-signed TLS certificate in the data directory. If that directory or Docker volume was replaced, clients see a changed certificate fingerprint. Confirm the new fingerprint with the server owner before accepting it. Preserve the data directory during upgrades.
+## Connected, then disconnected
 
-## Public listing is missing
+Record how long the session lasted and whether it happens while idle, during voice, or during uploads. Compare the client log and gateway log at the same timestamp. Check whether every member disconnected or only this device. Do not reset identities or delete application data to diagnose a recurring disconnect.
 
-Public directory registration is off until the registry fields are configured in Starling's instances.settings. A password-protected server is not listed. See the [Starling example TOML](https://github.com/Fancy-Mumble/starling/blob/main/starling.example.toml).
+## Server fails before it can accept clients
 
-## The server exits at startup
+Run **docker compose logs** for the failing service and read the first startup error. Unknown TOML keys, missing TLS files, storage permissions, and unavailable internal endpoints require different fixes. Compare the configuration with your Starling release's TOML reference. Do not expose more ports to fix a configuration parse error.
 
-Read the gateway or affected service logs. Starling rejects unknown TOML keys. Compare your file with its [configuration reference](https://github.com/Fancy-Mumble/starling/blob/main/examples/reference.toml).
-
-If the problem persists, include the client and server versions and relevant logs in a [bug report](/troubleshooting/reporting-bugs/).
+Attach the displayed error, resolved IPs, TCP test result, client/server versions, timestamp, and relevant logs to a [bug report](/troubleshooting/reporting-bugs/). Remove passwords and tokens from exported Compose configuration before sharing it.
