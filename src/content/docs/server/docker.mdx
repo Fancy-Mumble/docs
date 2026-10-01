@@ -38,4 +38,4 @@ cd starling
 
 Edit **deploy/starling.toml** for the distributed stack. To use the published image, set `STARLING_IMAGE=ghcr.io/fancy-mumble/starling:latest` in a `.env` file, then run `docker compose up -d --wait`. To build locally, run `docker compose up -d --wait --build`.
 
-The Compose **starling** service is the single-container alternative: `docker compose up -d --wait starling` starts it instead of the distributed services. It uses **starling.example.toml**; see the [Compose file](https://github.com/Fancy-Mumble/starling/blob/main/docker-compose.yml) for its mounts and settings.
+The Compose **starling** service is the single-container alternative: `docker compose up -d --wait starling` starts it instead of the distributed services. It uses the same **deploy/starling.toml** mount with service routing overrides; see the [Compose file](https://github.com/Fancy-Mumble/starling/blob/main/docker-compose.yml) for its mounts and settings.
