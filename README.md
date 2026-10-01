@@ -171,3 +171,5 @@ Add an image with descriptive alt text to the relevant guide, inspect the render
 The documentation content is dual-licensed under
 [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/) for prose
 and [MIT](https://opensource.org/licenses/MIT) for code samples.
+
+Mobile documentation captures use the actual mobile shell with Android user-agent and touch emulation at a 412×915 CSS-pixel viewport. They use sample server state and are layout examples, not physical-device or Android permission-dialog captures.
