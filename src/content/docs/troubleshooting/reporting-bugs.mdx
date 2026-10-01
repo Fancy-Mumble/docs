@@ -1,137 +1,51 @@
 ---
 title: Reporting bugs
-description: A checklist for filing a bug report that gets fixed.
-sidebar:
-  order: 6
+description: Submit a reproducible failure with settings, comparisons, screenshots, and matching logs.
 ---
 
-import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+| Problem | Repository |
+| --- | --- |
+| Client UI, device capture, playback, or crash | [Fancy Mumble client issues](https://github.com/Fancy-Mumble/FancyMumble/issues) |
+| Starling service, storage, configuration, or deployment | [Starling issues](https://github.com/Fancy-Mumble/starling/issues) |
+| Incorrect or missing documentation | [Docs issues](https://github.com/Fancy-Mumble/docs/issues) |
 
-A good bug report saves everyone time. Use this checklist before
-hitting **Submit**.
+## Capture the controls that matter
 
-## Which repo?
+For an audio issue, show the selected devices, activation mode, and processing/transmission choices. For a connection issue, show the exact error and the address/port fields with private values redacted. For a share issue, show the sender preview and viewer stats. A screenshot of the whole desktop often hides the important control at an unreadable size.
 
-| You are reporting | Where to file |
-|-------------------|---------------|
-| The app crashes, misrenders, or behaves wrong | [FancyMumble, app](https://github.com/Fancy-Mumble/FancyMumble/issues) |
-| Starling crashes, rejects a valid config, or its Compose deployment fails | [Fancy-Mumble/starling](https://github.com/Fancy-Mumble/starling/issues) |
-| The docs (this site) | [Fancy-Mumble/docs](https://github.com/Fancy-Mumble/docs/issues) |
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-users-audio-1.png" alt="Example of the Voice controls to include with an audio report: devices, volume, activation, and calibration" /><img class="screenshot-dark" src="/screenshot-users-audio-1-dark.png" alt="Example of the Voice controls to include with an audio report: devices, volume, activation, and calibration" /></span>
 
-When in doubt, file on the app repo. A maintainer will move it.
+## Copy this evidence template
 
-## The good report
+~~~text
+Client version / build:
+Server version and deployment:
+OS version; relevant audio/video device and driver:
+Time of reproduction, including timezone:
 
-<Card title="Template" icon="document">
+Steps (starting from the current state):
+1.
+2.
 
-```markdown
-**Summary**: one-line description.
+Expected result:
+Actual result and exact error:
+How often it happens:
 
-**Steps to reproduce**:
-1. Open the app.
-2. ...
-3. ...
+Working comparison:
+One change that was tested:
+Result before / after that change:
 
-**Expected**: what should have happened.
-**Observed**: what actually happened.
+Audio: local sample result; Continuous result; UDP versus TCP result.
+Share: sender preview; affected viewers; delivery mode; stats.
+Connection: resolved address; TCP probe; login/certificate error.
 
-**Versions**:
-- App: x.y.z (from Help, About).
-- Server: x.y.z (from server log on startup).
-- OS: Windows 11 / Ubuntu 24.04 / Android 15.
+Attachments: relevant screenshots and logs for the same time window.
+~~~
 
-**Network**: home Wi-Fi / corporate / mobile.
+Use the applicable evidence lines and remove the rest. Include exact version strings rather than “latest.” Describe a working comparison even when it is on the same device—for example another channel, another capture source, or the same call using TCP.
 
-**Logs**: attached (redacted), generated with log level = debug.
+## Obtain logs
 
-**Screenshots**: attached if visual.
-```
+Follow [Collect useful logs](/troubleshooting/debug-logging/) to enable file output and export the current **.log.zst** archive. Turn on logging before reproducing the issue. For a server problem, attach the failing service's logs and restart/exit status. Keep the reproduction short enough to identify in those logs.
 
-</Card>
-
-## What makes a report easy to fix
-
-<CardGrid>
-  <Card title="Minimum reproduction" icon="document">
-    Strip down to the smallest steps that show the problem. "Connect,
-    join channel, click X" beats "I have used the app for three
-    weeks and yesterday Y stopped working".
-  </Card>
-  <Card title="One bug per issue" icon="document">
-    Two unrelated bugs need two issues. They get fixed independently
-    and shipped in different releases.
-  </Card>
-  <Card title="Versions" icon="document">
-    "Latest" is not a version. Help, About, copy the exact string.
-    Maintainers reproduce against a specific build.
-  </Card>
-  <Card title="Logs" icon="document">
-    Always attach debug logs. See
-    [Debug logging](/troubleshooting/debug-logging/).
-  </Card>
-</CardGrid>
-
-## What makes a report hard to fix
-
-- "It does not work" with no further detail.
-- A 1000-line screenshot of the bug screen with no log.
-- Multiple unrelated issues in one report.
-- A wall of text describing how you feel about the bug. Save that for
-  the comment thread.
-
-## Security issues
-
-**Do not** file security issues as public GitHub issues.
-
-Instead, email the maintainers privately or use the GitHub "Security
-advisories" feature on the repo. Both are linked from the repo's
-**Security** tab.
-
-## Feature requests
-
-Open as a regular issue, but use the **enhancement** label. Include:
-
-- The problem you are trying to solve.
-- The expected behavior.
-- Optional: a sketch of how it could work.
-
-Maintainers prefer "problem-shaped" requests (here is a pain) over
-"solution-shaped" ones (please add this exact button).
-
-## Voting and following
-
-You can:
-
-- **Subscribe** to an issue to get notified about updates.
-- Add a **thumbs-up** reaction to "vote" for an issue. Comments like
-  "+1" are discouraged, use the reaction.
-
-## Pull requests
-
-If you can fix it yourself, even better:
-
-<Steps>
-1. Fork the repo.
-2. Create a branch.
-3. Open a draft PR early to discuss approach.
-4. Link the issue with `Fixes #123`.
-5. Add a test if you can.
-</Steps>
-
-Read the `CONTRIBUTING.md` in the repo first for code style rules.
-
-## Triage timeline
-
-Maintainers triage new issues within a few days. If your issue gets
-no reply after a week:
-
-- Add more context (logs, repro, video).
-- Tag the issue in the project's discussion channel.
-
-Persistence with patience is the right balance.
-
-## Thank you
-
-Bug reports are the only way the maintainers know something is
-broken. Every well-shaped issue makes the project better. Thanks
-for taking the time.
+Review attachments for credentials, private URLs, certificate keys, and other members' messages before making them public. Report separate failures in separate issues unless the reproduction shows they share the same cause.

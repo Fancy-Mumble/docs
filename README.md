@@ -173,3 +173,16 @@ The documentation content is dual-licensed under
 and [MIT](https://opensource.org/licenses/MIT) for code samples.
 
 Mobile documentation captures use the actual mobile shell with Android user-agent and touch emulation at a 412×915 CSS-pixel viewport. They use sample server state and are layout examples, not physical-device or Android permission-dialog captures.
+
+### Screenshot themes
+
+Current client screenshots use paired assets: `name.png` for light and
+`name-dark.png` for dark. Wrap both images in `.theme-screenshot` with
+`.screenshot-light` and `.screenshot-dark`; the site selects the matching
+image from Starlight’s `data-theme`, including system appearance. Preserve
+the same sample state in both captures.
+
+Screenshots show actual client components populated with local sample data.
+Mobile captures use the Android responsive shell in a browser, rather than
+a physical device. The live document example is a local document canvas;
+it does not demonstrate an active server plugin session.

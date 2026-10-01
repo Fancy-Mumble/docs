@@ -1,162 +1,72 @@
 ---
 title: Audio problems
-description: No sound, no mic, choppy audio, echo, robot voice. A symptom-driven checklist.
-sidebar:
-  order: 2
+description: Locate a voice failure by testing capture, processing, activation, output, and transport separately.
 ---
 
-import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+Use a quiet test channel and one other member. Change one setting at a time and repeat the same sentence. Start in **More, Settings, Voice** on desktop, or **Settings, Voice** on mobile.
 
-Most audio problems come from one of:
+## 1. Does the client receive your microphone?
 
-- The wrong **device** is selected.
-- The **activation mode** is wrong.
-- Your **firewall** is dropping UDP voice packets.
-- The **codec settings** do not match your network capacity.
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-users-audio-1.png" alt="Voice settings: engine switch, input and output devices, volume, activation cards, and calibration" /><img class="screenshot-dark" src="/screenshot-users-audio-1-dark.png" alt="Voice settings: engine switch, input and output devices, volume, activation cards, and calibration" /></span>
 
-Walk through the section that matches your symptom.
+1. Turn voice on if the page offers **Turn voice on**. A connected text session does not by itself mean the audio engine is running.
+2. Select the microphone by name in **Input device**. System default can change when a headset is connected or a Bluetooth device changes profile.
+3. Speak while watching the voice-gate meter. Check that **Microphone volume** is not zero.
 
-## "Nobody can hear me"
+| Observation | What to test next |
+| --- | --- |
+| No level movement | Check microphone permission and the input device in the OS. Record with another app using the same device. If that also fails, resolve device/permission access first. |
+| The OS recorder works, but Fancy Mumble's meter does not | Re-select the input. On Windows, disable **Exclusive microphone mode** and close other apps holding the device. Turn voice off and on after the change. Capture the resulting device error in the client log. |
+| Level responds to speech | Continue to the sample recorder. Increasing gain will not fix a transmission or channel-permission problem. |
 
-<Steps>
+On Windows, check **Settings, Privacy & security, Microphone** and access for desktop apps. On Android, check the app's **Microphone** permission. On Linux, check the recording stream's selected source in your PipeWire/PulseAudio mixer; an output monitor records the desktop instead of your microphone.
 
-1. Look at the **mute** and **deafen** icons at the bottom left of the
-   window. Make sure neither is on.
+## 2. Is the processed signal usable?
 
-2. **Settings, Voice, Input device**. Confirm the correct microphone
-   is selected. *System default* is fine on most setups.
+<span class="theme-screenshot"><img class="screenshot-light" src="/screenshot-users-audio-2.png" alt="Voice settings sample recorder, processing choices, quality, packet duration, and Force TCP audio" /><img class="screenshot-dark" src="/screenshot-users-audio-2-dark.png" alt="Voice settings sample recorder, processing choices, quality, packet duration, and Force TCP audio" /></span>
 
-3. **Microphone Volume** slider: 100% is the safe default. Above
-   that the app digitally amplifies; very high values can clip.
+Use **Hear yourself, Record sample**, speak for a few seconds, stop, and play it back. This tests the configured processing locally; it does not establish that another member receives your voice.
 
-4. Click **Calibrate** below the threshold slider. Speak. The fill
-   bar should move. If it does not, the **operating system** is not
-   delivering audio. Check OS-level mic settings.
+| Sample result | Next check |
+| --- | --- |
+| No playback, and other members are also inaudible | Select **Output device**, raise **Speaker volume** from zero, and check the OS per-app volume. Test another app through the same headphones. |
+| Loud cracks or distortion | Lower the microphone's OS input level and compare with **Auto gain** off. If the OS recorder is already distorted, changing the chat bitrate cannot repair the source. |
+| Words become metallic or disappear | Compare the same sentence with noise suppression **Off**, then with one algorithm enabled. Keep the option that preserves speech; do not combine this test with a gain or network change. |
+| Clear sample | Continue to activation and permissions. |
 
-5. If the fill bar moves but does not cross the threshold line,
-   either:
-   - Lower the threshold.
-   - Turn on **Auto sensitivity**.
-   - Increase the microphone volume.
+Noise suppression and the activation gate do different jobs: suppression processes sound; the gate decides when transmission is allowed. Continuous activation does not mean processing is disabled.
 
-6. If you are in **Push to Talk** mode, confirm the PTT key is set.
-   Click the recorder and press your key.
+## 3. Does activation allow transmission?
 
-7. Try **Continuous** mode (no gate). If you can be heard in
-   Continuous, the gate is too aggressive.
+Keep the microphone unmuted and headphones undeafened. Check the channel is the one you joined for voice, rather than only the conversation you are viewing.
 
-</Steps>
+1. Temporarily select **Continuous** in the test channel and ask your partner to listen.
+2. If Continuous works but **Voice activation** does not, use **Auto calibrate**, press **Calibrate**, and speak naturally for about five seconds.
+3. For **Manual calibrate**, the Open marker must be crossed to begin transmitting. The lower Close marker and hold keep the gate open between syllables. A close threshold nearer the opening threshold makes it easier to close; raising it is not a general fix for cut-off speech.
+4. If Continuous works but **Push to talk** does not, check the assigned shortcut and whether it is detected with the client both focused and in the background. Do not use mute as the push-to-talk switch.
+5. Restore your usual activation mode after the test.
 
-## "I cannot hear anyone"
+If the local sample is clear and Continuous still cannot be heard, ask an administrator to check **Speak** permission and suppression in that channel. Try a channel where a known working member can speak. Record whether your own speaking indicator appears and whether the other member sees it.
 
-<Steps>
-1. **Deafen** icon at the bottom left of the window: make sure it is off.
-2. **Settings, Voice, Output device**. Confirm the right speakers
-   or headphones are selected.
-3. **Speaker Volume**: above 0. At 100% you hear at normal level.
-4. Are other apps audible? If no, the OS volume mixer is muting the
-   app.
-5. On Windows: check the per-app volume in the OS mixer.
-</Steps>
+## 4. Is voice transport the failing part?
 
-## "Audio is choppy or stuttering"
+Use **Force TCP audio** in the Transmission section as a comparison. Repeat the same test with it off and on; allow the client time to apply the change.
 
-The voice path is dropping packets.
+| Result | Interpretation and action |
+| --- | --- |
+| Voice works only with Force TCP audio | UDP reachability or the UDP voice path needs investigation. Report the server address, port, and test result to its owner. |
+| Voice fails over both paths, but local recording works | Check channel permissions, mute/suppression, and both clients' logs before changing codec settings. |
+| Only one listener fails | Check that listener's output device, local user mute/volume, and connection. |
+| All members become choppy together | Compare server voice-service logs and host load at the recorded time. |
 
-<Steps>
-1. Settings, Voice, Network. Turn on **Force TCP**. This sends voice
-   over the already-established connection and avoids UDP drops.
-2. Lower the **bitrate** to 32 kbps under Compression.
-3. Increase **Audio per packet** to 40 or 60 ms. Bigger packets per
-   second, fewer of them.
-4. Switch to a wired Ethernet connection if you are on Wi-Fi.
-5. If you are on a busy Wi-Fi (apartment building, coffee shop),
-   try a different channel from your router admin page.
-</Steps>
+For the maintained Starling Compose deployment, normal Mumble voice needs **64738/UDP**, while control needs **64738/TCP**. A successful TCP port test does not test UDP. The owner should check the published UDP mapping and both host and cloud firewalls; see [Connection problems](/troubleshooting/connection/).
 
-If the problem persists, look at **Audio statistics** in the panel
-(Expert mode). Sustained >2% packet loss means the underlying
-connection is the issue, not the app.
+For stutter, make a controlled comparison using lower **Quality** (for example 32 kb/s) or a different **Audio per packet** value. A 40 ms packet bundles more audio into fewer packets than 20 ms and adds packetization delay; it is not a packet-loss repair. Note which change actually helped, then restore settings that did not.
 
-## "My voice sounds robotic or distorted"
+## Echo and feedback
 
-- The bitrate is too low for the activity (you are using extra-low
-  bitrate for music). Bump bitrate.
-- Auto-gain is over-amplifying because the mic is too quiet. Lower
-  the **Max Amplification** in Audio Processing.
-- The mic is clipping at the hardware level. Lower the OS-level mic
-  level (not the app's).
+Mute your microphone during an echo and ask whether the echo stops. If it does, test with headphones and disable any loopback/desktop-monitor input. If it continues, isolate other participants one at a time. This identifies whose capture path contains the returned audio instead of asking everyone to change noise suppression.
 
-## "I hear an echo"
+## Evidence to attach
 
-You are picking up your own speakers in your mic.
-
-- Use **headphones**. Most echo problems go away.
-- Lower the speaker volume.
-- Some headsets have an "echo cancellation" toggle in their utility.
-  Turn it on.
-- Make sure the mic is not pointed at the speakers.
-
-## "Voice cuts at the start of sentences"
-
-The gate is closing too quickly between syllables.
-
-- Settings, Voice, Expert, **Hold Frames**. Raise it. 10 to 20 is a
-  good range.
-- **Gate Close Ratio**: try a higher value (closer to 1).
-
-## "Voice cuts in the middle of speech"
-
-The denoiser is being too aggressive.
-
-- Try a different denoiser algorithm. RNNoise is the friendliest
-  default. DeepFilterNet is cleaner but may chop fricatives in
-  rare cases.
-- Lower the **attenuation limit** in the algorithm's advanced
-  controls.
-
-## "Background noise leaks through"
-
-- Switch to **DeepFilterNet** denoiser. Heavier but cleaner.
-- Raise the VAD threshold slightly.
-- Make sure **Voice Activation** mode is on. **Continuous** mode does
-  not denoise.
-
-## "Mic test works but nobody hears me"
-
-The mic works on the OS side but the app is not transmitting.
-
-- **Activation mode**: confirm it is not stuck in PTT without a key.
-- **Whisper key** is held by accident, so audio is going to a
-  whisper target. Check whisper keys in Shortcuts.
-- The server has **denied Speak** to your role in this channel. Try
-  another channel.
-
-## "My friend hears themselves through me"
-
-You are unmuted in a noisy room and the speakers are picking up the
-remote audio. Mute when you are not talking, or use headphones.
-
-## "Cannot pick a specific audio device"
-
-- The device is offline or being exclusive-used by another app.
-- The OS does not expose it to apps without permission. On Windows,
-  grant microphone permission to the app under Privacy settings.
-- On Linux PipeWire, the device may need to be made the default in
-  `pavucontrol`.
-
-## Legacy backend
-
-If audio is wonky on Linux specifically, try **Settings, Voice,
-Expert, Legacy Audio Backend**. Takes effect on the next voice
-toggle.
-
-## Still broken?
-
-[Open a bug report](/troubleshooting/reporting-bugs/) with:
-
-- Your platform.
-- Output of the Audio statistics panel (Expert mode).
-- Whether the issue happens with another headset or another
-  microphone.
-- Debug logs (see [Debug logging](/troubleshooting/debug-logging/)).
+Include input/output device names, activation mode, sample-recorder result, Continuous result, UDP-versus-TCP result, affected channel and listeners, and a timestamp with timezone. Attach a screenshot of Voice settings and [client logs](/troubleshooting/debug-logging/). This lets maintainers distinguish capture, processing, permission, and transport failures.
